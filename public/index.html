@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viscose — Address Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #f8fafc; --bg-card: #ffffff; --text: #0f172a; --text-muted: #64748b;
+      --accent: #6366f1; --accent-hover: #4f46e5; --accent-light: rgba(99,102,241,0.08);
+      --border: #e2e8f0; --danger: #ef4444; --success: #22c55e;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+      --bg:#0f172a;--bg-card:#1e293b;--text:#f1f5f9;--text-muted:#94a3b8;
+      --accent:#818cf8;--accent-hover:#a5b4fc;--accent-light:rgba(129,140,248,0.1);
+      --border:#334155;--shadow:0 1px 3px rgba(0,0,0,0.3);
+    }}
+    :root[data-theme="dark"]{
+      --bg:#0f172a;--bg-card:#1e293b;--text:#f1f5f9;--text-muted:#94a3b8;
+      --accent:#818cf8;--accent-hover:#a5b4fc;--accent-light:rgba(129,140,248,0.1);
+      --border:#334155;--shadow:0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .hidden { display: none !important; }
+
+    /* LOGIN */
+    .login-wrap {
+      display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;
+    }
+    .login-box {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 40px; width: 100%; max-width: 400px; box-shadow: var(--shadow);
+    }
+    .login-box h1 { font-size: 1.5rem; margin-bottom: 8px; text-align: center; }
+    .login-box p { color: var(--text-muted); text-align: center; margin-bottom: 24px; font-size: 0.9rem; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px;
+      background: var(--bg); color: var(--text); font-size: 0.95rem; outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 20px; border-radius: 10px; font-size: 0.9rem; font-weight: 600;
+      border: none; cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+    .btn-full { width: 100%; }
+    .btn-icon { padding: 6px 10px; font-size: 1rem; background: none; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); }
+    .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+
+    .alert { padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 16px; }
+    .alert-error { background: rgba(239,68,68,0.1); color: var(--danger); }
+    .alert-success { background: rgba(34,197,94,0.1); color: var(--success); }
+
+    /* LAYOUT */
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 260px; background: var(--bg-card); border-right: 1px solid var(--border);
+      padding: 20px; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0;
+    }
+    .sidebar-logo { font-size: 1.3rem; font-weight: 700; margin-bottom: 32px; display: flex; align-items: center; gap: 8px; }
+    .sidebar-logo span {
+      width: 32px; height: 32px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.9rem; font-weight: 800;
+    }
+    .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px;
+      color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500;
+      transition: all 0.2s;
+    }
+    .sidebar-nav a:hover, .sidebar-nav a.active { background: var(--accent-light); color: var(--accent); }
+    .sidebar-user {
+      padding-top: 16px; border-top: 1px solid var(--border); font-size: 0.85rem;
+    }
+    .sidebar-user .user-name { font-weight: 600; }
+    .sidebar-user .user-role { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .main { flex: 1; margin-left: 260px; padding: 32px; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .page-header h2 { font-size: 1.4rem; }
+
+    /* TABLE */
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+      box-shadow: var(--shadow); overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 12px 16px; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 16px; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    .role-badge {
+      display: inline-block; padding: 2px 10px; border-radius: 100px; font-size: 0.75rem; font-weight: 600;
+    }
+    .role-superadmin { background: rgba(239,68,68,0.1); color: var(--danger); }
+    .role-admin { background: rgba(99,102,241,0.1); color: var(--accent); }
+    .role-user { background: rgba(34,197,94,0.1); color: var(--success); }
+
+    /* ADDRESS CARDS */
+    .addr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .addr-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 20px; box-shadow: var(--shadow); transition: all 0.2s;
+    }
+    .addr-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .addr-card-label { font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .addr-card-body { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 12px; }
+    .addr-card-actions { display: flex; gap: 8px; }
+    .map-link {
+      display: inline-flex; align-items: center; gap: 6px; color: var(--accent); text-decoration: none;
+      font-size: 0.85rem; font-weight: 600; padding: 6px 12px; background: var(--accent-light);
+      border-radius: 8px; transition: 0.2s;
+    }
+    .map-link:hover { background: var(--accent); color: #fff; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex;
+      align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+    }
+    .modal {
+      background: var(--bg-card); border-radius: 16px; padding: 32px;
+      width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+    }
+    .modal h3 { font-size: 1.2rem; margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-state p { font-size: 1.1rem; margin-bottom: 16px; }
+
+    /* MOBILE */
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      padding: 12px 16px; align-items: center; justify-content: space-between;
+    }
+    @media(max-width:768px) {
+      .sidebar { display: none; }
+      .sidebar.open { display: flex; z-index: 200; width: 100%; }
+      .main { margin-left: 0; padding: 16px; padding-top: 64px; }
+      .mobile-header { display: flex; }
+      .addr-grid { grid-template-columns: 1fr; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      table { font-size: 0.8rem; }
+      th, td { padding: 8px 10px; }
+    }
+
+    .overflow-x { overflow-x: auto; }
+  </style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setupScreen" class="login-wrap hidden">
+  <div class="login-box">
+    <h1>Initial Setup</h1>
+    <p>Create the super admin account</p>
+    <div id="setupAlert"></div>
+    <div class="form-group"><label>Name</label><input id="setupName" type="text" placeholder="Your name"></div>
+    <div class="form-group"><label>Email</label><input id="setupEmail" type="email" placeholder="admin@example.com"></div>
+    <div class="form-group"><label>Password</label><input id="setupPass" type="password" placeholder="Choose a strong password"></div>
+    <button class="btn btn-primary btn-full" onclick="doSetup()">Create Super Admin</button>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-wrap hidden">
+  <div class="login-box">
+    <h1>Welcome Back</h1>
+    <p>Sign in to your Viscose account</p>
+    <div id="loginAlert"></div>
+    <div class="form-group"><label>Email</label><input id="loginEmail" type="email" placeholder="you@example.com"></div>
+    <div class="form-group"><label>Password</label><input id="loginPass" type="password" placeholder="Your password"></div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen" class="hidden">
+  <div class="mobile-header">
+    <div style="font-weight:700;display:flex;align-items:center;gap:8px">
+      <span style="width:28px;height:28px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:800">V</span>
+      Viscose
+    </div>
+    <button class="btn-icon" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+  </div>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-logo"><span>V</span> Viscose</div>
+      <nav class="sidebar-nav">
+        <a href="#" onclick="showPage('addresses')" data-page="addresses">📍 My Addresses</a>
+        <a href="#" onclick="showPage('users')" data-page="users" id="navUsers" class="hidden">👥 Users</a>
+        <a href="#" onclick="showPage('alladdresses')" data-page="alladdresses" id="navAllAddr" class="hidden">🗂 All Addresses</a>
+      </nav>
+      <div class="sidebar-user">
+        <div class="user-name" id="sidebarName"></div>
+        <div class="user-role" id="sidebarRole"></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:10px;width:100%" onclick="logout()">Sign Out</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- MY ADDRESSES PAGE -->
+      <div id="page-addresses">
+        <div class="page-header">
+          <h2>My Addresses</h2>
+          <button class="btn btn-primary" onclick="openAddressModal()">+ Add Address</button>
+        </div>
+        <div class="addr-grid" id="myAddressList"></div>
+      </div>
+
+      <!-- USERS PAGE (admin only) -->
+      <div id="page-users" class="hidden">
+        <div class="page-header">
+          <h2>Manage Users</h2>
+          <button class="btn btn-primary" onclick="openUserModal()">+ Add User</button>
+        </div>
+        <div class="card overflow-x">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th></th></tr></thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ALL ADDRESSES PAGE (admin only) -->
+      <div id="page-alladdresses" class="hidden">
+        <div class="page-header">
+          <h2>All User Addresses</h2>
+          <div class="form-group" style="margin:0;min-width:200px">
+            <select id="userFilter" onchange="loadAllAddresses()">
+              <option value="">Select a user...</option>
+            </select>
+          </div>
+        </div>
+        <div class="addr-grid" id="allAddressList"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ADDRESS MODAL -->
+<div id="addressModal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal('addressModal')">
+  <div class="modal">
+    <h3 id="addrModalTitle">Add Address</h3>
+    <input type="hidden" id="addrEditId">
+    <div class="form-group"><label>Label (e.g. Home, Work)</label><input id="addrLabel" placeholder="Home"></div>
+    <div class="form-group"><label>Street *</label><input id="addrStreet" placeholder="123 Main St"></div>
+    <div class="form-group"><label>City</label><input id="addrCity" placeholder="Brooklyn"></div>
+    <div class="form-group"><label>State</label><input id="addrState" placeholder="NY"></div>
+    <div class="form-group"><label>Zip</label><input id="addrZip" placeholder="11201"></div>
+    <div class="form-group"><label>Country</label><input id="addrCountry" placeholder="USA"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('addressModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAddress()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER MODAL -->
+<div id="userModal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal('userModal')">
+  <div class="modal">
+    <h3>Add User</h3>
+    <div id="userModalAlert"></div>
+    <div class="form-group"><label>Name</label><input id="newUserName" placeholder="Full name"></div>
+    <div class="form-group"><label>Email</label><input id="newUserEmail" type="email" placeholder="user@example.com"></div>
+    <div class="form-group"><label>Password</label><input id="newUserPass" type="password" placeholder="Temporary password"></div>
+    <div class="form-group" id="roleField"><label>Role</label>
+      <select id="newUserRole"><option value="user">User</option><option value="admin">Admin</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('userModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createUser()">Create User</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let token = localStorage.getItem('viscose_token');
+let currentUser = null;
+
+const API = '/api';
+
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + path, { ...opts, headers });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+async function init() {
+  if (token) {
+    try {
+      const data = await api('/me');
+      currentUser = data.user;
+      showApp();
+    } catch {
+      token = null;
+      localStorage.removeItem('viscose_token');
+      checkSetup();
+    }
+  } else {
+    checkSetup();
+  }
+}
+
+async function checkSetup() {
+  try {
+    await api('/me');
+    showScreen('loginScreen');
+  } catch (e) {
+    if (e.message === 'Unauthorized') {
+      showScreen('loginScreen');
+    } else {
+      showScreen('setupScreen');
+    }
+  }
+}
+
+function showScreen(id) {
+  ['setupScreen', 'loginScreen', 'appScreen'].forEach(s => document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+async function doSetup() {
+  try {
+    await fetch(API + '/setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('setupName').value,
+        email: document.getElementById('setupEmail').value,
+        password: document.getElementById('setupPass').value
+      })
+    }).then(r => r.json());
+    document.getElementById('setupAlert').innerHTML = '<div class="alert alert-success">Super admin created! You can now sign in.</div>';
+    setTimeout(() => showScreen('loginScreen'), 1500);
+  } catch (e) {
+    document.getElementById('setupAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>';
+  }
+}
+
+async function doLogin() {
+  try {
+    const data = await fetch(API + '/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('loginEmail').value,
+        password: document.getElementById('loginPass').value
+      })
+    }).then(r => { if (!r.ok) throw r; return r.json(); });
+    token = data.token;
+    currentUser = data.user;
+    localStorage.setItem('viscose_token', token);
+    showApp();
+  } catch (e) {
+    document.getElementById('loginAlert').innerHTML = '<div class="alert alert-error">Invalid email or password</div>';
+  }
+}
+
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+function logout() {
+  token = null;
+  currentUser = null;
+  localStorage.removeItem('viscose_token');
+  showScreen('loginScreen');
+}
+
+function showApp() {
+  showScreen('appScreen');
+  document.getElementById('sidebarName').textContent = currentUser.name;
+  document.getElementById('sidebarRole').textContent = currentUser.role;
+
+  const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
+  document.getElementById('navUsers').classList.toggle('hidden', !isAdmin);
+  document.getElementById('navAllAddr').classList.toggle('hidden', !isAdmin);
+
+  if (currentUser.role !== 'superadmin') {
+    document.getElementById('roleField').classList.add('hidden');
+  }
+
+  showPage('addresses');
+}
+
+function showPage(page) {
+  document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
+  document.getElementById('page-' + page).classList.remove('hidden');
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  document.querySelector('[data-page="' + page + '"]')?.classList.add('active');
+  document.querySelector('.sidebar')?.classList.remove('open');
+
+  if (page === 'addresses') loadMyAddresses();
+  if (page === 'users') loadUsers();
+  if (page === 'alladdresses') loadUserOptions();
+}
+
+// ADDRESSES
+async function loadMyAddresses() {
+  try {
+    const data = await api('/addresses');
+    renderAddresses(data.addresses, 'myAddressList', true);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function renderAddresses(addresses, containerId, canEdit) {
+  const c = document.getElementById(containerId);
+  if (!addresses.length) {
+    c.innerHTML = '<div class="empty-state"><p>No addresses yet</p></div>';
+    return;
+  }
+  c.innerHTML = addresses.map(a => {
+    const full = [a.street, a.city, a.state, a.zip, a.country].filter(Boolean).join(', ');
+    const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(full);
+    return `<div class="addr-card">
+      <div class="addr-card-label">
+        <span>${esc(a.label || 'Address')}</span>
+        ${canEdit ? `<div style="display:flex;gap:6px">
+          <button class="btn-icon" onclick="editAddress(${a.id},'${esc(a.label)}','${esc(a.street)}','${esc(a.city)}','${esc(a.state)}','${esc(a.zip)}','${esc(a.country)}')">✏️</button>
+          <button class="btn-icon" onclick="deleteAddress(${a.id})">🗑</button>
+        </div>` : ''}
+      </div>
+      <div class="addr-card-body">${esc(full)}</div>
+      <div class="addr-card-actions">
+        <a href="${mapUrl}" target="_blank" rel="noopener" class="map-link">📍 Open in Maps</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function openAddressModal(id) {
+  document.getElementById('addrEditId').value = '';
+  document.getElementById('addrModalTitle').textContent = 'Add Address';
+  ['addrLabel','addrStreet','addrCity','addrState','addrZip','addrCountry'].forEach(f => document.getElementById(f).value = '');
+  document.getElementById('addressModal').classList.remove('hidden');
+}
+
+function editAddress(id, label, street, city, state, zip, country) {
+  document.getElementById('addrEditId').value = id;
+  document.getElementById('addrModalTitle').textContent = 'Edit Address';
+  document.getElementById('addrLabel').value = label;
+  document.getElementById('addrStreet').value = street;
+  document.getElementById('addrCity').value = city;
+  document.getElementById('addrState').value = state;
+  document.getElementById('addrZip').value = zip;
+  document.getElementById('addrCountry').value = country;
+  document.getElementById('addressModal').classList.remove('hidden');
+}
+
+async function saveAddress() {
+  const editId = document.getElementById('addrEditId').value;
+  const body = {
+    label: document.getElementById('addrLabel').value,
+    street: document.getElementById('addrStreet').value,
+    city: document.getElementById('addrCity').value,
+    state: document.getElementById('addrState').value,
+    zip: document.getElementById('addrZip').value,
+    country: document.getElementById('addrCountry').value
+  };
+  if (!body.street) return alert('Street is required');
+  try {
+    if (editId) {
+      await api('/addresses', { method: 'PUT', body: JSON.stringify({ id: parseInt(editId), ...body }) });
+    } else {
+      await api('/addresses', { method: 'POST', body: JSON.stringify(body) });
+    }
+    closeModal('addressModal');
+    loadMyAddresses();
+  } catch (e) { alert(e.message); }
+}
+
+async function deleteAddress(id) {
+  if (!confirm('Delete this address?')) return;
+  try {
+    await api('/addresses?id=' + id, { method: 'DELETE' });
+    loadMyAddresses();
+  } catch (e) { alert(e.message); }
+}
+
+// USERS
+async function loadUsers() {
+  try {
+    const data = await api('/users');
+    const tbody = document.getElementById('userTableBody');
+    tbody.innerHTML = data.users.map(u => `<tr>
+      <td>${esc(u.name)}</td>
+      <td>${esc(u.email)}</td>
+      <td><span class="role-badge role-${u.role}">${u.role}</span></td>
+      <td>${new Date(u.created_at).toLocaleDateString()}</td>
+      <td>${u.role !== 'superadmin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id},'${esc(u.name)}')">Delete</button>` : ''}</td>
+    </tr>`).join('');
+  } catch (e) { console.error(e); }
+}
+
+function openUserModal() {
+  ['newUserName','newUserEmail','newUserPass'].forEach(f => document.getElementById(f).value = '');
+  document.getElementById('newUserRole').value = 'user';
+  document.getElementById('userModalAlert').innerHTML = '';
+  document.getElementById('userModal').classList.remove('hidden');
+}
+
+async function createUser() {
+  try {
+    await api('/users', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: document.getElementById('newUserName').value,
+        email: document.getElementById('newUserEmail').value,
+        password: document.getElementById('newUserPass').value,
+        role: document.getElementById('newUserRole').value
+      })
+    });
+    closeModal('userModal');
+    loadUsers();
+  } catch (e) {
+    document.getElementById('userModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>';
+  }
+}
+
+async function deleteUser(id, name) {
+  if (!confirm('Delete user ' + name + '? This will also delete their addresses.')) return;
+  try {
+    await api('/users?id=' + id, { method: 'DELETE' });
+    loadUsers();
+  } catch (e) { alert(e.message); }
+}
+
+// ALL ADDRESSES (admin)
+async function loadUserOptions() {
+  try {
+    const data = await api('/users');
+    const sel = document.getElementById('userFilter');
+    sel.innerHTML = '<option value="">Select a user...</option>' +
+      data.users.map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.email)})</option>`).join('');
+  } catch (e) { console.error(e); }
+}
+
+async function loadAllAddresses() {
+  const userId = document.getElementById('userFilter').value;
+  if (!userId) { document.getElementById('allAddressList').innerHTML = ''; return; }
+  try {
+    const data = await api('/addresses?user_id=' + userId);
+    renderAddresses(data.addresses, 'allAddressList', false);
+  } catch (e) { console.error(e); }
+}
+
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+init();
+</script>
+</body>
+</html>
