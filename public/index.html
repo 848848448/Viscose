@@ -325,14 +325,15 @@ async function init() {
 
 async function checkSetup() {
   try {
-    await api('/me');
-    showScreen('loginScreen');
-  } catch (e) {
-    if (e.message === 'Unauthorized') {
-      showScreen('loginScreen');
-    } else {
+    const res = await fetch(API + '/setup');
+    const data = await res.json();
+    if (data.needsSetup) {
       showScreen('setupScreen');
+    } else {
+      showScreen('loginScreen');
     }
+  } catch (e) {
+    showScreen('loginScreen');
   }
 }
 

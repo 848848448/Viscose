@@ -5,6 +5,12 @@ async function hashPassword(password) {
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+export async function onRequestGet(context) {
+  const { env } = context;
+  const existing = await env.DB.prepare("SELECT id FROM users WHERE role = 'superadmin' LIMIT 1").first();
+  return new Response(JSON.stringify({ needsSetup: !existing }), { headers: { 'Content-Type': 'application/json' } });
+}
+
 export async function onRequestPost(context) {
   const { env } = context;
   const existing = await env.DB.prepare("SELECT id FROM users WHERE role = 'superadmin' LIMIT 1").first();
