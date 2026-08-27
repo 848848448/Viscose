@@ -34,22 +34,22 @@
 
     /* AUTH SCREENS */
     .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-    .auth-box{width:100%;max-width:360px}
-    .auth-logo{font-size:1.1rem;font-weight:600;letter-spacing:-0.02em;margin-bottom:40px}
-    .auth-box h1{font-size:1.4rem;font-weight:600;letter-spacing:-0.02em;margin-bottom:4px}
-    .auth-box .sub{color:var(--text2);font-size:0.875rem;margin-bottom:28px}
+    .auth-box{width:100%;max-width:420px}
+    .auth-logo{font-size:1.4rem;font-weight:600;letter-spacing:-0.02em;margin-bottom:40px}
+    .auth-box h1{font-size:1.8rem;font-weight:600;letter-spacing:-0.02em;margin-bottom:6px}
+    .auth-box .sub{color:var(--text2);font-size:1rem;margin-bottom:28px}
 
-    .field{margin-bottom:16px}
-    .field label{display:block;font-size:0.8rem;font-weight:500;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em}
+    .field{margin-bottom:18px}
+    .field label{display:block;font-size:0.9rem;font-weight:500;color:var(--text2);margin-bottom:6px}
     .field input,.field select{
-      width:100%;padding:10px 12px;background:var(--input-bg);border:1px solid var(--input-border);
-      border-radius:6px;color:var(--text);font-size:0.9rem;font-family:inherit;outline:none;transition:border-color 0.15s;
+      width:100%;padding:14px 16px;background:var(--input-bg);border:1px solid var(--input-border);
+      border-radius:8px;color:var(--text);font-size:1rem;font-family:inherit;outline:none;transition:border-color 0.15s;
     }
     .field input:focus,.field select:focus{border-color:var(--input-focus)}
 
     .btn{
       display:inline-flex;align-items:center;justify-content:center;gap:6px;
-      padding:10px 20px;border-radius:6px;font-size:0.875rem;font-weight:500;
+      padding:13px 24px;border-radius:8px;font-size:1rem;font-weight:500;
       border:1px solid var(--line);cursor:pointer;font-family:inherit;transition:all 0.15s;
       background:var(--bg2);color:var(--text);text-decoration:none;
     }
@@ -58,59 +58,59 @@
     .btn-dark:hover{opacity:0.85}
     .btn-red{background:var(--red);color:#fff;border-color:var(--red)}
     .btn-red:hover{opacity:0.85}
-    .btn-sm{padding:6px 12px;font-size:0.8rem}
+    .btn-sm{padding:10px 18px;font-size:0.9rem}
     .btn-full{width:100%}
 
-    .alert{padding:10px 12px;border-radius:6px;font-size:0.8rem;margin-bottom:16px;border:1px solid}
+    .alert{padding:12px 16px;border-radius:8px;font-size:0.95rem;margin-bottom:16px;border:1px solid}
     .alert-error{background:rgba(192,57,43,0.06);color:var(--red);border-color:rgba(192,57,43,0.15)}
     .alert-ok{background:rgba(39,174,96,0.06);color:var(--green);border-color:rgba(39,174,96,0.15)}
 
     /* APP LAYOUT */
     .app{display:flex;min-height:100vh}
     .side{
-      width:220px;background:var(--bg2);border-right:1px solid var(--line);
-      padding:20px 12px;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;
+      width:250px;background:var(--bg2);border-right:1px solid var(--line);
+      padding:24px 16px;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;
     }
-    .side-logo{font-size:0.95rem;font-weight:600;letter-spacing:-0.02em;padding:0 8px;margin-bottom:28px}
-    .side-nav{flex:1;display:flex;flex-direction:column;gap:1px}
+    .side-logo{font-size:1.2rem;font-weight:600;letter-spacing:-0.02em;padding:0 8px;margin-bottom:32px}
+    .side-nav{flex:1;display:flex;flex-direction:column;gap:2px}
     .side-nav a{
-      display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;
-      color:var(--text2);text-decoration:none;font-size:0.85rem;font-weight:500;transition:all 0.15s;
+      display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;
+      color:var(--text2);text-decoration:none;font-size:1rem;font-weight:500;transition:all 0.15s;
     }
     .side-nav a:hover{color:var(--text);background:var(--bg)}
     .side-nav a.active{color:var(--text);background:var(--bg)}
-    .side-nav a .ico{width:18px;text-align:center;font-size:0.8rem;opacity:0.6}
-    .side-foot{padding-top:16px;border-top:1px solid var(--line);font-size:0.8rem}
-    .side-foot .name{font-weight:600;color:var(--text)}
-    .side-foot .role{color:var(--text3);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+    .side-nav a .ico{width:20px;text-align:center;font-size:0.9rem;opacity:0.6}
+    .side-foot{padding-top:16px;border-top:1px solid var(--line);font-size:0.9rem}
+    .side-foot .name{font-weight:600;color:var(--text);font-size:1rem}
+    .side-foot .role{color:var(--text3);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
 
-    .main{flex:1;margin-left:220px;padding:28px 32px}
-    .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-    .page-head h2{font-size:1.15rem;font-weight:600;letter-spacing:-0.01em}
+    .main{flex:1;margin-left:250px;padding:32px 40px}
+    .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+    .page-head h2{font-size:1.4rem;font-weight:600;letter-spacing:-0.01em}
 
     /* TABLE */
     .card{background:var(--bg2);border:1px solid var(--line);border-radius:8px;overflow:hidden}
     table{width:100%;border-collapse:collapse}
-    th{text-align:left;padding:10px 14px;font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--line);font-weight:500}
-    td{padding:10px 14px;font-size:0.85rem;border-bottom:1px solid var(--line)}
+    th{text-align:left;padding:14px 18px;font-size:0.8rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--line);font-weight:500}
+    td{padding:14px 18px;font-size:1rem;border-bottom:1px solid var(--line)}
     tr:last-child td{border-bottom:none}
-    .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.03em}
+    .badge{display:inline-block;padding:4px 12px;border-radius:6px;font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.03em}
     .badge-sa{background:rgba(192,57,43,0.08);color:var(--red)}
     .badge-admin{background:rgba(41,128,185,0.08);color:var(--blue)}
     .badge-user{background:rgba(39,174,96,0.08);color:var(--green)}
 
     /* ADDRESS CARDS */
     .addr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-    .addr-card{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:16px}
-    .addr-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-    .addr-card-top span{font-weight:600;font-size:0.9rem}
+    .addr-card{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:20px}
+    .addr-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .addr-card-top span{font-weight:600;font-size:1.05rem}
     .addr-card-top .actions{display:flex;gap:4px}
     .addr-card-top .actions button{background:none;border:none;cursor:pointer;padding:4px 6px;color:var(--text3);font-size:0.85rem;border-radius:4px;transition:0.15s}
     .addr-card-top .actions button:hover{background:var(--bg);color:var(--text)}
-    .addr-body{color:var(--text2);font-size:0.85rem;margin-bottom:12px;line-height:1.5}
+    .addr-body{color:var(--text2);font-size:1rem;margin-bottom:14px;line-height:1.6}
     .map-btn{
-      display:inline-flex;align-items:center;gap:5px;font-size:0.8rem;font-weight:500;
-      color:var(--text2);text-decoration:none;padding:5px 10px;border:1px solid var(--line);border-radius:5px;transition:0.15s;
+      display:inline-flex;align-items:center;gap:6px;font-size:0.9rem;font-weight:500;
+      color:var(--text2);text-decoration:none;padding:8px 14px;border:1px solid var(--line);border-radius:6px;transition:0.15s;
     }
     .map-btn:hover{border-color:var(--text3);color:var(--text)}
 
@@ -133,7 +133,7 @@
     @media(max-width:640px){
       .side{display:none;width:100%}
       .side.open{display:flex;z-index:200}
-      .main{margin-left:0;padding:16px;padding-top:52px}
+      .main{margin-left:0;padding:20px;padding-top:56px}
       .mob-head{display:flex}
       .addr-grid{grid-template-columns:1fr}
       .page-head{flex-direction:column;align-items:flex-start;gap:12px}
@@ -183,6 +183,7 @@
         <a href="#" onclick="showPage('addresses')" data-page="addresses"><span class="ico">&#9679;</span> My Addresses</a>
         <a href="#" onclick="showPage('users')" data-page="users" id="navUsers" class="hidden"><span class="ico">&#9679;</span> Users</a>
         <a href="#" onclick="showPage('alladdresses')" data-page="alladdresses" id="navAllAddr" class="hidden"><span class="ico">&#9679;</span> All Addresses</a>
+        <a href="#" onclick="showPage('admins')" data-page="admins" id="navAdmins" class="hidden"><span class="ico">&#9679;</span> Manage Admins</a>
       </nav>
       <div class="side-foot">
         <div class="name" id="sidebarName"></div>
@@ -209,6 +210,20 @@
           <table>
             <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th></th></tr></thead>
             <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ADMINS PAGE (superadmin only) -->
+      <div id="page-admins" class="hidden">
+        <div class="page-head">
+          <h2>Manage Admins</h2>
+          <button class="btn btn-dark btn-sm" onclick="openAdminModal()">+ Add Admin</button>
+        </div>
+        <div class="card overflow-x">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th></th></tr></thead>
+            <tbody id="adminTableBody"></tbody>
           </table>
         </div>
       </div>
@@ -243,6 +258,21 @@
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('addressModal')">Cancel</button>
       <button class="btn btn-dark" onclick="saveAddress()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN MODAL -->
+<div id="adminModal" class="overlay hidden" onclick="if(event.target===this)closeModal('adminModal')">
+  <div class="modal">
+    <h3>Add Admin</h3>
+    <div id="adminModalAlert"></div>
+    <div class="field"><label>Name</label><input id="newAdminName" placeholder="Full name"></div>
+    <div class="field"><label>Email</label><input id="newAdminEmail" type="email" placeholder="admin@company.com"></div>
+    <div class="field"><label>Password</label><input id="newAdminPass" type="password" placeholder="Temporary password"></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('adminModal')">Cancel</button>
+      <button class="btn btn-dark" onclick="createAdmin()">Create Admin</button>
     </div>
   </div>
 </div>
@@ -357,6 +387,7 @@ function showApp() {
   const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
   document.getElementById('navUsers').classList.toggle('hidden', !isAdmin);
   document.getElementById('navAllAddr').classList.toggle('hidden', !isAdmin);
+  document.getElementById('navAdmins').classList.toggle('hidden', currentUser.role !== 'superadmin');
   if (currentUser.role !== 'superadmin') document.getElementById('roleField').classList.add('hidden');
   showPage('addresses');
 }
@@ -369,6 +400,7 @@ function showPage(page) {
   document.querySelector('.side')?.classList.remove('open');
   if (page === 'addresses') loadMyAddresses();
   if (page === 'users') loadUsers();
+  if (page === 'admins') loadAdmins();
   if (page === 'alladdresses') loadUserOptions();
 }
 
@@ -475,6 +507,37 @@ async function loadAllAddresses() {
   const uid = document.getElementById('userFilter').value;
   if (!uid) { document.getElementById('allAddressList').innerHTML = ''; return; }
   try { const d = await api('/addresses?user_id=' + uid); renderAddresses(d.addresses, 'allAddressList', false); } catch(e) { console.error(e); }
+}
+
+// ADMINS
+async function loadAdmins() {
+  try {
+    const d = await api('/users');
+    const admins = d.users.filter(u => u.role === 'superadmin' || u.role === 'admin');
+    document.getElementById('adminTableBody').innerHTML = admins.map(u => `<tr>
+      <td>${esc(u.name)}</td><td style="color:var(--text2)">${esc(u.email)}</td>
+      <td><span class="badge badge-${u.role === 'superadmin' ? 'sa' : 'admin'}">${u.role}</span></td>
+      <td>${u.role === 'admin' ? `<button class="btn btn-red btn-sm" onclick="removeAdmin(${u.id},'${esc(u.name)}')">Remove</button>` : ''}</td>
+    </tr>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+function openAdminModal() {
+  ['newAdminName','newAdminEmail','newAdminPass'].forEach(f => document.getElementById(f).value = '');
+  document.getElementById('adminModalAlert').innerHTML = '';
+  document.getElementById('adminModal').classList.remove('hidden');
+}
+
+async function createAdmin() {
+  try {
+    await api('/users', { method: 'POST', body: JSON.stringify({ name: document.getElementById('newAdminName').value, email: document.getElementById('newAdminEmail').value, password: document.getElementById('newAdminPass').value, role: 'admin' }) });
+    closeModal('adminModal'); loadAdmins();
+  } catch(e) { document.getElementById('adminModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
+}
+
+async function removeAdmin(id, name) {
+  if (!confirm('Remove admin ' + name + '?')) return;
+  try { await api('/users?id=' + id, { method: 'DELETE' }); loadAdmins(); } catch(e) { alert(e.message); }
 }
 
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
