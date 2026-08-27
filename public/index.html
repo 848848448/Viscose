@@ -184,6 +184,7 @@
         <a href="#" onclick="showPage('users')" data-page="users" id="navUsers" class="hidden"><span class="ico">&#9679;</span> Users</a>
         <a href="#" onclick="showPage('alladdresses')" data-page="alladdresses" id="navAllAddr" class="hidden"><span class="ico">&#9679;</span> All Addresses</a>
         <a href="#" onclick="showPage('admins')" data-page="admins" id="navAdmins" class="hidden"><span class="ico">&#9679;</span> Manage Admins</a>
+        <a href="#" onclick="showPage('settings')" data-page="settings" style="margin-top:auto"><span class="ico">&#9679;</span> Settings</a>
       </nav>
       <div class="side-foot">
         <div class="name" id="sidebarName"></div>
@@ -238,6 +239,35 @@
           </div>
         </div>
         <div class="addr-grid" id="allAddressList"></div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div id="page-settings" class="hidden">
+        <div class="page-head"><h2>Account Settings</h2></div>
+        <div id="settingsAlert"></div>
+
+        <div class="card" style="padding:24px;margin-bottom:20px">
+          <h3 style="font-size:1.1rem;margin-bottom:16px">Profile</h3>
+          <div class="field"><label>Name</label><input id="settingsName" placeholder="Your name"></div>
+          <div class="field"><label>Email</label><input id="settingsEmail" type="email" disabled style="opacity:0.6"></div>
+          <button class="btn btn-dark" onclick="saveProfile()">Save Profile</button>
+        </div>
+
+        <div class="card" style="padding:24px;margin-bottom:20px">
+          <h3 style="font-size:1.1rem;margin-bottom:16px">Change Password</h3>
+          <div class="field"><label>Current Password</label><input id="currentPass" type="password" placeholder="Enter current password"></div>
+          <div class="field"><label>New Password</label><input id="newPass" type="password" placeholder="Enter new password"></div>
+          <div class="field"><label>Confirm New Password</label><input id="confirmPass" type="password" placeholder="Confirm new password"></div>
+          <button class="btn btn-dark" onclick="changePassword()">Change Password</button>
+        </div>
+
+        <div class="card" style="padding:24px">
+          <h3 style="font-size:1.1rem;margin-bottom:16px">Account Info</h3>
+          <div style="display:grid;gap:10px;font-size:0.95rem">
+            <div><span style="color:var(--text3)">Role:</span> <span id="settingsRole" style="font-weight:600"></span></div>
+            <div><span style="color:var(--text3)">Member since:</span> <span id="settingsCreated"></span></div>
+          </div>
+        </div>
       </div>
 
     </main>
@@ -402,6 +432,7 @@ function showPage(page) {
   if (page === 'users') loadUsers();
   if (page === 'admins') loadAdmins();
   if (page === 'alladdresses') loadUserOptions();
+  if (page === 'settings') loadSettings();
 }
 
 async function loadMyAddresses() {
@@ -538,6 +569,42 @@ async function createAdmin() {
 async function removeAdmin(id, name) {
   if (!confirm('Remove admin ' + name + '?')) return;
   try { await api('/users?id=' + id, { method: 'DELETE' }); loadAdmins(); } catch(e) { alert(e.message); }
+}
+
+// SETTINGS
+async function loadSettings() {
+  try {
+    const d = await api('/profile');
+    document.getElementById('settingsName').value = d.user.name;
+    document.getElementById('settingsEmail').value = d.user.email;
+    document.getElementById('settingsRole').textContent = d.user.role;
+    document.getElementById('settingsCreated').textContent = new Date(d.user.created_at).toLocaleDateString();
+    document.getElementById('settingsAlert').innerHTML = '';
+    ['currentPass','newPass','confirmPass'].forEach(f => document.getElementById(f).value = '');
+  } catch(e) { console.error(e); }
+}
+
+async function saveProfile() {
+  try {
+    await api('/profile', { method: 'PUT', body: JSON.stringify({ name: document.getElementById('settingsName').value }) });
+    currentUser.name = document.getElementById('settingsName').value;
+    document.getElementById('sidebarName').textContent = currentUser.name;
+    document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-ok">Profile updated.</div>';
+  } catch(e) { document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
+}
+
+async function changePassword() {
+  const newP = document.getElementById('newPass').value;
+  const confP = document.getElementById('confirmPass').value;
+  if (newP !== confP) {
+    document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-error">New passwords do not match.</div>';
+    return;
+  }
+  try {
+    await api('/profile', { method: 'POST', body: JSON.stringify({ current_password: document.getElementById('currentPass').value, new_password: newP }) });
+    document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-ok">Password changed successfully.</div>';
+    ['currentPass','newPass','confirmPass'].forEach(f => document.getElementById(f).value = '');
+  } catch(e) { document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
 
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
