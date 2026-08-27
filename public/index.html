@@ -655,7 +655,7 @@ async function loadMyPickups() {
           <span>${esc(p.addr_label || 'Address')}</span>
           <span class="status status-${p.status}">${p.status}</span>
         </div>
-        <div style="color:var(--text2);font-size:0.95rem;margin-bottom:6px">${esc(addr)}</div>
+        <div style="color:var(--text2);font-size:0.95rem;margin-bottom:6px"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${esc(addr)}</a></div>
         ${p.notes ? `<div style="font-size:0.9rem;margin-bottom:6px"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}
         ${p.admin_notes ? `<div style="font-size:0.9rem;margin-bottom:6px;color:var(--blue)"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
@@ -732,6 +732,7 @@ function renderPickups() {
       ${p.admin_notes ? `<div style="font-size:0.9rem;margin-bottom:6px;color:var(--blue)"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
       <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
         <a href="${mapUrl}" target="_blank" rel="noopener" class="map-btn">View on Map &rarr;</a>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr)}" target="_blank" rel="noopener" class="map-btn" style="background:var(--blue);color:#fff">Navigate &rarr;</a>
         <button class="btn btn-sm" onclick="openPickupUpdate(${p.id},'${p.status}','${esc(p.admin_notes || '')}')">Update</button>
         <span style="font-size:0.8rem;color:var(--text3);margin-left:auto">${new Date(p.requested_at).toLocaleDateString()}</span>
       </div>
