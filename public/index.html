@@ -139,6 +139,13 @@
       .page-head{flex-direction:column;align-items:flex-start;gap:12px}
     }
     .overflow-x{overflow-x:auto}
+    .pickup-card{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:12px}
+    .pickup-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .pickup-header .pickup-user{font-weight:600;font-size:1rem}
+    .status{display:inline-block;padding:4px 12px;border-radius:6px;font-size:0.8rem;font-weight:600;text-transform:uppercase}
+    .status-pending{background:rgba(245,158,11,0.1);color:#d97706}
+    .status-confirmed{background:rgba(41,128,185,0.1);color:var(--blue)}
+    .status-completed{background:rgba(39,174,96,0.1);color:var(--green)}
   </style>
 </head>
 <body>
@@ -181,7 +188,9 @@
       <div class="side-logo">Viscose</div>
       <nav class="side-nav">
         <a href="#" onclick="showPage('addresses')" data-page="addresses"><span class="ico">&#9679;</span> My Addresses</a>
+        <a href="#" onclick="showPage('mypickups')" data-page="mypickups"><span class="ico">&#9679;</span> My Pickups</a>
         <a href="#" onclick="showPage('users')" data-page="users" id="navUsers" class="hidden"><span class="ico">&#9679;</span> Users</a>
+        <a href="#" onclick="showPage('pickups')" data-page="pickups" id="navPickups" class="hidden"><span class="ico">&#9679;</span> Pickup Requests</a>
         <a href="#" onclick="showPage('alladdresses')" data-page="alladdresses" id="navAllAddr" class="hidden"><span class="ico">&#9679;</span> All Addresses</a>
         <a href="#" onclick="showPage('admins')" data-page="admins" id="navAdmins" class="hidden"><span class="ico">&#9679;</span> Manage Admins</a>
         <a href="#" onclick="showPage('settings')" data-page="settings" style="margin-top:auto"><span class="ico">&#9679;</span> Settings</a>
@@ -200,6 +209,29 @@
           <button class="btn btn-dark btn-sm" onclick="openAddressModal()">+ Add</button>
         </div>
         <div class="addr-grid" id="myAddressList"></div>
+      </div>
+
+      <!-- MY PICKUPS (user) -->
+      <div id="page-mypickups" class="hidden">
+        <div class="page-head">
+          <h2>My Pickups</h2>
+          <button class="btn btn-dark btn-sm" onclick="openPickupModal()">+ Request Pickup</button>
+        </div>
+        <div id="myPickupList"></div>
+      </div>
+
+      <!-- ALL PICKUPS (admin) -->
+      <div id="page-pickups" class="hidden">
+        <div class="page-head">
+          <h2>Pickup Requests</h2>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" onclick="filterPickups('all')" id="filterAll">All</button>
+            <button class="btn btn-sm" onclick="filterPickups('pending')" id="filterPending">Pending</button>
+            <button class="btn btn-sm" onclick="filterPickups('confirmed')" id="filterConfirmed">Confirmed</button>
+            <button class="btn btn-sm" onclick="filterPickups('completed')" id="filterCompleted">Completed</button>
+          </div>
+        </div>
+        <div id="allPickupList"></div>
       </div>
 
       <div id="page-users" class="hidden">
@@ -271,6 +303,42 @@
       </div>
 
     </main>
+  </div>
+</div>
+
+<!-- PICKUP REQUEST MODAL -->
+<div id="pickupModal" class="overlay hidden" onclick="if(event.target===this)closeModal('pickupModal')">
+  <div class="modal">
+    <h3>Request Pickup</h3>
+    <div id="pickupModalAlert"></div>
+    <div class="field"><label>Address</label>
+      <select id="pickupAddress"><option value="">Select address...</option></select>
+    </div>
+    <div class="field"><label>Notes (optional)</label><input id="pickupNotes" placeholder="Any special instructions"></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('pickupModal')">Cancel</button>
+      <button class="btn btn-dark" onclick="submitPickup()">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PICKUP MODAL -->
+<div id="pickupUpdateModal" class="overlay hidden" onclick="if(event.target===this)closeModal('pickupUpdateModal')">
+  <div class="modal">
+    <h3>Update Pickup</h3>
+    <input type="hidden" id="updatePickupId">
+    <div class="field"><label>Status</label>
+      <select id="updatePickupStatus">
+        <option value="pending">Pending</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="completed">Completed</option>
+      </select>
+    </div>
+    <div class="field"><label>Admin Notes</label><input id="updatePickupNotes" placeholder="Notes for this pickup"></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('pickupUpdateModal')">Cancel</button>
+      <button class="btn btn-dark" onclick="updatePickup()">Update</button>
+    </div>
   </div>
 </div>
 
@@ -417,6 +485,7 @@ function showApp() {
   const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
   document.getElementById('navUsers').classList.toggle('hidden', !isAdmin);
   document.getElementById('navAllAddr').classList.toggle('hidden', !isAdmin);
+  document.getElementById('navPickups').classList.toggle('hidden', !isAdmin);
   document.getElementById('navAdmins').classList.toggle('hidden', currentUser.role !== 'superadmin');
   if (currentUser.role !== 'superadmin') document.getElementById('roleField').classList.add('hidden');
   showPage('addresses');
@@ -429,7 +498,9 @@ function showPage(page) {
   document.querySelector('[data-page="' + page + '"]')?.classList.add('active');
   document.querySelector('.side')?.classList.remove('open');
   if (page === 'addresses') loadMyAddresses();
+  if (page === 'mypickups') loadMyPickups();
   if (page === 'users') loadUsers();
+  if (page === 'pickups') loadAllPickups();
   if (page === 'admins') loadAdmins();
   if (page === 'alladdresses') loadUserOptions();
   if (page === 'settings') loadSettings();
@@ -569,6 +640,118 @@ async function createAdmin() {
 async function removeAdmin(id, name) {
   if (!confirm('Remove admin ' + name + '?')) return;
   try { await api('/users?id=' + id, { method: 'DELETE' }); loadAdmins(); } catch(e) { alert(e.message); }
+}
+
+// PICKUPS (user)
+async function loadMyPickups() {
+  try {
+    const d = await api('/pickups?mine=1');
+    const c = document.getElementById('myPickupList');
+    if (!d.pickups.length) { c.innerHTML = '<div class="empty">No pickup requests yet.</div>'; return; }
+    c.innerHTML = d.pickups.map(p => {
+      const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
+      return `<div class="pickup-card">
+        <div class="pickup-header">
+          <span>${esc(p.addr_label || 'Address')}</span>
+          <span class="status status-${p.status}">${p.status}</span>
+        </div>
+        <div style="color:var(--text2);font-size:0.95rem;margin-bottom:6px">${esc(addr)}</div>
+        ${p.notes ? `<div style="font-size:0.9rem;margin-bottom:6px"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}
+        ${p.admin_notes ? `<div style="font-size:0.9rem;margin-bottom:6px;color:var(--blue)"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <span style="font-size:0.8rem;color:var(--text3)">${new Date(p.requested_at).toLocaleDateString()}</span>
+          ${p.status === 'pending' ? `<button class="btn btn-red btn-sm" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function openPickupModal() {
+  try {
+    const d = await api('/addresses');
+    const sel = document.getElementById('pickupAddress');
+    sel.innerHTML = '<option value="">Select address...</option>' + d.addresses.map(a => {
+      const full = [a.street, a.city, a.state].filter(Boolean).join(', ');
+      return `<option value="${a.id}">${esc(a.label || 'Address')} — ${esc(full)}</option>`;
+    }).join('');
+    document.getElementById('pickupNotes').value = '';
+    document.getElementById('pickupModalAlert').innerHTML = '';
+    document.getElementById('pickupModal').classList.remove('hidden');
+  } catch(e) { alert(e.message); }
+}
+
+async function submitPickup() {
+  const address_id = document.getElementById('pickupAddress').value;
+  if (!address_id) { document.getElementById('pickupModalAlert').innerHTML = '<div class="alert alert-error">Select an address.</div>'; return; }
+  try {
+    await api('/pickups', { method: 'POST', body: JSON.stringify({ address_id: parseInt(address_id), notes: document.getElementById('pickupNotes').value }) });
+    closeModal('pickupModal'); loadMyPickups();
+  } catch(e) { document.getElementById('pickupModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
+}
+
+async function cancelPickup(id) {
+  if (!confirm('Cancel this pickup request?')) return;
+  try { await api('/pickups?id=' + id, { method: 'DELETE' }); loadMyPickups(); } catch(e) { alert(e.message); }
+}
+
+// PICKUPS (admin)
+let allPickupsData = [];
+let pickupFilter = 'all';
+
+async function loadAllPickups() {
+  try {
+    const d = await api('/pickups');
+    allPickupsData = d.pickups;
+    renderPickups();
+  } catch(e) { console.error(e); }
+}
+
+function filterPickups(f) {
+  pickupFilter = f;
+  document.querySelectorAll('[id^="filter"]').forEach(b => b.classList.remove('btn-dark'));
+  document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('btn-dark');
+  renderPickups();
+}
+
+function renderPickups() {
+  const filtered = pickupFilter === 'all' ? allPickupsData : allPickupsData.filter(p => p.status === pickupFilter);
+  const c = document.getElementById('allPickupList');
+  if (!filtered.length) { c.innerHTML = '<div class="empty">No pickup requests.</div>'; return; }
+  c.innerHTML = filtered.map(p => {
+    const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
+    const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
+    return `<div class="pickup-card">
+      <div class="pickup-header">
+        <span class="pickup-user">${esc(p.user_name)} <span style="color:var(--text3);font-weight:400;font-size:0.85rem">${esc(p.user_email)}</span></span>
+        <span class="status status-${p.status}">${p.status}</span>
+      </div>
+      <div style="font-weight:500;margin-bottom:4px">${esc(p.addr_label || 'Address')}</div>
+      <div style="color:var(--text2);font-size:0.95rem;margin-bottom:6px">${esc(addr)}</div>
+      ${p.notes ? `<div style="font-size:0.9rem;margin-bottom:6px"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}
+      ${p.admin_notes ? `<div style="font-size:0.9rem;margin-bottom:6px;color:var(--blue)"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
+      <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+        <a href="${mapUrl}" target="_blank" rel="noopener" class="map-btn">View on Map &rarr;</a>
+        <button class="btn btn-sm" onclick="openPickupUpdate(${p.id},'${p.status}','${esc(p.admin_notes || '')}')">Update</button>
+        <span style="font-size:0.8rem;color:var(--text3);margin-left:auto">${new Date(p.requested_at).toLocaleDateString()}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openPickupUpdate(id, status, notes) {
+  document.getElementById('updatePickupId').value = id;
+  document.getElementById('updatePickupStatus').value = status;
+  document.getElementById('updatePickupNotes').value = notes;
+  document.getElementById('pickupUpdateModal').classList.remove('hidden');
+}
+
+async function updatePickup() {
+  const id = parseInt(document.getElementById('updatePickupId').value);
+  try {
+    await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status: document.getElementById('updatePickupStatus').value, admin_notes: document.getElementById('updatePickupNotes').value }) });
+    closeModal('pickupUpdateModal'); loadAllPickups();
+  } catch(e) { alert(e.message); }
 }
 
 // SETTINGS
