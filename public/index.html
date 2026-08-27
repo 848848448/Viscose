@@ -327,13 +327,17 @@ async function checkSetup() {
   try {
     const res = await fetch(API + '/setup');
     const data = await res.json();
+    if (data.error) {
+      document.getElementById('setupAlert').innerHTML = '<div class="alert alert-error">' + data.error + '</div>';
+    }
     if (data.needsSetup) {
       showScreen('setupScreen');
     } else {
       showScreen('loginScreen');
     }
   } catch (e) {
-    showScreen('loginScreen');
+    document.getElementById('setupAlert').innerHTML = '<div class="alert alert-error">Cannot connect to server: ' + e.message + '</div>';
+    showScreen('setupScreen');
   }
 }
 
@@ -344,7 +348,7 @@ function showScreen(id) {
 
 async function doSetup() {
   try {
-    await fetch(API + '/setup', {
+    const res = await fetch(API + '/setup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -352,7 +356,9 @@ async function doSetup() {
         email: document.getElementById('setupEmail').value,
         password: document.getElementById('setupPass').value
       })
-    }).then(r => r.json());
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Setup failed');
     document.getElementById('setupAlert').innerHTML = '<div class="alert alert-success">Super admin created! You can now sign in.</div>';
     setTimeout(() => showScreen('loginScreen'), 1500);
   } catch (e) {
