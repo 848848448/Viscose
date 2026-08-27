@@ -2,7 +2,8 @@ export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
 
-  if (url.pathname.startsWith('/api/') && url.pathname !== '/api/login' && url.pathname !== '/api/setup') {
+  const publicPaths = ['/api/login', '/api/setup'];
+  if (url.pathname.startsWith('/api/') && !publicPaths.includes(url.pathname)) {
     const token = request.headers.get('Authorization')?.replace('Bearer ', '');
     if (!token) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
