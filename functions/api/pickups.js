@@ -32,7 +32,7 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   const { env, data } = context;
   const user = data.user;
-  const { address_id, notes } = await context.request.json();
+  const { address_id, notes, photo } = await context.request.json();
 
   if (!address_id) {
     return Response.json({ error: 'Address is required' }, { status: 400 });
@@ -43,8 +43,8 @@ export async function onRequestPost(context) {
     return Response.json({ error: 'Address not found' }, { status: 404 });
   }
 
-  await env.DB.prepare("INSERT INTO pickups (user_id, address_id, notes) VALUES (?, ?, ?)")
-    .bind(user.user_id, address_id, notes || '').run();
+  await env.DB.prepare("INSERT INTO pickups (user_id, address_id, notes, photo) VALUES (?, ?, ?, ?)")
+    .bind(user.user_id, address_id, notes || '', photo || '').run();
 
   return Response.json({ success: true }, { status: 201 });
 }
