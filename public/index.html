@@ -5,147 +5,216 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viscose</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111'/><text x='50' y='68' text-anchor='middle' font-size='60' font-weight='bold' fill='white'>V</text></svg>">
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     :root{
-      --bg:#fafafa;--bg2:#fff;--text:#111;--text2:#555;--text3:#999;
-      --line:#e5e5e5;--accent:#111;--accent-fg:#fff;
-      --input-bg:#fff;--input-border:#d0d0d0;--input-focus:#111;
-      --red:#c0392b;--green:#27ae60;--blue:#2980b9;
-      --shadow:0 1px 2px rgba(0,0,0,0.04);
+      --bg:#f5f5f7;--bg2:#fff;--bg3:#f0f0f2;--text:#1d1d1f;--text2:#6e6e73;--text3:#aeaeb2;
+      --line:#d2d2d7;--accent:#1d1d1f;--accent-fg:#fff;
+      --input-bg:#fff;--input-border:#d2d2d7;--input-focus:#0071e3;
+      --red:#ff3b30;--green:#34c759;--blue:#0071e3;--orange:#ff9500;
+      --card-shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --hover-shadow:0 4px 12px rgba(0,0,0,0.08);
+      --radius:12px;--radius-lg:16px;
     }
     @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
-      --bg:#111;--bg2:#1a1a1a;--text:#e5e5e5;--text2:#aaa;--text3:#666;
-      --line:#2a2a2a;--accent:#e5e5e5;--accent-fg:#111;
-      --input-bg:#1a1a1a;--input-border:#333;--input-focus:#e5e5e5;
-      --shadow:0 1px 2px rgba(0,0,0,0.2);
+      --bg:#000;--bg2:#1c1c1e;--bg3:#2c2c2e;--text:#f5f5f7;--text2:#98989d;--text3:#636366;
+      --line:#38383a;--accent:#f5f5f7;--accent-fg:#1c1c1e;
+      --input-bg:#2c2c2e;--input-border:#48484a;--input-focus:#0a84ff;
+      --blue:#0a84ff;--red:#ff453a;--green:#30d158;--orange:#ff9f0a;
+      --card-shadow:0 1px 3px rgba(0,0,0,0.3);
+      --hover-shadow:0 4px 16px rgba(0,0,0,0.4);
     }}
     :root[data-theme="dark"]{
-      --bg:#111;--bg2:#1a1a1a;--text:#e5e5e5;--text2:#aaa;--text3:#666;
-      --line:#2a2a2a;--accent:#e5e5e5;--accent-fg:#111;
-      --input-bg:#1a1a1a;--input-border:#333;--input-focus:#e5e5e5;
-      --shadow:0 1px 2px rgba(0,0,0,0.2);
+      --bg:#000;--bg2:#1c1c1e;--bg3:#2c2c2e;--text:#f5f5f7;--text2:#98989d;--text3:#636366;
+      --line:#38383a;--accent:#f5f5f7;--accent-fg:#1c1c1e;
+      --input-bg:#2c2c2e;--input-border:#48484a;--input-focus:#0a84ff;
+      --blue:#0a84ff;--red:#ff453a;--green:#30d158;--orange:#ff9f0a;
+      --card-shadow:0 1px 3px rgba(0,0,0,0.3);
+      --hover-shadow:0 4px 16px rgba(0,0,0,0.4);
     }
 
-    body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+    body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
     .hidden{display:none!important}
 
-    /* AUTH SCREENS */
-    .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-    .auth-box{width:100%;max-width:420px}
-    .auth-logo{font-size:1.4rem;font-weight:600;letter-spacing:-0.02em;margin-bottom:40px}
-    .auth-box h1{font-size:1.8rem;font-weight:600;letter-spacing:-0.02em;margin-bottom:6px}
-    .auth-box .sub{color:var(--text2);font-size:1rem;margin-bottom:28px}
+    /* AUTH */
+    .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100dvh;padding:24px}
+    .auth-box{width:100%;max-width:400px}
+    .auth-logo{font-size:1.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:48px}
+    .auth-box h1{font-size:2rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:8px}
+    .auth-box .sub{color:var(--text2);font-size:1.05rem;margin-bottom:32px}
 
-    .field{margin-bottom:18px}
-    .field label{display:block;font-size:0.9rem;font-weight:500;color:var(--text2);margin-bottom:6px}
-    .field input,.field select{
-      width:100%;padding:14px 16px;background:var(--input-bg);border:1px solid var(--input-border);
-      border-radius:8px;color:var(--text);font-size:1rem;font-family:inherit;outline:none;transition:border-color 0.15s;
+    .field{margin-bottom:20px}
+    .field label{display:block;font-size:0.85rem;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em}
+    .field input,.field select,.field textarea{
+      width:100%;padding:14px 16px;background:var(--input-bg);border:1.5px solid var(--input-border);
+      border-radius:var(--radius);color:var(--text);font-size:1rem;font-family:inherit;outline:none;
+      transition:border-color 0.2s,box-shadow 0.2s;
     }
-    .field input:focus,.field select:focus{border-color:var(--input-focus)}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--input-focus);box-shadow:0 0 0 3px rgba(0,113,227,0.15)}
+    .field textarea{resize:vertical;min-height:80px}
 
     .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:6px;
-      padding:13px 24px;border-radius:8px;font-size:1rem;font-weight:500;
-      border:1px solid var(--line);cursor:pointer;font-family:inherit;transition:all 0.15s;
-      background:var(--bg2);color:var(--text);text-decoration:none;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      padding:14px 28px;border-radius:var(--radius);font-size:1rem;font-weight:600;
+      border:1.5px solid var(--line);cursor:pointer;font-family:inherit;
+      transition:all 0.2s;background:var(--bg2);color:var(--text);text-decoration:none;
+      white-space:nowrap;
     }
-    .btn:hover{border-color:var(--text3)}
+    .btn:hover{box-shadow:var(--hover-shadow);transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .btn-primary:hover{opacity:0.9}
     .btn-dark{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
-    .btn-dark:hover{opacity:0.85}
+    .btn-dark:hover{opacity:0.9}
     .btn-red{background:var(--red);color:#fff;border-color:var(--red)}
-    .btn-red:hover{opacity:0.85}
-    .btn-sm{padding:10px 18px;font-size:0.9rem}
+    .btn-sm{padding:10px 20px;font-size:0.9rem}
+    .btn-xs{padding:8px 14px;font-size:0.8rem;border-radius:8px}
     .btn-full{width:100%}
+    .btn-ghost{background:transparent;border-color:transparent;color:var(--text2);padding:8px 12px}
+    .btn-ghost:hover{color:var(--text);background:var(--bg3);box-shadow:none;transform:none}
 
-    .alert{padding:12px 16px;border-radius:8px;font-size:0.95rem;margin-bottom:16px;border:1px solid}
-    .alert-error{background:rgba(192,57,43,0.06);color:var(--red);border-color:rgba(192,57,43,0.15)}
-    .alert-ok{background:rgba(39,174,96,0.06);color:var(--green);border-color:rgba(39,174,96,0.15)}
+    .alert{padding:14px 18px;border-radius:var(--radius);font-size:0.95rem;margin-bottom:20px;font-weight:500}
+    .alert-error{background:rgba(255,59,48,0.08);color:var(--red)}
+    .alert-ok{background:rgba(52,199,89,0.08);color:var(--green)}
 
-    /* APP LAYOUT */
-    .app{display:flex;min-height:100vh}
+    /* LAYOUT */
+    .app{display:flex;min-height:100dvh}
+
     .side{
-      width:250px;background:var(--bg2);border-right:1px solid var(--line);
-      padding:24px 16px;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;
+      width:280px;background:var(--bg2);border-right:1px solid var(--line);
+      padding:28px 16px 20px;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;
+      z-index:200;
     }
-    .side-logo{font-size:1.2rem;font-weight:600;letter-spacing:-0.02em;padding:0 8px;margin-bottom:32px}
+    .side-logo{font-size:1.3rem;font-weight:700;letter-spacing:-0.03em;padding:0 12px;margin-bottom:36px}
     .side-nav{flex:1;display:flex;flex-direction:column;gap:2px}
     .side-nav a{
-      display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;
-      color:var(--text2);text-decoration:none;font-size:1rem;font-weight:500;transition:all 0.15s;
+      display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;
+      color:var(--text2);text-decoration:none;font-size:0.95rem;font-weight:500;transition:all 0.15s;
     }
-    .side-nav a:hover{color:var(--text);background:var(--bg)}
-    .side-nav a.active{color:var(--text);background:var(--bg)}
-    .side-nav a .ico{width:20px;text-align:center;font-size:0.9rem;opacity:0.6}
-    .side-foot{padding-top:16px;border-top:1px solid var(--line);font-size:0.9rem}
-    .side-foot .name{font-weight:600;color:var(--text);font-size:1rem}
-    .side-foot .role{color:var(--text3);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
+    .side-nav a:hover{color:var(--text);background:var(--bg3)}
+    .side-nav a.active{color:var(--text);background:var(--bg3);font-weight:600}
+    .side-nav a .ico{width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+    .side-foot{padding-top:20px;border-top:1px solid var(--line)}
+    .side-foot .user-info{padding:12px;border-radius:10px;margin-bottom:12px}
+    .side-foot .name{font-weight:600;font-size:1rem}
+    .side-foot .role{color:var(--text3);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-top:2px}
 
-    .main{flex:1;margin-left:250px;padding:32px 40px}
-    .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
-    .page-head h2{font-size:1.4rem;font-weight:600;letter-spacing:-0.01em}
+    .main{flex:1;margin-left:280px;padding:32px 40px;max-width:1200px}
+    .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;gap:16px}
+    .page-head h2{font-size:1.6rem;font-weight:700;letter-spacing:-0.02em}
 
-    /* TABLE */
-    .card{background:var(--bg2);border:1px solid var(--line);border-radius:8px;overflow:hidden}
-    table{width:100%;border-collapse:collapse}
-    th{text-align:left;padding:14px 18px;font-size:0.8rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--line);font-weight:500}
-    td{padding:14px 18px;font-size:1rem;border-bottom:1px solid var(--line)}
+    /* TABLE CARD */
+    .card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--card-shadow)}
+    .overflow-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    table{width:100%;border-collapse:collapse;min-width:500px}
+    th{text-align:left;padding:14px 20px;font-size:0.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--line);font-weight:600;background:var(--bg3)}
+    td{padding:16px 20px;font-size:0.95rem;border-bottom:1px solid var(--line)}
     tr:last-child td{border-bottom:none}
-    .badge{display:inline-block;padding:4px 12px;border-radius:6px;font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.03em}
-    .badge-sa{background:rgba(192,57,43,0.08);color:var(--red)}
-    .badge-admin{background:rgba(41,128,185,0.08);color:var(--blue)}
-    .badge-user{background:rgba(39,174,96,0.08);color:var(--green)}
+    tr:hover td{background:var(--bg3)}
+    .badge{display:inline-block;padding:5px 14px;border-radius:20px;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+    .badge-sa{background:rgba(255,59,48,0.1);color:var(--red)}
+    .badge-admin{background:rgba(0,113,227,0.1);color:var(--blue)}
+    .badge-user{background:rgba(52,199,89,0.1);color:var(--green)}
 
     /* ADDRESS CARDS */
-    .addr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-    .addr-card{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:20px}
-    .addr-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-    .addr-card-top span{font-weight:600;font-size:1.05rem}
+    .addr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+    .addr-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--card-shadow);transition:box-shadow 0.2s,transform 0.2s}
+    .addr-card:hover{box-shadow:var(--hover-shadow);transform:translateY(-2px)}
+    .addr-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .addr-card-top .label{font-weight:700;font-size:1.1rem}
     .addr-card-top .actions{display:flex;gap:4px}
-    .addr-card-top .actions button{background:none;border:none;cursor:pointer;padding:4px 6px;color:var(--text3);font-size:0.85rem;border-radius:4px;transition:0.15s}
-    .addr-card-top .actions button:hover{background:var(--bg);color:var(--text)}
-    .addr-body{color:var(--text2);font-size:1rem;margin-bottom:14px;line-height:1.6}
-    .map-btn{
-      display:inline-flex;align-items:center;gap:6px;font-size:0.9rem;font-weight:500;
-      color:var(--text2);text-decoration:none;padding:8px 14px;border:1px solid var(--line);border-radius:6px;transition:0.15s;
+    .addr-card-top .actions button{background:none;border:none;cursor:pointer;padding:6px 8px;color:var(--text3);font-size:1rem;border-radius:8px;transition:0.15s}
+    .addr-card-top .actions button:hover{background:var(--bg3);color:var(--text)}
+    .addr-body{color:var(--text2);font-size:0.95rem;margin-bottom:16px;line-height:1.7}
+    .map-link{
+      display:inline-flex;align-items:center;gap:6px;font-size:0.9rem;font-weight:600;
+      color:var(--blue);text-decoration:none;padding:10px 16px;
+      border:1.5px solid var(--line);border-radius:10px;transition:all 0.2s;background:var(--bg2);
     }
-    .map-btn:hover{border-color:var(--text3);color:var(--text)}
+    .map-link:hover{border-color:var(--blue);box-shadow:0 2px 8px rgba(0,113,227,0.12)}
+    .nav-link{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .nav-link:hover{opacity:0.9;box-shadow:0 2px 8px rgba(0,113,227,0.25)}
+
+    /* PICKUP CARDS */
+    .pickup-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px;box-shadow:var(--card-shadow);transition:box-shadow 0.2s}
+    .pickup-card:hover{box-shadow:var(--hover-shadow)}
+    .pickup-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap}
+    .pickup-user{font-weight:700;font-size:1.05rem}
+    .pickup-user .email{color:var(--text3);font-weight:400;font-size:0.85rem;margin-left:4px}
+    .status{display:inline-block;padding:5px 14px;border-radius:20px;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+    .status-pending{background:rgba(255,149,0,0.1);color:var(--orange)}
+    .status-confirmed{background:rgba(0,113,227,0.1);color:var(--blue)}
+    .status-completed{background:rgba(52,199,89,0.1);color:var(--green)}
+    .pickup-addr{font-weight:600;margin-bottom:4px;font-size:1rem}
+    .pickup-detail{color:var(--text2);font-size:0.95rem;margin-bottom:8px}
+    .pickup-note{font-size:0.9rem;margin-bottom:6px;padding:10px 14px;background:var(--bg3);border-radius:8px}
+    .pickup-note strong{font-weight:600}
+    .pickup-actions{display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap;padding-top:16px;border-top:1px solid var(--line)}
+    .pickup-meta{font-size:0.8rem;color:var(--text3);margin-left:auto}
+
+    /* FILTER TABS */
+    .filter-tabs{display:flex;gap:6px;flex-wrap:wrap}
+    .filter-tab{
+      padding:8px 18px;border-radius:20px;font-size:0.85rem;font-weight:600;
+      border:1.5px solid var(--line);cursor:pointer;background:var(--bg2);color:var(--text2);
+      transition:all 0.15s;font-family:inherit;
+    }
+    .filter-tab:hover{border-color:var(--text3);color:var(--text)}
+    .filter-tab.active{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+
+    /* SETTINGS SECTIONS */
+    .settings-section{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px;margin-bottom:20px;box-shadow:var(--card-shadow)}
+    .settings-section h3{font-size:1.15rem;font-weight:700;margin-bottom:20px;letter-spacing:-0.01em}
+    .info-grid{display:grid;gap:12px}
+    .info-row{display:flex;gap:12px;font-size:0.95rem}
+    .info-row .lbl{color:var(--text3);min-width:120px;font-weight:500}
+    .info-row .val{font-weight:600}
 
     /* MODAL */
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
-    .modal{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:28px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
-    .modal h3{font-size:1.05rem;font-weight:600;margin-bottom:20px}
-    .modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+    .modal{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);padding:32px;width:100%;max-width:440px;max-height:90dvh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+    .modal h3{font-size:1.2rem;font-weight:700;margin-bottom:24px;letter-spacing:-0.01em}
+    .modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
 
-    .empty{text-align:center;padding:48px 20px;color:var(--text3);font-size:0.9rem}
+    .empty{text-align:center;padding:64px 24px;color:var(--text3);font-size:1rem;font-weight:500}
 
-    /* MOBILE */
+    /* MOBILE TOP BAR */
     .mob-head{
-      display:none;position:fixed;top:0;left:0;right:0;z-index:100;
+      display:none;position:fixed;top:0;left:0;right:0;z-index:150;
       background:var(--bg2);border-bottom:1px solid var(--line);
-      padding:10px 16px;align-items:center;justify-content:space-between;
+      padding:14px 20px;align-items:center;justify-content:space-between;
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
     }
-    .mob-head .logo{font-weight:600;font-size:0.95rem}
-    .mob-head button{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text);padding:4px}
-    @media(max-width:640px){
-      .side{display:none;width:100%}
-      .side.open{display:flex;z-index:200}
-      .main{margin-left:0;padding:20px;padding-top:56px}
+    .mob-head .logo{font-weight:700;font-size:1.1rem;letter-spacing:-0.03em}
+    .mob-head button{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text);padding:4px 8px;border-radius:8px;transition:0.15s}
+    .mob-head button:hover{background:var(--bg3)}
+    .mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:190}
+    .mob-overlay.open{display:block}
+
+    /* RESPONSIVE */
+    @media(max-width:768px){
+      .side{display:none;width:300px;max-width:85vw;left:0;box-shadow:6px 0 20px rgba(0,0,0,0.15)}
+      .side.open{display:flex}
+      .main{margin-left:0;padding:24px 16px;padding-top:68px}
       .mob-head{display:flex}
       .addr-grid{grid-template-columns:1fr}
-      .page-head{flex-direction:column;align-items:flex-start;gap:12px}
+      .page-head{flex-direction:column;align-items:flex-start;gap:16px}
+      .page-head h2{font-size:1.4rem}
+      .filter-tabs{width:100%}
+      .pickup-actions{gap:8px}
+      .pickup-meta{margin-left:0;width:100%}
+      .settings-section{padding:20px}
+      .modal{padding:24px;margin:12px}
     }
-    .overflow-x{overflow-x:auto}
-    .pickup-card{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:12px}
-    .pickup-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-    .pickup-header .pickup-user{font-weight:600;font-size:1rem}
-    .status{display:inline-block;padding:4px 12px;border-radius:6px;font-size:0.8rem;font-weight:600;text-transform:uppercase}
-    .status-pending{background:rgba(245,158,11,0.1);color:#d97706}
-    .status-confirmed{background:rgba(41,128,185,0.1);color:var(--blue)}
-    .status-completed{background:rgba(39,174,96,0.1);color:var(--green)}
+    @media(min-width:769px) and (max-width:1024px){
+      .side{width:240px}
+      .main{margin-left:240px;padding:28px 24px}
+    }
+    @media(min-width:1400px){
+      .main{padding:40px 60px}
+    }
   </style>
 </head>
 <body>
@@ -168,8 +237,8 @@
 <div id="loginScreen" class="auth-wrap hidden">
   <div class="auth-box">
     <div class="auth-logo">Viscose</div>
-    <h1>Welcome</h1>
-    <p class="sub">Sign in to continue.</p>
+    <h1>Welcome back</h1>
+    <p class="sub">Sign in to your account.</p>
     <div id="loginAlert"></div>
     <div class="field"><label>Email</label><input id="loginEmail" type="email" placeholder="you@company.com"></div>
     <div class="field"><label>Password</label><input id="loginPass" type="password" placeholder="Your password"></div>
@@ -181,37 +250,41 @@
 <div id="appScreen" class="hidden">
   <div class="mob-head">
     <span class="logo">Viscose</span>
-    <button onclick="document.querySelector('.side').classList.toggle('open')">&#9776;</button>
+    <button onclick="toggleMobileMenu()" id="menuBtn">&#9776;</button>
   </div>
+  <div class="mob-overlay" id="mobOverlay" onclick="toggleMobileMenu()"></div>
   <div class="app">
-    <aside class="side">
+    <aside class="side" id="sidebar">
       <div class="side-logo">Viscose</div>
       <nav class="side-nav">
-        <a href="#" onclick="showPage('addresses')" data-page="addresses"><span class="ico">&#9679;</span> My Addresses</a>
-        <a href="#" onclick="showPage('mypickups')" data-page="mypickups"><span class="ico">&#9679;</span> My Pickups</a>
-        <a href="#" onclick="showPage('users')" data-page="users" id="navUsers" class="hidden"><span class="ico">&#9679;</span> Users</a>
-        <a href="#" onclick="showPage('pickups')" data-page="pickups" id="navPickups" class="hidden"><span class="ico">&#9679;</span> Pickup Requests</a>
-        <a href="#" onclick="showPage('alladdresses')" data-page="alladdresses" id="navAllAddr" class="hidden"><span class="ico">&#9679;</span> All Addresses</a>
-        <a href="#" onclick="showPage('admins')" data-page="admins" id="navAdmins" class="hidden"><span class="ico">&#9679;</span> Manage Admins</a>
-        <a href="#" onclick="showPage('settings')" data-page="settings" style="margin-top:auto"><span class="ico">&#9679;</span> Settings</a>
+        <a href="#" onclick="showPage('addresses')" data-page="addresses"><span class="ico">&#127968;</span> My Addresses</a>
+        <a href="#" onclick="showPage('mypickups')" data-page="mypickups"><span class="ico">&#128230;</span> My Pickups</a>
+        <a href="#" onclick="showPage('users')" data-page="users" id="navUsers" class="hidden"><span class="ico">&#128101;</span> Users</a>
+        <a href="#" onclick="showPage('pickups')" data-page="pickups" id="navPickups" class="hidden"><span class="ico">&#128203;</span> Pickup Requests</a>
+        <a href="#" onclick="showPage('alladdresses')" data-page="alladdresses" id="navAllAddr" class="hidden"><span class="ico">&#127758;</span> All Addresses</a>
+        <a href="#" onclick="showPage('admins')" data-page="admins" id="navAdmins" class="hidden"><span class="ico">&#128272;</span> Manage Admins</a>
+        <a href="#" onclick="showPage('settings')" data-page="settings" style="margin-top:auto"><span class="ico">&#9881;</span> Settings</a>
       </nav>
       <div class="side-foot">
-        <div class="name" id="sidebarName"></div>
-        <div class="role" id="sidebarRole"></div>
+        <div class="user-info">
+          <div class="name" id="sidebarName"></div>
+          <div class="role" id="sidebarRole"></div>
+        </div>
         <button class="btn btn-sm btn-full" onclick="logout()">Sign Out</button>
       </div>
     </aside>
     <main class="main">
 
+      <!-- ADDRESSES -->
       <div id="page-addresses">
         <div class="page-head">
           <h2>My Addresses</h2>
-          <button class="btn btn-dark btn-sm" onclick="openAddressModal()">+ Add</button>
+          <button class="btn btn-dark btn-sm" onclick="openAddressModal()">+ Add Address</button>
         </div>
         <div class="addr-grid" id="myAddressList"></div>
       </div>
 
-      <!-- MY PICKUPS (user) -->
+      <!-- MY PICKUPS -->
       <div id="page-mypickups" class="hidden">
         <div class="page-head">
           <h2>My Pickups</h2>
@@ -220,20 +293,21 @@
         <div id="myPickupList"></div>
       </div>
 
-      <!-- ALL PICKUPS (admin) -->
+      <!-- ADMIN PICKUPS -->
       <div id="page-pickups" class="hidden">
         <div class="page-head">
           <h2>Pickup Requests</h2>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-sm" onclick="filterPickups('all')" id="filterAll">All</button>
-            <button class="btn btn-sm" onclick="filterPickups('pending')" id="filterPending">Pending</button>
-            <button class="btn btn-sm" onclick="filterPickups('confirmed')" id="filterConfirmed">Confirmed</button>
-            <button class="btn btn-sm" onclick="filterPickups('completed')" id="filterCompleted">Completed</button>
+          <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterPickups('all')" id="filterAll">All</button>
+            <button class="filter-tab" onclick="filterPickups('pending')" id="filterPending">Pending</button>
+            <button class="filter-tab" onclick="filterPickups('confirmed')" id="filterConfirmed">Confirmed</button>
+            <button class="filter-tab" onclick="filterPickups('completed')" id="filterCompleted">Completed</button>
           </div>
         </div>
         <div id="allPickupList"></div>
       </div>
 
+      <!-- USERS -->
       <div id="page-users" class="hidden">
         <div class="page-head">
           <h2>Users</h2>
@@ -247,7 +321,7 @@
         </div>
       </div>
 
-      <!-- ADMINS PAGE (superadmin only) -->
+      <!-- ADMINS -->
       <div id="page-admins" class="hidden">
         <div class="page-head">
           <h2>Manage Admins</h2>
@@ -261,43 +335,41 @@
         </div>
       </div>
 
+      <!-- ALL ADDRESSES -->
       <div id="page-alladdresses" class="hidden">
         <div class="page-head">
           <h2>All Addresses</h2>
-          <div class="field" style="margin:0;min-width:200px">
+          <div class="field" style="margin:0;min-width:220px">
             <select id="userFilter" onchange="loadAllAddresses()">
-              <option value="">Select user</option>
+              <option value="">Select user...</option>
             </select>
           </div>
         </div>
         <div class="addr-grid" id="allAddressList"></div>
       </div>
 
-      <!-- SETTINGS PAGE -->
+      <!-- SETTINGS -->
       <div id="page-settings" class="hidden">
         <div class="page-head"><h2>Account Settings</h2></div>
         <div id="settingsAlert"></div>
-
-        <div class="card" style="padding:24px;margin-bottom:20px">
-          <h3 style="font-size:1.1rem;margin-bottom:16px">Profile</h3>
+        <div class="settings-section">
+          <h3>Profile</h3>
           <div class="field"><label>Name</label><input id="settingsName" placeholder="Your name"></div>
-          <div class="field"><label>Email</label><input id="settingsEmail" type="email" disabled style="opacity:0.6"></div>
+          <div class="field"><label>Email</label><input id="settingsEmail" type="email" disabled style="opacity:0.5"></div>
           <button class="btn btn-dark" onclick="saveProfile()">Save Profile</button>
         </div>
-
-        <div class="card" style="padding:24px;margin-bottom:20px">
-          <h3 style="font-size:1.1rem;margin-bottom:16px">Change Password</h3>
+        <div class="settings-section">
+          <h3>Change Password</h3>
           <div class="field"><label>Current Password</label><input id="currentPass" type="password" placeholder="Enter current password"></div>
           <div class="field"><label>New Password</label><input id="newPass" type="password" placeholder="Enter new password"></div>
           <div class="field"><label>Confirm New Password</label><input id="confirmPass" type="password" placeholder="Confirm new password"></div>
           <button class="btn btn-dark" onclick="changePassword()">Change Password</button>
         </div>
-
-        <div class="card" style="padding:24px">
-          <h3 style="font-size:1.1rem;margin-bottom:16px">Account Info</h3>
-          <div style="display:grid;gap:10px;font-size:0.95rem">
-            <div><span style="color:var(--text3)">Role:</span> <span id="settingsRole" style="font-weight:600"></span></div>
-            <div><span style="color:var(--text3)">Member since:</span> <span id="settingsCreated"></span></div>
+        <div class="settings-section">
+          <h3>Account Info</h3>
+          <div class="info-grid">
+            <div class="info-row"><span class="lbl">Role</span><span class="val" id="settingsRole"></span></div>
+            <div class="info-row"><span class="lbl">Member since</span><span class="val" id="settingsCreated"></span></div>
           </div>
         </div>
       </div>
@@ -306,7 +378,7 @@
   </div>
 </div>
 
-<!-- PICKUP REQUEST MODAL -->
+<!-- MODALS -->
 <div id="pickupModal" class="overlay hidden" onclick="if(event.target===this)closeModal('pickupModal')">
   <div class="modal">
     <h3>Request Pickup</h3>
@@ -314,7 +386,7 @@
     <div class="field"><label>Address</label>
       <select id="pickupAddress"><option value="">Select address...</option></select>
     </div>
-    <div class="field"><label>Notes (optional)</label><input id="pickupNotes" placeholder="Any special instructions"></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="pickupNotes" placeholder="Any special instructions..."></textarea></div>
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('pickupModal')">Cancel</button>
       <button class="btn btn-dark" onclick="submitPickup()">Submit Request</button>
@@ -322,7 +394,6 @@
   </div>
 </div>
 
-<!-- ADMIN PICKUP MODAL -->
 <div id="pickupUpdateModal" class="overlay hidden" onclick="if(event.target===this)closeModal('pickupUpdateModal')">
   <div class="modal">
     <h3>Update Pickup</h3>
@@ -334,7 +405,7 @@
         <option value="completed">Completed</option>
       </select>
     </div>
-    <div class="field"><label>Admin Notes</label><input id="updatePickupNotes" placeholder="Notes for this pickup"></div>
+    <div class="field"><label>Admin Notes</label><textarea id="updatePickupNotes" placeholder="Notes for this pickup..."></textarea></div>
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('pickupUpdateModal')">Cancel</button>
       <button class="btn btn-dark" onclick="updatePickup()">Update</button>
@@ -342,17 +413,20 @@
   </div>
 </div>
 
-<!-- ADDRESS MODAL -->
 <div id="addressModal" class="overlay hidden" onclick="if(event.target===this)closeModal('addressModal')">
   <div class="modal">
     <h3 id="addrModalTitle">Add Address</h3>
     <input type="hidden" id="addrEditId">
     <div class="field"><label>Label</label><input id="addrLabel" placeholder="Home, Work, etc."></div>
     <div class="field"><label>Street</label><input id="addrStreet" placeholder="123 Main St"></div>
-    <div class="field"><label>City</label><input id="addrCity" placeholder="Brooklyn"></div>
-    <div class="field"><label>State</label><input id="addrState" placeholder="NY"></div>
-    <div class="field"><label>Zip</label><input id="addrZip" placeholder="11201"></div>
-    <div class="field"><label>Country</label><input id="addrCountry" placeholder="USA"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field"><label>City</label><input id="addrCity" placeholder="Brooklyn"></div>
+      <div class="field"><label>State</label><input id="addrState" placeholder="NY"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field"><label>Zip</label><input id="addrZip" placeholder="11201"></div>
+      <div class="field"><label>Country</label><input id="addrCountry" placeholder="USA"></div>
+    </div>
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('addressModal')">Cancel</button>
       <button class="btn btn-dark" onclick="saveAddress()">Save</button>
@@ -360,7 +434,6 @@
   </div>
 </div>
 
-<!-- ADMIN MODAL -->
 <div id="adminModal" class="overlay hidden" onclick="if(event.target===this)closeModal('adminModal')">
   <div class="modal">
     <h3>Add Admin</h3>
@@ -375,7 +448,6 @@
   </div>
 </div>
 
-<!-- USER MODAL -->
 <div id="userModal" class="overlay hidden" onclick="if(event.target===this)closeModal('userModal')">
   <div class="modal">
     <h3>Add User</h3>
@@ -405,6 +477,13 @@ async function api(path, opts = {}) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Request failed');
   return data;
+}
+
+function toggleMobileMenu() {
+  const side = document.getElementById('sidebar');
+  const overlay = document.getElementById('mobOverlay');
+  side.classList.toggle('open');
+  overlay.classList.toggle('open');
 }
 
 async function init() {
@@ -496,7 +575,9 @@ function showPage(page) {
   document.getElementById('page-' + page).classList.remove('hidden');
   document.querySelectorAll('.side-nav a').forEach(a => a.classList.remove('active'));
   document.querySelector('[data-page="' + page + '"]')?.classList.add('active');
-  document.querySelector('.side')?.classList.remove('open');
+  // close mobile menu
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('mobOverlay').classList.remove('open');
   if (page === 'addresses') loadMyAddresses();
   if (page === 'mypickups') loadMyPickups();
   if (page === 'users') loadUsers();
@@ -506,6 +587,9 @@ function showPage(page) {
   if (page === 'settings') loadSettings();
 }
 
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+// ADDRESSES
 async function loadMyAddresses() {
   try { const d = await api('/addresses'); renderAddresses(d.addresses, 'myAddressList', true); } catch(e) { console.error(e); }
 }
@@ -518,19 +602,17 @@ function renderAddresses(list, cid, canEdit) {
     const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(full);
     return `<div class="addr-card">
       <div class="addr-card-top">
-        <span>${esc(a.label || 'Address')}</span>
+        <span class="label">${esc(a.label || 'Address')}</span>
         ${canEdit ? `<div class="actions">
           <button onclick="editAddress(${a.id},'${esc(a.label)}','${esc(a.street)}','${esc(a.city)}','${esc(a.state)}','${esc(a.zip)}','${esc(a.country)}')" title="Edit">&#9998;</button>
           <button onclick="deleteAddress(${a.id})" title="Delete">&times;</button>
         </div>` : ''}
       </div>
       <div class="addr-body">${esc(full)}</div>
-      <a href="${mapUrl}" target="_blank" rel="noopener" class="map-btn">View on Map &rarr;</a>
+      <a href="${mapUrl}" target="_blank" rel="noopener" class="map-link">&#128205; View on Map</a>
     </div>`;
   }).join('');
 }
-
-function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
 function openAddressModal() {
   document.getElementById('addrEditId').value = '';
@@ -567,14 +649,16 @@ async function deleteAddress(id) {
   try { await api('/addresses?id=' + id, { method: 'DELETE' }); loadMyAddresses(); } catch(e) { alert(e.message); }
 }
 
+// USERS
 async function loadUsers() {
   try {
     const d = await api('/users');
     document.getElementById('userTableBody').innerHTML = d.users.map(u => `<tr>
-      <td>${esc(u.name)}</td><td style="color:var(--text2)">${esc(u.email)}</td>
+      <td style="font-weight:600">${esc(u.name)}</td>
+      <td style="color:var(--text2)">${esc(u.email)}</td>
       <td><span class="badge badge-${u.role === 'superadmin' ? 'sa' : u.role}">${u.role}</span></td>
       <td style="color:var(--text3)">${new Date(u.created_at).toLocaleDateString()}</td>
-      <td>${u.role !== 'superadmin' ? `<button class="btn btn-red btn-sm" onclick="deleteUser(${u.id},'${esc(u.name)}')">Remove</button>` : ''}</td>
+      <td>${u.role !== 'superadmin' ? `<button class="btn btn-red btn-xs" onclick="deleteUser(${u.id},'${esc(u.name)}')">Remove</button>` : ''}</td>
     </tr>`).join('');
   } catch(e) { console.error(e); }
 }
@@ -598,10 +682,11 @@ async function deleteUser(id, name) {
   try { await api('/users?id=' + id, { method: 'DELETE' }); loadUsers(); } catch(e) { alert(e.message); }
 }
 
+// ALL ADDRESSES
 async function loadUserOptions() {
   try {
     const d = await api('/users');
-    document.getElementById('userFilter').innerHTML = '<option value="">Select user</option>' + d.users.map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.email)})</option>`).join('');
+    document.getElementById('userFilter').innerHTML = '<option value="">Select user...</option>' + d.users.map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.email)})</option>`).join('');
   } catch(e) { console.error(e); }
 }
 
@@ -617,9 +702,10 @@ async function loadAdmins() {
     const d = await api('/users');
     const admins = d.users.filter(u => u.role === 'superadmin' || u.role === 'admin');
     document.getElementById('adminTableBody').innerHTML = admins.map(u => `<tr>
-      <td>${esc(u.name)}</td><td style="color:var(--text2)">${esc(u.email)}</td>
+      <td style="font-weight:600">${esc(u.name)}</td>
+      <td style="color:var(--text2)">${esc(u.email)}</td>
       <td><span class="badge badge-${u.role === 'superadmin' ? 'sa' : 'admin'}">${u.role}</span></td>
-      <td>${u.role === 'admin' ? `<button class="btn btn-red btn-sm" onclick="removeAdmin(${u.id},'${esc(u.name)}')">Remove</button>` : ''}</td>
+      <td>${u.role === 'admin' ? `<button class="btn btn-red btn-xs" onclick="removeAdmin(${u.id},'${esc(u.name)}')">Remove</button>` : ''}</td>
     </tr>`).join('');
   } catch(e) { console.error(e); }
 }
@@ -650,17 +736,18 @@ async function loadMyPickups() {
     if (!d.pickups.length) { c.innerHTML = '<div class="empty">No pickup requests yet.</div>'; return; }
     c.innerHTML = d.pickups.map(p => {
       const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
+      const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
       return `<div class="pickup-card">
         <div class="pickup-header">
-          <span>${esc(p.addr_label || 'Address')}</span>
+          <span class="pickup-addr">${esc(p.addr_label || 'Address')}</span>
           <span class="status status-${p.status}">${p.status}</span>
         </div>
-        <div style="color:var(--text2);font-size:0.95rem;margin-bottom:6px"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${esc(addr)}</a></div>
-        ${p.notes ? `<div style="font-size:0.9rem;margin-bottom:6px"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}
-        ${p.admin_notes ? `<div style="font-size:0.9rem;margin-bottom:6px;color:var(--blue)"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-          <span style="font-size:0.8rem;color:var(--text3)">${new Date(p.requested_at).toLocaleDateString()}</span>
-          ${p.status === 'pending' ? `<button class="btn btn-red btn-sm" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}
+        <div class="pickup-detail"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:500">${esc(addr)} &#8599;</a></div>
+        ${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}
+        ${p.admin_notes ? `<div class="pickup-note" style="border-left:3px solid var(--blue)"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
+        <div class="pickup-actions">
+          <span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>
+          ${p.status === 'pending' ? `<button class="btn btn-red btn-xs" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -709,8 +796,8 @@ async function loadAllPickups() {
 
 function filterPickups(f) {
   pickupFilter = f;
-  document.querySelectorAll('[id^="filter"]').forEach(b => b.classList.remove('btn-dark'));
-  document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('btn-dark');
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
   renderPickups();
 }
 
@@ -721,20 +808,21 @@ function renderPickups() {
   c.innerHTML = filtered.map(p => {
     const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
     const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
+    const navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr);
     return `<div class="pickup-card">
       <div class="pickup-header">
-        <span class="pickup-user">${esc(p.user_name)} <span style="color:var(--text3);font-weight:400;font-size:0.85rem">${esc(p.user_email)}</span></span>
+        <span class="pickup-user">${esc(p.user_name)}<span class="email">${esc(p.user_email)}</span></span>
         <span class="status status-${p.status}">${p.status}</span>
       </div>
-      <div style="font-weight:500;margin-bottom:4px">${esc(p.addr_label || 'Address')}</div>
-      <div style="color:var(--text2);font-size:0.95rem;margin-bottom:6px">${esc(addr)}</div>
-      ${p.notes ? `<div style="font-size:0.9rem;margin-bottom:6px"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}
-      ${p.admin_notes ? `<div style="font-size:0.9rem;margin-bottom:6px;color:var(--blue)"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
-      <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
-        <a href="${mapUrl}" target="_blank" rel="noopener" class="map-btn">View on Map &rarr;</a>
-        <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr)}" target="_blank" rel="noopener" class="map-btn" style="background:var(--blue);color:#fff">Navigate &rarr;</a>
+      <div class="pickup-addr">${esc(p.addr_label || 'Address')}</div>
+      <div class="pickup-detail">${esc(addr)}</div>
+      ${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}
+      ${p.admin_notes ? `<div class="pickup-note" style="border-left:3px solid var(--blue)"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
+      <div class="pickup-actions">
+        <a href="${mapUrl}" target="_blank" rel="noopener" class="map-link">&#128205; Map</a>
+        <a href="${navUrl}" target="_blank" rel="noopener" class="map-link nav-link">&#128663; Navigate</a>
         <button class="btn btn-sm" onclick="openPickupUpdate(${p.id},'${p.status}','${esc(p.admin_notes || '')}')">Update</button>
-        <span style="font-size:0.8rem;color:var(--text3);margin-left:auto">${new Date(p.requested_at).toLocaleDateString()}</span>
+        <span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>
       </div>
     </div>`;
   }).join('');
