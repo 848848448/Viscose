@@ -66,6 +66,7 @@
     .btn-blue{background:var(--blue);color:#fff;border-color:var(--blue)}
     .btn-blue:hover{opacity:0.9}
     .btn-red{background:var(--red);color:#fff;border-color:var(--red)}
+    .btn-green{background:var(--green);color:#fff;border-color:var(--green)}
     .btn-sm{padding:10px 20px;font-size:0.9rem}
     .btn-xs{padding:7px 14px;font-size:0.8rem;border-radius:8px}
     .btn-full{width:100%}
@@ -73,6 +74,9 @@
     .alert{padding:14px 18px;border-radius:var(--radius);font-size:0.95rem;margin-bottom:20px;font-weight:500}
     .alert-error{background:rgba(255,59,48,0.08);color:var(--red)}
     .alert-ok{background:rgba(52,199,89,0.08);color:var(--green)}
+
+    .forgot-link{display:block;text-align:center;margin-top:16px;color:var(--blue);font-size:0.9rem;cursor:pointer;font-weight:500}
+    .forgot-link:hover{text-decoration:underline}
 
     /* LAYOUT */
     .app{display:flex;min-height:100dvh}
@@ -95,8 +99,17 @@
     .side-foot .role{color:var(--text3);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-top:2px}
 
     .main{flex:1;margin-left:260px;padding:28px 36px;max-width:1100px}
-    .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;gap:16px}
+    .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;gap:16px;flex-wrap:wrap}
     .page-head h2{font-size:1.5rem;font-weight:700;letter-spacing:-0.02em}
+
+    /* SEARCH BAR */
+    .search-bar{position:relative;width:100%;max-width:320px}
+    .search-bar input{width:100%;padding:10px 16px 10px 40px;border:1.5px solid var(--input-border);border-radius:20px;background:var(--input-bg);color:var(--text);font-size:0.9rem;font-family:inherit;outline:none;transition:border-color 0.2s}
+    .search-bar input:focus{border-color:var(--input-focus)}
+    .search-bar svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--text3)}
+
+    /* TOOLBAR */
+    .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}
 
     /* TABLE */
     .card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--card-shadow)}
@@ -130,7 +143,8 @@
     .nav-link:hover{opacity:0.9}
 
     /* PICKUP CARDS */
-    .pickup-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);padding:22px;margin-bottom:14px;box-shadow:var(--card-shadow)}
+    .pickup-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);padding:22px;margin-bottom:14px;box-shadow:var(--card-shadow);transition:box-shadow 0.2s}
+    .pickup-card.selected{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue)}
     .pickup-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px;flex-wrap:wrap}
     .pickup-user{font-weight:700;font-size:1rem}
     .pickup-user .email{color:var(--text3);font-weight:400;font-size:0.8rem;margin-left:6px}
@@ -148,6 +162,28 @@
     .pickup-actions{display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--line)}
     .pickup-meta{font-size:0.78rem;color:var(--text3);margin-left:auto}
 
+    /* COMMENTS */
+    .comments-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+    .comments-toggle{display:flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:600;color:var(--blue);cursor:pointer;background:none;border:none;padding:4px 0;font-family:inherit}
+    .comments-toggle:hover{text-decoration:underline}
+    .comments-list{margin-top:10px}
+    .comment-bubble{padding:10px 14px;border-radius:12px;margin-bottom:8px;font-size:0.88rem;max-width:85%}
+    .comment-bubble.mine{background:var(--blue);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+    .comment-bubble.other{background:var(--bg3);border-bottom-left-radius:4px}
+    .comment-meta{font-size:0.72rem;margin-top:2px;opacity:0.7}
+    .comment-input{display:flex;gap:8px;margin-top:10px}
+    .comment-input input{flex:1;padding:10px 14px;border:1.5px solid var(--input-border);border-radius:20px;background:var(--input-bg);color:var(--text);font-size:0.88rem;font-family:inherit;outline:none}
+    .comment-input input:focus{border-color:var(--input-focus)}
+    .comment-input button{padding:10px 18px;border-radius:20px;background:var(--blue);color:#fff;border:none;font-weight:600;font-size:0.85rem;cursor:pointer;font-family:inherit}
+
+    /* HISTORY TIMELINE */
+    .history-section{margin-top:12px}
+    .history-toggle{display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600;color:var(--text3);cursor:pointer;background:none;border:none;padding:4px 0;font-family:inherit}
+    .history-toggle:hover{color:var(--text2)}
+    .timeline{margin-top:8px;padding-left:16px;border-left:2px solid var(--line)}
+    .timeline-item{padding:6px 0 6px 14px;font-size:0.82rem;color:var(--text2);position:relative}
+    .timeline-item::before{content:'';position:absolute;left:-7px;top:12px;width:10px;height:10px;border-radius:50%;background:var(--bg3);border:2px solid var(--line)}
+
     /* FILTER TABS */
     .filter-tabs{display:flex;gap:6px;flex-wrap:wrap}
     .filter-tab{
@@ -157,6 +193,9 @@
     }
     .filter-tab:hover{border-color:var(--text3);color:var(--text)}
     .filter-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+    /* CHECKBOX */
+    .pickup-check{width:20px;height:20px;accent-color:var(--blue);cursor:pointer;flex-shrink:0}
 
     /* DASHBOARD */
     .dash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:28px}
@@ -172,6 +211,16 @@
     .info-row{display:flex;gap:12px;font-size:0.93rem}
     .info-row .lbl{color:var(--text3);min-width:110px;font-weight:500}
     .info-row .val{font-weight:600}
+
+    /* THEME TOGGLE */
+    .theme-toggle{display:flex;align-items:center;gap:14px;padding:14px 0}
+    .theme-toggle span{font-weight:500}
+    .toggle-switch{position:relative;width:52px;height:28px;cursor:pointer}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-track{position:absolute;inset:0;background:var(--line);border-radius:14px;transition:background 0.3s}
+    .toggle-switch input:checked + .toggle-track{background:var(--blue)}
+    .toggle-track::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform 0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+    .toggle-switch input:checked + .toggle-track::after{transform:translateX(24px)}
 
     /* PHOTO UPLOAD */
     .photo-upload{margin-bottom:16px}
@@ -220,6 +269,8 @@
       .settings-section{padding:18px}
       .modal{padding:22px;margin:8px}
       .dash-stats{grid-template-columns:repeat(2,1fr)}
+      .search-bar{max-width:100%}
+      .toolbar{flex-direction:column;align-items:stretch}
     }
     @media(min-width:769px) and (max-width:1024px){
       .side{width:220px}
@@ -253,6 +304,27 @@
     <div class="field"><label>Email</label><input id="loginEmail" type="email" placeholder="you@company.com"></div>
     <div class="field"><label>Password</label><input id="loginPass" type="password" placeholder="Your password"></div>
     <button class="btn btn-dark btn-full" onclick="doLogin()">Sign In</button>
+    <a class="forgot-link" onclick="showForgotPassword()">Forgot password?</a>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD -->
+<div id="forgotScreen" class="auth-wrap hidden">
+  <div class="auth-box">
+    <div class="auth-logo">Viscose</div>
+    <h1>Reset Password</h1>
+    <p class="sub">Enter your email and we'll send you a reset link.</p>
+    <div id="forgotAlert"></div>
+    <div id="forgotEmailForm">
+      <div class="field"><label>Email</label><input id="forgotEmail" type="email" placeholder="you@company.com"></div>
+      <button class="btn btn-dark btn-full" onclick="sendResetEmail()">Send Reset Link</button>
+    </div>
+    <div id="resetTokenForm" class="hidden">
+      <div class="field"><label>New Password</label><input id="resetNewPass" type="password" placeholder="Min 6 characters"></div>
+      <div class="field"><label>Confirm Password</label><input id="resetConfirmPass" type="password" placeholder="Confirm password"></div>
+      <button class="btn btn-dark btn-full" onclick="submitPasswordReset()">Reset Password</button>
+    </div>
+    <a class="forgot-link" onclick="showScreen('loginScreen')">Back to sign in</a>
   </div>
 </div>
 
@@ -333,12 +405,33 @@
       <div id="page-pickups" class="hidden">
         <div class="page-head">
           <h2>Pickup Requests</h2>
+        </div>
+        <div class="toolbar">
           <div class="filter-tabs">
             <button class="filter-tab active" onclick="filterPickups('all')" id="filterAll">All</button>
             <button class="filter-tab" onclick="filterPickups('pending')" id="filterPending">Pending</button>
             <button class="filter-tab" onclick="filterPickups('confirmed')" id="filterConfirmed">Confirmed</button>
             <button class="filter-tab" onclick="filterPickups('completed')" id="filterCompleted">Completed</button>
           </div>
+          <div class="filter-tabs" id="dateFilters">
+            <button class="filter-tab active" onclick="filterDate('all')" id="dateAll">All Time</button>
+            <button class="filter-tab" onclick="filterDate('today')" id="dateToday">Today</button>
+            <button class="filter-tab" onclick="filterDate('week')" id="dateWeek">This Week</button>
+            <button class="filter-tab" onclick="filterDate('month')" id="dateMonth">This Month</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <div class="search-bar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search pickups..." id="pickupSearch" oninput="renderPickups()">
+          </div>
+          <button class="btn btn-sm" onclick="exportCSV()" title="Export to CSV">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV</button>
+          <button class="btn btn-sm" id="routeBtn" onclick="planRoute()" style="display:none">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            Route Selected</button>
+          <button class="btn btn-sm btn-blue" id="bulkBtn" onclick="openBulkModal()" style="display:none">Bulk Update (<span id="bulkCount">0</span>)</button>
         </div>
         <div id="allPickupList"></div>
       </div>
@@ -386,6 +479,17 @@
       <div id="page-settings" class="hidden">
         <div class="page-head"><h2>Account Settings</h2></div>
         <div id="settingsAlert"></div>
+        <div class="settings-section">
+          <h3>Appearance</h3>
+          <div class="theme-toggle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <span>Dark Mode</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="darkToggle" onchange="toggleTheme()">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
         <div class="settings-section">
           <h3>Profile</h3>
           <div class="field"><label>Name</label><input id="settingsName" placeholder="Your name"></div>
@@ -451,6 +555,24 @@
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('pickupUpdateModal')">Cancel</button>
       <button class="btn btn-dark" onclick="updatePickup()">Update</button>
+    </div>
+  </div>
+</div>
+
+<div id="bulkModal" class="overlay hidden" onclick="if(event.target===this)closeModal('bulkModal')">
+  <div class="modal">
+    <h3>Bulk Update <span id="bulkModalCount">0</span> Pickups</h3>
+    <div class="field"><label>Set Status</label>
+      <select id="bulkStatus">
+        <option value="pending">Pending</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="completed">Completed</option>
+      </select>
+    </div>
+    <div class="field"><label>Admin Notes (optional)</label><textarea id="bulkNotes" placeholder="Notes for all selected..."></textarea></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('bulkModal')">Cancel</button>
+      <button class="btn btn-dark" onclick="executeBulkUpdate()">Update All</button>
     </div>
   </div>
 </div>
@@ -528,6 +650,12 @@ function toggleMobileMenu() {
 }
 
 async function init() {
+  loadTheme();
+  const hash = location.hash;
+  if (hash && hash.startsWith('#reset=')) {
+    showResetForm(hash.replace('#reset=', ''));
+    return;
+  }
   if (token) {
     try {
       const data = await api('/me');
@@ -556,7 +684,7 @@ async function checkSetup() {
 }
 
 function showScreen(id) {
-  ['setupScreen','loginScreen','appScreen'].forEach(s => document.getElementById(s).classList.add('hidden'));
+  ['setupScreen','loginScreen','appScreen','forgotScreen'].forEach(s => document.getElementById(s).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
 
@@ -596,6 +724,63 @@ document.getElementById('setupPass').addEventListener('keydown', e => { if (e.ke
 
 function logout() { token = null; currentUser = null; localStorage.removeItem('viscose_token'); location.hash = ''; showScreen('loginScreen'); }
 
+// FORGOT PASSWORD
+function showForgotPassword() {
+  document.getElementById('forgotAlert').innerHTML = '';
+  document.getElementById('forgotEmail').value = '';
+  document.getElementById('forgotEmailForm').classList.remove('hidden');
+  document.getElementById('resetTokenForm').classList.add('hidden');
+  showScreen('forgotScreen');
+}
+
+function showResetForm(resetToken) {
+  window._resetToken = resetToken;
+  document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-ok">Enter your new password below.</div>';
+  document.getElementById('forgotEmailForm').classList.add('hidden');
+  document.getElementById('resetTokenForm').classList.remove('hidden');
+  showScreen('forgotScreen');
+}
+
+async function sendResetEmail() {
+  const email = document.getElementById('forgotEmail').value;
+  if (!email) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">Enter your email.</div>'; return; }
+  try {
+    await fetch(API + '/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+    document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-ok">If that email exists, a reset link has been sent. Check your inbox.</div>';
+  } catch(e) {
+    document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>';
+  }
+}
+
+async function submitPasswordReset() {
+  const np = document.getElementById('resetNewPass').value;
+  const cp = document.getElementById('resetConfirmPass').value;
+  if (np !== cp) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">Passwords do not match.</div>'; return; }
+  if (np.length < 6) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">Password must be at least 6 characters.</div>'; return; }
+  try {
+    const res = await fetch(API + '/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: window._resetToken, new_password: np }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Reset failed');
+    document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-ok">Password reset successful! Redirecting to login...</div>';
+    setTimeout(() => { location.hash = ''; showScreen('loginScreen'); }, 2000);
+  } catch(e) {
+    document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>';
+  }
+}
+
+// THEME
+function loadTheme() {
+  const saved = localStorage.getItem('viscose_theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+}
+
+function toggleTheme() {
+  const isDark = document.getElementById('darkToggle').checked;
+  const theme = isDark ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('viscose_theme', theme);
+}
+
 function showApp() {
   showScreen('appScreen');
   document.getElementById('sidebarName').textContent = currentUser.name;
@@ -607,7 +792,7 @@ function showApp() {
   document.getElementById('navAdmins').classList.toggle('hidden', currentUser.role !== 'superadmin');
   if (currentUser.role !== 'superadmin') document.getElementById('roleField').classList.add('hidden');
   const hash = location.hash.replace('#', '') || 'dashboard';
-  showPage(hash);
+  showPage(hash.startsWith('reset=') ? 'dashboard' : hash);
 }
 
 function showPage(page) {
@@ -884,6 +1069,13 @@ async function loadMyPickups() {
           <span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>
           ${p.status === 'pending' ? `<button class="btn btn-red btn-xs" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}
         </div>
+        <div class="comments-section">
+          <button class="comments-toggle" onclick="toggleComments(${p.id}, this)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Comments
+          </button>
+          <div id="comments-${p.id}" class="hidden"></div>
+        </div>
       </div>`;
     }).join('');
   } catch(e) { console.error(e); }
@@ -923,36 +1115,137 @@ async function cancelPickup(id) {
   try { await api('/pickups?id=' + id, { method: 'DELETE' }); loadMyPickups(); } catch(e) { alert(e.message); }
 }
 
+// COMMENTS
+async function toggleComments(pickupId, btn) {
+  const container = document.getElementById('comments-' + pickupId);
+  if (!container.classList.contains('hidden')) {
+    container.classList.add('hidden');
+    return;
+  }
+  container.classList.remove('hidden');
+  await loadComments(pickupId);
+}
+
+async function loadComments(pickupId) {
+  const container = document.getElementById('comments-' + pickupId);
+  try {
+    const d = await api('/pickup-comments?pickup_id=' + pickupId);
+    const comments = d.comments || [];
+    container.innerHTML = `
+      <div class="comments-list">
+        ${comments.length ? comments.map(c => `
+          <div class="comment-bubble ${c.user_id === currentUser.id ? 'mine' : 'other'}">
+            <div>${esc(c.message)}</div>
+            <div class="comment-meta">${esc(c.user_name)} &middot; ${new Date(c.created_at).toLocaleString()}</div>
+          </div>
+        `).join('') : '<div style="text-align:center;color:var(--text3);font-size:0.85rem;padding:8px">No comments yet</div>'}
+      </div>
+      <div class="comment-input">
+        <input type="text" placeholder="Write a message..." id="commentInput-${pickupId}" onkeydown="if(event.key==='Enter')sendComment(${pickupId})">
+        <button onclick="sendComment(${pickupId})">Send</button>
+      </div>
+    `;
+  } catch(e) {
+    container.innerHTML = '<div style="color:var(--text3);font-size:0.85rem;padding:8px">Could not load comments</div>';
+  }
+}
+
+async function sendComment(pickupId) {
+  const input = document.getElementById('commentInput-' + pickupId);
+  const msg = input.value.trim();
+  if (!msg) return;
+  try {
+    await api('/pickup-comments', { method: 'POST', body: JSON.stringify({ pickup_id: pickupId, message: msg }) });
+    await loadComments(pickupId);
+  } catch(e) { alert(e.message); }
+}
+
 // PICKUPS (admin)
 let allPickupsData = [];
 let pickupFilter = 'all';
+let dateFilter = 'all';
+let selectedPickups = new Set();
 
 async function loadAllPickups() {
   try {
     const d = await api('/pickups');
     allPickupsData = d.pickups;
+    selectedPickups.clear();
+    updateBulkUI();
     renderPickups();
   } catch(e) { console.error(e); }
 }
 
 function filterPickups(f) {
   pickupFilter = f;
-  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-pickups .filter-tabs:first-child .filter-tab').forEach(b => b.classList.remove('active'));
   document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
   renderPickups();
 }
 
+function filterDate(f) {
+  dateFilter = f;
+  document.querySelectorAll('#dateFilters .filter-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('date' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
+  renderPickups();
+}
+
+function getFilteredPickups() {
+  let filtered = pickupFilter === 'all' ? allPickupsData : allPickupsData.filter(p => p.status === pickupFilter);
+
+  if (dateFilter !== 'all') {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    filtered = filtered.filter(p => {
+      const d = new Date(p.requested_at);
+      if (dateFilter === 'today') return d >= startOfDay;
+      if (dateFilter === 'week') { const w = new Date(startOfDay); w.setDate(w.getDate() - w.getDay()); return d >= w; }
+      if (dateFilter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      return true;
+    });
+  }
+
+  const q = (document.getElementById('pickupSearch')?.value || '').toLowerCase();
+  if (q) {
+    filtered = filtered.filter(p => {
+      const text = [p.user_name, p.user_email, p.addr_label, p.street, p.city, p.state, p.zip, p.notes, p.admin_notes, p.status].filter(Boolean).join(' ').toLowerCase();
+      return text.includes(q);
+    });
+  }
+
+  return filtered;
+}
+
+function togglePickupSelect(id) {
+  if (selectedPickups.has(id)) selectedPickups.delete(id);
+  else selectedPickups.add(id);
+  updateBulkUI();
+  const card = document.querySelector(`[data-pickup-id="${id}"]`);
+  if (card) card.classList.toggle('selected', selectedPickups.has(id));
+}
+
+function updateBulkUI() {
+  const n = selectedPickups.size;
+  document.getElementById('bulkBtn').style.display = n > 0 ? '' : 'none';
+  document.getElementById('routeBtn').style.display = n > 1 ? '' : 'none';
+  document.getElementById('bulkCount').textContent = n;
+}
+
 function renderPickups() {
-  const filtered = pickupFilter === 'all' ? allPickupsData : allPickupsData.filter(p => p.status === pickupFilter);
+  const filtered = getFilteredPickups();
   const c = document.getElementById('allPickupList');
   if (!filtered.length) { c.innerHTML = '<div class="empty">No pickup requests.</div>'; return; }
   c.innerHTML = filtered.map(p => {
     const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
     const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
     const navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr);
-    return `<div class="pickup-card">
+    const checked = selectedPickups.has(p.id) ? 'checked' : '';
+    return `<div class="pickup-card ${checked ? 'selected' : ''}" data-pickup-id="${p.id}">
       <div class="pickup-header">
-        <span class="pickup-user">${esc(p.user_name)}<span class="email">${esc(p.user_email)}</span></span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="checkbox" class="pickup-check" ${checked} onchange="togglePickupSelect(${p.id})">
+          <span class="pickup-user">${esc(p.user_name)}<span class="email">${esc(p.user_email)}</span></span>
+        </div>
         <span class="status status-${p.status}">${p.status}</span>
       </div>
       <div class="pickup-addr">${esc(p.addr_label || 'Address')}</div>
@@ -970,8 +1263,65 @@ function renderPickups() {
         <button class="btn btn-sm" onclick="openPickupUpdate(${p.id},'${p.status}','${esc(p.admin_notes || '')}')">Update</button>
         <span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>
       </div>
+      <div class="comments-section">
+        <button class="comments-toggle" onclick="toggleComments(${p.id}, this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Comments
+        </button>
+        <div id="comments-${p.id}" class="hidden"></div>
+      </div>
     </div>`;
   }).join('');
+}
+
+// CSV EXPORT
+function exportCSV() {
+  const data = getFilteredPickups();
+  if (!data.length) { alert('No data to export.'); return; }
+  const headers = ['Name','Email','Address Label','Street','City','State','Zip','Country','Status','Notes','Admin Notes','Date'];
+  const rows = data.map(p => [
+    p.user_name, p.user_email, p.addr_label, p.street, p.city, p.state, p.zip, p.country,
+    p.status, p.notes || '', p.admin_notes || '', new Date(p.requested_at).toLocaleDateString()
+  ].map(v => '"' + String(v).replace(/"/g, '""') + '"'));
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'pickups-' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ROUTE PLANNING
+function planRoute() {
+  const selected = allPickupsData.filter(p => selectedPickups.has(p.id));
+  if (selected.length < 2) { alert('Select at least 2 pickups for route planning.'); return; }
+  const waypoints = selected.map(p => [p.street, p.city, p.state, p.zip].filter(Boolean).join(', '));
+  const dest = encodeURIComponent(waypoints.pop());
+  const wps = waypoints.map(w => encodeURIComponent(w)).join('|');
+  window.open('https://www.google.com/maps/dir/?api=1&destination=' + dest + '&waypoints=' + wps, '_blank');
+}
+
+// BULK UPDATE
+function openBulkModal() {
+  document.getElementById('bulkModalCount').textContent = selectedPickups.size;
+  document.getElementById('bulkStatus').value = 'confirmed';
+  document.getElementById('bulkNotes').value = '';
+  document.getElementById('bulkModal').classList.remove('hidden');
+}
+
+async function executeBulkUpdate() {
+  const status = document.getElementById('bulkStatus').value;
+  const notes = document.getElementById('bulkNotes').value;
+  const ids = [...selectedPickups];
+  try {
+    for (const id of ids) {
+      await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status, admin_notes: notes || undefined }) });
+    }
+    closeModal('bulkModal');
+    selectedPickups.clear();
+    updateBulkUI();
+    loadAllPickups();
+  } catch(e) { alert(e.message); }
 }
 
 function openPickupUpdate(id, status, notes) {
@@ -999,6 +1349,8 @@ async function loadSettings() {
     document.getElementById('settingsCreated').textContent = new Date(d.user.created_at).toLocaleDateString();
     document.getElementById('settingsAlert').innerHTML = '';
     ['currentPass','newPass','confirmPass'].forEach(f => document.getElementById(f).value = '');
+    const theme = localStorage.getItem('viscose_theme');
+    document.getElementById('darkToggle').checked = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme:dark)').matches);
   } catch(e) { console.error(e); }
 }
 

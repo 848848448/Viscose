@@ -2,7 +2,7 @@ export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
 
-  const publicPaths = ['/api/login', '/api/setup'];
+  const publicPaths = ['/api/login', '/api/setup', '/api/reset-password'];
   if (url.pathname.startsWith('/api/') && !publicPaths.includes(url.pathname)) {
     const token = request.headers.get('Authorization')?.replace('Bearer ', '');
     if (!token) {

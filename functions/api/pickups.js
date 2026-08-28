@@ -61,6 +61,10 @@ export async function onRequestPut(context) {
     return Response.json({ error: 'Only admins can update pickup status' }, { status: 403 });
   }
 
+  const pickup = await env.DB.prepare("SELECT p.*, u.email as user_email, u.name as user_name, a.label as addr_label FROM pickups p JOIN users u ON p.user_id = u.id JOIN addresses a ON p.address_id = a.id WHERE p.id = ?").bind(id).first();
+  if (!pickup) return Response.json({ error: 'Pickup not found' }, { status: 404 });
+
+  const oldStatus = pickup.status;
   const updates = [];
   const values = [];
   if (status) { updates.push("status = ?"); values.push(status); }
@@ -71,6 +75,39 @@ export async function onRequestPut(context) {
 
   values.push(id);
   await env.DB.prepare(`UPDATE pickups SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run();
+
+  if (status && status !== oldStatus) {
+    try {
+      await env.DB.prepare("INSERT INTO pickup_log (pickup_id, changed_by, old_status, new_status) VALUES (?, ?, ?, ?)")
+        .bind(id, user.user_id, oldStatus, status).run();
+    } catch(e) {}
+
+    if (env.RESEND_API_KEY) {
+      try {
+        const statusLabels = { pending: 'Pending', confirmed: 'Confirmed', completed: 'Completed' };
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: env.EMAIL_FROM || 'Viscose <onboarding@resend.dev>',
+            to: [pickup.user_email],
+            subject: `Pickup ${statusLabels[status] || status} — ${pickup.addr_label || 'Address'}`,
+            html: `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px">
+              <h2 style="margin-bottom:8px">Pickup Update</h2>
+              <p>Hello ${pickup.user_name},</p>
+              <p>Your pickup request for <strong>${pickup.addr_label || 'your address'}</strong> has been updated.</p>
+              <table style="margin:16px 0;font-size:15px">
+                <tr><td style="padding:4px 12px 4px 0;color:#666">Status:</td><td style="font-weight:600">${statusLabels[status] || status}</td></tr>
+                ${admin_notes ? `<tr><td style="padding:4px 12px 4px 0;color:#666">Notes:</td><td>${admin_notes}</td></tr>` : ''}
+              </table>
+              <p style="margin-top:24px"><a href="${env.SITE_URL || 'https://viscose.pages.dev'}/#mypickups" style="background:#111;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500">View Pickups</a></p>
+              <p style="margin-top:32px;font-size:13px;color:#999">This email was sent by Viscose.</p>
+            </div>`
+          })
+        });
+      } catch(e) { console.error('Notification email failed:', e); }
+    }
+  }
 
   return Response.json({ success: true });
 }
