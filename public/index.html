@@ -259,8 +259,9 @@
 <!-- APP -->
 <div id="appScreen" class="hidden">
   <div class="mob-head">
-    <span class="logo">Viscose</span>
     <button onclick="toggleMobileMenu()" id="menuBtn">&#9776;</button>
+    <span class="logo">Viscose</span>
+    <span style="width:36px"></span>
   </div>
   <div class="mob-overlay" id="mobOverlay" onclick="toggleMobileMenu()"></div>
   <div class="app">
@@ -639,19 +640,24 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s || 
 async function loadDashboard() {
   try {
     const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
-    const [pickupsData, addrData] = await Promise.all([
-      api('/pickups' + (isAdmin ? '' : '?mine=1')),
-      api('/addresses')
-    ]);
-    const pickups = pickupsData.pickups;
+    let pickups = [], addresses = [];
+    try {
+      const addrData = await api('/addresses');
+      addresses = addrData.addresses || [];
+    } catch(e) {}
+    try {
+      const pickupsData = await api('/pickups' + (isAdmin ? '' : '?mine=1'));
+      pickups = pickupsData.pickups || [];
+    } catch(e) {}
+
     const pending = pickups.filter(p => p.status === 'pending').length;
     const confirmed = pickups.filter(p => p.status === 'confirmed').length;
     const completed = pickups.filter(p => p.status === 'completed').length;
 
     document.getElementById('dashStats').innerHTML = `
-      <div class="stat-card"><div class="stat-num">${addrData.addresses.length}</div><div class="stat-label">Addresses</div></div>
+      <div class="stat-card"><div class="stat-num">${addresses.length}</div><div class="stat-label">Addresses</div></div>
+      <div class="stat-card"><div class="stat-num">${pickups.length}</div><div class="stat-label">Total Pickups</div></div>
       <div class="stat-card"><div class="stat-num" style="color:var(--orange)">${pending}</div><div class="stat-label">Pending</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:var(--blue)">${confirmed}</div><div class="stat-label">Confirmed</div></div>
       <div class="stat-card"><div class="stat-num" style="color:var(--green)">${completed}</div><div class="stat-label">Completed</div></div>
     `;
 
