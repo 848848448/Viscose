@@ -351,6 +351,7 @@
     .dm-conv-name{font-weight:600;font-size:0.95rem;display:flex;align-items:center;gap:6px}
     .dm-conv-name .role-tag{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.04em;padding:2px 6px;border-radius:4px;font-weight:700}
     .dm-conv-name .role-tag.driver{background:rgba(175,82,222,0.1);color:#af52de}
+    .dm-conv-name .role-tag.factory{background:rgba(255,149,0,0.1);color:#ff9500}
     .dm-conv-name .role-tag.admin{background:rgba(7,94,84,0.1);color:#075e54}
     .dm-conv-preview{color:var(--text2);font-size:0.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
     .dm-conv-right{text-align:right;flex-shrink:0}
@@ -652,6 +653,9 @@
         <a href="#driverpickups" data-page="driverpickups" id="navDriver" class="hidden">
           <svg class="icon" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
           My Deliveries</a>
+        <a href="#factory" data-page="factory" id="navFactory" class="hidden">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M2 20V8l5-6v6l5-6v6l5-6v6h5v12H2z"/></svg>
+          Factory</a>
         <a href="#tracking" data-page="tracking" id="navTracking" class="hidden">
           <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
           Live Tracking</a>
@@ -785,6 +789,20 @@
           </div>
         </div>
         <div id="driverPickupList"></div>
+      </div>
+
+      <!-- FACTORY -->
+      <div id="page-factory" class="hidden">
+        <div class="page-head">
+          <h2>Factory</h2>
+          <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterFactory('all')" id="fFilterAll">All</button>
+            <button class="filter-tab" onclick="filterFactory('picked_up')" id="fFilterPicked_up">Picked Up</button>
+            <button class="filter-tab" onclick="filterFactory('in_process')" id="fFilterIn_process">In Process</button>
+            <button class="filter-tab" onclick="filterFactory('ready')" id="fFilterReady">Ready</button>
+          </div>
+        </div>
+        <div id="factoryPickupList"></div>
       </div>
 
       <!-- LIVE TRACKING -->
@@ -1120,7 +1138,7 @@
       <div class="field" style="flex:1"><label>Country</label><input id="newUserCountry" placeholder="Country" value="US"></div>
     </div>
     <div class="field" id="roleField"><label>Role</label>
-      <select id="newUserRole"><option value="user">User</option><option value="driver">Driver</option><option value="admin">Admin</option></select>
+      <select id="newUserRole"><option value="user">User</option><option value="driver">Driver</option><option value="factory">Factory</option><option value="admin">Admin</option></select>
     </div>
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('userModal')">Cancel</button>
@@ -1288,29 +1306,33 @@ function showApp() {
   document.getElementById('sidebarRole').textContent = currentUser.role;
   const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
   const isDriver = currentUser.role === 'driver';
+  const isFactory = currentUser.role === 'factory';
   document.getElementById('navUsers').classList.toggle('hidden', !isAdmin);
   document.getElementById('navAllAddr').classList.toggle('hidden', !isAdmin);
   document.getElementById('navPickups').classList.toggle('hidden', !isAdmin);
   document.getElementById('navDriver').classList.toggle('hidden', !isDriver);
+  document.getElementById('navFactory').classList.toggle('hidden', !isFactory);
   document.getElementById('navAdmins').classList.toggle('hidden', currentUser.role !== 'superadmin');
   document.getElementById('navTracking').classList.toggle('hidden', !isAdmin);
   document.getElementById('navActivityLog').classList.toggle('hidden', !isAdmin);
-  if (isDriver) {
+  if (isDriver || isFactory) {
     document.querySelector('[data-page="addresses"]').classList.add('hidden');
     document.querySelector('[data-page="mypickups"]').classList.add('hidden');
+    document.querySelector('[data-page="dashboard"]').classList.add('hidden');
   }
   if (currentUser.role !== 'superadmin') document.getElementById('roleField').classList.add('hidden');
   requestNotifPermission();
   showDmFab();
   setInterval(pollDmUnread, 10000);
   if (isDriver) startDriverLocationSharing();
-  const hash = location.hash.replace('#', '') || (isDriver ? 'driverpickups' : 'dashboard');
-  showPage(hash.startsWith('reset=') ? (isDriver ? 'driverpickups' : 'dashboard') : hash);
+  const defaultPage = isDriver ? 'driverpickups' : isFactory ? 'factory' : 'dashboard';
+  const hash = location.hash.replace('#', '') || defaultPage;
+  showPage(hash.startsWith('reset=') ? defaultPage : hash);
 }
 
 function showPage(page) {
-  const valid = ['dashboard','addresses','mypickups','users','pickups','alladdresses','admins','settings','driverpickups','tracking','activitylog'];
-  if (!valid.includes(page)) page = currentUser?.role === 'driver' ? 'driverpickups' : 'dashboard';
+  const valid = ['dashboard','addresses','mypickups','users','pickups','alladdresses','admins','settings','driverpickups','factory','tracking','activitylog'];
+  if (!valid.includes(page)) page = currentUser?.role === 'driver' ? 'driverpickups' : currentUser?.role === 'factory' ? 'factory' : 'dashboard';
   location.hash = page;
   document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
   document.getElementById('page-' + page).classList.remove('hidden');
@@ -1326,6 +1348,7 @@ function showPage(page) {
   if (page === 'admins') loadAdmins();
   if (page === 'alladdresses') loadUserOptions();
   if (page === 'driverpickups') loadDriverPickups();
+  if (page === 'factory') loadFactoryPickups();
   if (page === 'settings') loadSettings();
   if (page === 'tracking') loadTracking();
   if (page === 'activitylog') loadActivityLog();
@@ -1588,6 +1611,24 @@ function driverPhotoAction(id, status, photoField) {
 function driverPickupPhoto(id) { driverPhotoAction(id, 'picked_up', 'pickup_photo'); }
 function driverDeliverPhoto(id) { driverPhotoAction(id, 'delivered', 'delivery_photo'); }
 
+// FACTORY
+let factoryData = [], factoryFilter = 'all';
+async function loadFactoryPickups() { try { const d = await api('/pickups'); factoryData = d.pickups; renderFactoryPickups(); } catch(e) { console.error(e); } }
+function filterFactory(f) { factoryFilter = f; document.querySelectorAll('#page-factory .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('fFilter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderFactoryPickups(); }
+function renderFactoryPickups() {
+  const show = factoryFilter === 'all' ? factoryData.filter(p => ['picked_up','in_process','ready'].includes(p.status)) : factoryData.filter(p => p.status === factoryFilter);
+  const c = document.getElementById('factoryPickupList');
+  if (!show.length) { c.innerHTML = '<div class="empty">No pickups.</div>'; return; }
+  c.innerHTML = show.map(p => {
+    const addr = [p.street, p.city, p.state, p.zip].filter(Boolean).join(', ');
+    let actionBtn = '';
+    if (p.status === 'picked_up') actionBtn = `<button class="btn btn-sm" onclick="factoryUpdate(${p.id}, 'in_process')" style="padding:8px 12px">Mark In Process</button>`;
+    else if (p.status === 'in_process') actionBtn = `<button class="btn btn-sm btn-dark" onclick="factoryUpdate(${p.id}, 'ready')" style="padding:8px 12px">Mark Ready to Go</button>`;
+    return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-user">${esc(p.user_name)}</span><span class="status status-${p.status}">${p.status.replace('_',' ')}</span></div><div class="pickup-addr">${esc(p.addr_label || 'Address')}</div><div class="pickup-detail">${esc(addr)}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">📷 Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}<div class="pickup-actions">${actionBtn}<span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span></div></div>`;
+  }).join('');
+}
+async function factoryUpdate(id, status) { try { await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status }) }); loadFactoryPickups(); } catch(e) { alert(e.message); } }
+
 // CSV EXPORT
 function exportCSV() {
   const data = getFilteredPickups(); if (!data.length) { alert('No data to export.'); return; }
@@ -1729,8 +1770,9 @@ let dmCurrentChat = null, dmReplyTo = null, dmPendingMedia = null, dmPollInterva
 function showDmFab() {
   const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
   const isDriver = currentUser.role === 'driver';
-  document.getElementById('dmFab').classList.toggle('hidden', !isAdmin && !isDriver);
-  if (isAdmin || isDriver) {
+  const isFact = currentUser.role === 'factory';
+  document.getElementById('dmFab').classList.toggle('hidden', !isAdmin && !isDriver && !isFact);
+  if (isAdmin || isDriver || isFact) {
     pollDmUnread();
     try { const saved = sessionStorage.getItem('dmChat'); if (saved) { const c = JSON.parse(saved); openDM(); openDmChat(c.userId, c.name, c.role); } } catch(e) {}
   }
@@ -1766,9 +1808,9 @@ async function loadDmConversations() {
     if (!convs.length) { list.innerHTML = '<div class="dm-empty"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>No conversations yet</div>'; return; }
     list.innerHTML = convs.map(c => {
       const initial = (c.name || '?')[0].toUpperCase();
-      const avatarClass = c.role === 'driver' ? 'driver' : 'admin';
-      const roleTag = c.role === 'driver' ? 'Driver' : (c.role === 'superadmin' ? 'Super Admin' : 'Admin');
-      const roleClass = c.role === 'driver' ? 'driver' : 'admin';
+      const avatarClass = c.role === 'driver' ? 'driver' : c.role === 'factory' ? 'factory' : 'admin';
+      const roleTag = c.role === 'driver' ? 'Driver' : c.role === 'factory' ? 'Factory' : (c.role === 'superadmin' ? 'Super Admin' : 'Admin');
+      const roleClass = c.role === 'driver' ? 'driver' : c.role === 'factory' ? 'factory' : 'admin';
       const timeStr = c.last_message_at ? formatDmTime(c.last_message_at) : '';
       const preview = c.last_message ? (c.last_sender === currentUser.name ? '<svg width="16" height="11" viewBox="0 0 16 11" style="vertical-align:-1px;margin-right:2px"><polyline points="1 5 4 8 11 1" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>' : '') + esc(c.last_message) : '<span style="color:var(--text3)">Start a conversation</span>';
       return `<div class="dm-conv" onclick="openDmChat(${c.user_id}, '${esc(c.name)}', '${c.role}')"><div class="dm-avatar ${avatarClass}">${initial}</div><div class="dm-conv-body"><div class="dm-conv-name">${esc(c.name)} <span class="role-tag ${roleClass}">${roleTag}</span></div><div class="dm-conv-preview">${preview}</div></div><div class="dm-conv-right">${timeStr ? `<div class="dm-conv-time" ${c.unread > 0 ? 'style="color:#25d366;font-weight:600"' : ''}>${timeStr}</div>` : ''}${c.unread > 0 ? `<span class="dm-conv-unread">${c.unread}</span>` : ''}</div></div>`;
@@ -2024,7 +2066,7 @@ function doGSearch(q) {
     } catch(e) { console.error(e); }
   }, 300);
 }
-function gsearchGo(type, id, extra) { closeGSearch(); if (type === 'user') showPage('users'); else if (type === 'pickup') showPage(currentUser.role === 'driver' ? 'driverpickups' : 'pickups'); else if (type === 'message' && extra) { openDM(); openDmChat(parseInt(extra), '', ''); } }
+function gsearchGo(type, id, extra) { closeGSearch(); if (type === 'user') showPage('users'); else if (type === 'pickup') showPage(currentUser.role === 'driver' ? 'driverpickups' : currentUser.role === 'factory' ? 'factory' : 'pickups'); else if (type === 'message' && extra) { openDM(); openDmChat(parseInt(extra), '', ''); } }
 
 // PULL TO REFRESH
 let ptrStartY = 0, ptrActive = false;

@@ -4,9 +4,10 @@ export async function onRequestGet(context) {
   const url = new URL(context.request.url);
   const isAdmin = user.role === 'superadmin' || user.role === 'admin';
   const isDriver = user.role === 'driver';
+  const isFactory = user.role === 'factory';
 
   let query, params;
-  if (isAdmin && !url.searchParams.get('mine')) {
+  if ((isAdmin || isFactory) && !url.searchParams.get('mine')) {
     query = `SELECT p.*, u.name as user_name, u.email as user_email,
       a.label as addr_label, a.street, a.city, a.state, a.zip, a.country,
       d.name as driver_name
@@ -67,12 +68,17 @@ export async function onRequestPut(context) {
   const user = data.user;
   const isAdmin = user.role === 'superadmin' || user.role === 'admin';
   const isDriver = user.role === 'driver';
+  const isFactory = user.role === 'factory';
 
   const { id, status, admin_notes, driver_id, priority, delivery_photo, pickup_photo } = await context.request.json();
   if (!id) return Response.json({ error: 'Missing pickup id' }, { status: 400 });
 
-  if (!isAdmin && !isDriver) {
+  if (!isAdmin && !isDriver && !isFactory) {
     return Response.json({ error: 'Not authorized' }, { status: 403 });
+  }
+
+  if (isFactory && status && !['in_process', 'ready'].includes(status)) {
+    return Response.json({ error: 'Factory can only set in_process or ready' }, { status: 403 });
   }
 
   const pickup = await env.DB.prepare("SELECT p.*, u.email as user_email, u.name as user_name, a.label as addr_label FROM pickups p JOIN users u ON p.user_id = u.id JOIN addresses a ON p.address_id = a.id WHERE p.id = ?").bind(id).first();
