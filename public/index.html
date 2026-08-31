@@ -335,7 +335,7 @@
     .dm-list{flex:1;overflow-y:auto;background:var(--bg)}
     .dm-conv{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;transition:background 0.1s;border-bottom:1px solid var(--line)}
     .dm-conv:active{background:var(--bg3)}
-    .dm-avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;color:#fff;flex-shrink:0}
+    .dm-avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;color:#fff;flex-shrink:0;position:relative}
     .dm-avatar.driver{background:#af52de}
     .dm-avatar.admin{background:#075e54}
     .dm-conv-body{flex:1;min-width:0}
@@ -352,7 +352,7 @@
     .dm-chat-header{display:flex;align-items:center;gap:12px;padding:10px 6px 10px 4px;background:#075e54;color:#fff;min-height:56px}
     :root[data-theme="dark"] .dm-chat-header{background:#1f2c34}
     @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .dm-chat-header{background:#1f2c34}}
-    .dm-chat-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:#fff;flex-shrink:0}
+    .dm-chat-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:#fff;flex-shrink:0;position:relative}
     .dm-chat-info{flex:1}
     .dm-chat-name{font-weight:600;font-size:0.95rem;color:#fff}
     .dm-chat-role{font-size:0.7rem;color:rgba(255,255,255,0.7)}
@@ -458,6 +458,34 @@
 
     .dm-empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:0.9rem}
     .dm-empty svg{width:64px;height:64px;stroke:var(--line);fill:none;stroke-width:1.5;margin-bottom:12px;display:block;margin-inline:auto}
+
+    /* Typing indicator */
+    .dm-typing{padding:4px 14px;font-size:0.78rem;color:var(--text3);font-style:italic;min-height:22px}
+    .dm-typing-dots{display:inline-flex;gap:3px;vertical-align:middle;margin-left:4px}
+    .dm-typing-dots span{width:5px;height:5px;background:var(--text3);border-radius:50%;animation:dmTypingBounce 1.2s infinite}
+    .dm-typing-dots span:nth-child(2){animation-delay:0.2s}
+    .dm-typing-dots span:nth-child(3){animation-delay:0.4s}
+    @keyframes dmTypingBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}
+
+    /* Online status dot */
+    .dm-online{width:10px;height:10px;border-radius:50%;background:#34c759;border:2px solid var(--bg2);position:absolute;bottom:0;right:0}
+    .dm-offline{width:10px;height:10px;border-radius:50%;background:var(--text3);border:2px solid var(--bg2);position:absolute;bottom:0;right:0}
+
+    /* Message reactions */
+    .dm-reactions{display:flex;gap:4px;flex-wrap:wrap;padding:2px 4px}
+    .dm-reaction{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:12px;font-size:0.75rem;cursor:pointer;border:1px solid var(--line);background:var(--bg2)}
+    .dm-reaction.mine{border-color:var(--blue);background:rgba(0,122,255,0.08)}
+    .dm-reaction-count{font-size:0.7rem;color:var(--text2);font-weight:600}
+    .dm-react-picker{position:absolute;bottom:100%;right:0;display:flex;gap:2px;background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:4px 8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:600;animation:dmCtxIn 0.12s ease-out}
+    .dm-react-picker button{background:none;border:none;font-size:1.3rem;cursor:pointer;padding:4px;border-radius:8px;line-height:1}
+    .dm-react-picker button:active{background:var(--bg3)}
+
+    /* Emoji picker */
+    .dm-emoji-btn{background:none;border:none;cursor:pointer;color:var(--text3);padding:8px;border-radius:50%;display:flex;align-items:center}
+    .dm-emoji-btn:active{background:var(--bg3)}
+    .dm-emoji-panel{position:absolute;bottom:60px;left:8px;right:8px;background:var(--bg2);border:1px solid var(--line);border-radius:16px;box-shadow:0 -4px 20px rgba(0,0,0,0.15);z-index:500;max-height:220px;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(8,1fr);gap:2px}
+    .dm-emoji-panel button{background:none;border:none;font-size:1.5rem;cursor:pointer;padding:6px;border-radius:8px;line-height:1;text-align:center}
+    .dm-emoji-panel button:active{background:var(--bg3)}
 
     /* MOBILE */
     .mob-head{
@@ -782,6 +810,7 @@
         </div>
       </div>
       <div class="dm-messages" id="dmMessages" style="position:relative"></div>
+      <div class="dm-typing" id="dmTyping"></div>
       <div class="dm-reply-bar hidden" id="dmReplyBar">
         <div class="reply-info">
           <div class="reply-name" id="dmReplyName"></div>
@@ -794,13 +823,17 @@
         <span id="dmMediaLabel" style="font-size:0.82rem;color:var(--text2)"></span>
         <button class="dm-close-btn" onclick="cancelDmMedia()">&times;</button>
       </div>
-      <div class="dm-input-bar">
+      <div class="dm-emoji-panel hidden" id="dmEmojiPanel"></div>
+      <div class="dm-input-bar" style="position:relative">
+        <button class="dm-emoji-btn" onclick="toggleDmEmoji()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        </button>
         <button class="dm-attach-btn" onclick="document.getElementById('dmMediaInput').click()">
           <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
         </button>
         <input type="file" id="dmMediaInput" accept="image/*,video/*" style="display:none" onchange="handleDmMedia(this)">
         <div class="dm-input-wrap">
-          <input type="text" placeholder="Type a message..." id="dmInput" onkeydown="if(event.key==='Enter')sendDm()">
+          <input type="text" placeholder="Type a message..." id="dmInput" onkeydown="if(event.key==='Enter')sendDm()" oninput="dmTypingNotify()">
         </div>
         <button class="dm-send-btn" onclick="sendDm()">
           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
@@ -1893,8 +1926,11 @@ let dmPollInterval = null;
 let dmUnreadTotal = 0;
 let dmLastConvState = {};
 let dmMessagesCache = [];
+let dmReactionsCache = {};
 let dmLongPressTimer = null;
 let dmCtxMsg = null;
+let dmTypingTimer = null;
+let dmPresenceInterval = null;
 
 function showDmFab() {
   const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
@@ -2022,17 +2058,21 @@ async function openDmChat(userId, name, role) {
   const avatarClass = role === 'driver' ? 'driver' : 'admin';
   const avatar = document.getElementById('dmChatAvatar');
   avatar.className = 'dm-chat-avatar ' + avatarClass;
-  avatar.textContent = initial;
+  avatar.innerHTML = initial + '<span class="dm-offline" id="dmOnlineDot"></span>';
   document.getElementById('dmChatName').textContent = name;
   document.getElementById('dmChatRole').textContent = role === 'superadmin' ? 'Super Admin' : role.charAt(0).toUpperCase() + role.slice(1);
+  document.getElementById('dmTyping').innerHTML = '';
+  document.getElementById('dmEmojiPanel').classList.add('hidden');
 
   document.getElementById('dmListView').classList.add('hidden');
   document.getElementById('dmChatView').classList.remove('hidden');
 
   await loadDmMessages();
+  checkDmPresence();
 
   if (dmPollInterval) clearInterval(dmPollInterval);
-  dmPollInterval = setInterval(() => loadDmMessages(true), 3000);
+  dmPollInterval = setInterval(() => { loadDmMessages(true); checkDmTyping(); }, 3000);
+  setInterval(checkDmPresence, 15000);
 }
 
 async function loadDmMessages(silent) {
@@ -2042,6 +2082,11 @@ async function loadDmMessages(silent) {
     const d = await api('/messages?with=' + dmCurrentChat.userId);
     const msgs = d.messages || [];
     dmMessagesCache = msgs;
+
+    try {
+      const ids = msgs.map(m => m.id).join(',');
+      if (ids) { const rd = await api('/reactions?ids=' + ids); dmReactionsCache = rd.reactions || {}; }
+    } catch(e) { dmReactionsCache = {}; }
 
     let html = '';
     let lastDate = '';
@@ -2087,14 +2132,26 @@ async function loadDmMessages(silent) {
         }
       }
 
+      const rxns = dmReactionsCache[m.id] || [];
+      let rxnHtml = '';
+      if (rxns.length) {
+        const grouped = {};
+        rxns.forEach(r => { if (!grouped[r.emoji]) grouped[r.emoji] = []; grouped[r.emoji].push(r); });
+        rxnHtml = '<div class="dm-reactions">' + Object.entries(grouped).map(([emoji, list]) =>
+          `<span class="dm-reaction${list.some(r => r.user_id === currentUser.id) ? ' mine' : ''}" onclick="event.stopPropagation();toggleReaction(${m.id},'${emoji}')">${emoji}<span class="dm-reaction-count">${list.length > 1 ? list.length : ''}</span></span>`
+        ).join('') + '</div>';
+      }
+
       html += `<div class="dm-msg-wrap ${isMine ? 'mine' : 'other'}" id="msg-${m.id}"
         ontouchstart="dmTouchStart(event,${m.id})" ontouchend="dmTouchEnd()" ontouchmove="dmTouchMove(event)"
-        oncontextmenu="event.preventDefault();showDmCtx(event,${m.id})">
+        oncontextmenu="event.preventDefault();showDmCtx(event,${m.id})"
+        ondblclick="showReactPicker(event,${m.id})">
         <div class="dm-bubble">
           ${replyHtml}${mediaHtml}
           ${m.message ? `<span class="dm-msg-text">${esc(m.message)}</span>` : ''}
           <div class="dm-time-row"><span class="dm-time">${timeStr}</span>${checkHtml}</div>
         </div>
+        ${rxnHtml}
       </div>`;
     });
 
@@ -2511,6 +2568,109 @@ function renderAvatar() {
     el.innerHTML = `<span id="avatarInitial">${initial}</span><div class="avatar-edit">EDIT</div><input type="file" id="avatarInput" accept="image/*" onchange="handleAvatarUpload(this)" hidden>`;
   }
 }
+
+// TYPING INDICATOR
+function dmTypingNotify() {
+  if (!dmCurrentChat) return;
+  clearTimeout(dmTypingTimer);
+  dmTypingTimer = setTimeout(() => {
+    api('/typing', { method: 'POST', body: JSON.stringify({ to: dmCurrentChat.userId }) }).catch(() => {});
+  }, 300);
+}
+async function checkDmTyping() {
+  if (!dmCurrentChat) return;
+  try {
+    const d = await api('/typing?from=' + dmCurrentChat.userId);
+    const el = document.getElementById('dmTyping');
+    if (d.typing) {
+      el.innerHTML = `${esc(dmCurrentChat.name)} is typing<span class="dm-typing-dots"><span></span><span></span><span></span></span>`;
+    } else {
+      el.innerHTML = '';
+    }
+  } catch(e) {}
+}
+
+// ONLINE PRESENCE
+async function checkDmPresence() {
+  if (!dmCurrentChat) return;
+  try {
+    api('/presence', { method: 'POST' }).catch(() => {});
+    const d = await api('/presence?user_id=' + dmCurrentChat.userId);
+    const dot = document.getElementById('dmOnlineDot');
+    if (dot) {
+      dot.className = d.online ? 'dm-online' : 'dm-offline';
+      const roleEl = document.getElementById('dmChatRole');
+      if (d.online) {
+        roleEl.textContent = 'online';
+        roleEl.style.color = '#34c759';
+      } else if (d.last_seen) {
+        const ago = Date.now() - new Date(d.last_seen + 'Z').getTime();
+        const mins = Math.floor(ago / 60000);
+        roleEl.textContent = mins < 60 ? `last seen ${mins}m ago` : mins < 1440 ? `last seen ${Math.floor(mins/60)}h ago` : 'offline';
+        roleEl.style.color = '';
+      }
+    }
+  } catch(e) {}
+}
+
+// REACTIONS
+async function toggleReaction(msgId, emoji) {
+  try {
+    await api('/reactions', { method: 'POST', body: JSON.stringify({ message_id: msgId, emoji }) });
+    await loadDmMessages(true);
+  } catch(e) {}
+}
+function showReactPicker(e, msgId) {
+  e.preventDefault();
+  const existing = document.querySelector('.dm-react-picker');
+  if (existing) existing.remove();
+  const el = document.getElementById('msg-' + msgId);
+  if (!el) return;
+  const picker = document.createElement('div');
+  picker.className = 'dm-react-picker';
+  ['👍','❤️','😂','😮','😢','🙏'].forEach(emoji => {
+    const btn = document.createElement('button');
+    btn.textContent = emoji;
+    btn.onclick = (ev) => { ev.stopPropagation(); picker.remove(); toggleReaction(msgId, emoji); };
+    picker.appendChild(btn);
+  });
+  el.style.position = 'relative';
+  el.appendChild(picker);
+  setTimeout(() => { document.addEventListener('click', function rem() { picker.remove(); document.removeEventListener('click', rem); }); }, 10);
+}
+
+// EMOJI PICKER
+const EMOJI_LIST = ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😇','😍','🤩','😘','😗','😋','😛','😜','🤪','😝','🤑','🤗','🤭','😐','😑','😶','😏','😒','🙄','😬','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😤','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','✋','🤚','🖐️','🖖','👋','🤝','🙏','✍️','💪','🦾','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❤️‍🔥','💯','💢','💥','💫','💦','🔥','⭐','🌟','✨','🎉','🎊','🏆','🥇'];
+function toggleDmEmoji() {
+  const panel = document.getElementById('dmEmojiPanel');
+  if (panel.classList.contains('hidden')) {
+    if (!panel.children.length) {
+      panel.innerHTML = EMOJI_LIST.map(e => `<button onclick="insertDmEmoji('${e}')">${e}</button>`).join('');
+    }
+    panel.classList.remove('hidden');
+  } else {
+    panel.classList.add('hidden');
+  }
+}
+function insertDmEmoji(emoji) {
+  const input = document.getElementById('dmInput');
+  input.value += emoji;
+  input.focus();
+}
+
+// PRESENCE HEARTBEAT
+setInterval(() => { if (currentUser) api('/presence', { method: 'POST' }).catch(() => {}); }, 30000);
+
+// Add React to context menu
+const origShowDmCtx = showDmCtx;
+showDmCtx = function(e, msgId) {
+  origShowDmCtx(e, msgId);
+  const ctx = document.getElementById('dmCtx');
+  const reactBtn = document.createElement('button');
+  reactBtn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 14s1.5 2 4 2 4-2 4-2" fill="none" stroke="currentColor" stroke-width="2"/></svg>React';
+  reactBtn.onclick = () => { ctx.classList.add('hidden'); showReactPicker(e, msgId); };
+  ctx.insertBefore(reactBtn, ctx.firstChild);
+};
 
 init();
 </script>
