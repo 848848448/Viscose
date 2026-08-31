@@ -23,8 +23,8 @@ export async function onRequestGet(context) {
       FROM pickups p
       JOIN users u ON p.user_id = u.id
       JOIN addresses a ON p.address_id = a.id
-      WHERE p.driver_id = ?
-      ORDER BY CASE p.status WHEN 'picked_up' THEN 0 WHEN 'in_process' THEN 1 WHEN 'ready' THEN 2 ELSE 3 END, p.requested_at DESC`;
+      WHERE p.driver_id = ? OR (p.driver_id IS NULL AND p.status = 'pending')
+      ORDER BY CASE p.status WHEN 'pending' THEN 0 WHEN 'picked_up' THEN 1 WHEN 'in_process' THEN 2 WHEN 'ready' THEN 3 ELSE 4 END, p.requested_at DESC`;
     params = [user.user_id];
   } else {
     query = `SELECT p.*, a.label as addr_label, a.street, a.city, a.state, a.zip, a.country
@@ -84,13 +84,16 @@ export async function onRequestPut(context) {
   const pickup = await env.DB.prepare("SELECT p.*, u.email as user_email, u.name as user_name, a.label as addr_label FROM pickups p JOIN users u ON p.user_id = u.id JOIN addresses a ON p.address_id = a.id WHERE p.id = ?").bind(id).first();
   if (!pickup) return Response.json({ error: 'Pickup not found' }, { status: 404 });
 
-  if (isDriver && pickup.driver_id !== user.user_id) {
+  if (isDriver && pickup.driver_id !== user.user_id && pickup.driver_id !== null) {
     return Response.json({ error: 'Not assigned to you' }, { status: 403 });
   }
 
   const oldStatus = pickup.status;
   const updates = [];
   const values = [];
+  if (isDriver && pickup.driver_id === null) {
+    updates.push("driver_id = ?"); values.push(user.user_id);
+  }
   if (status) { updates.push("status = ?"); values.push(status); }
   if (admin_notes !== undefined && isAdmin) { updates.push("admin_notes = ?"); values.push(admin_notes); }
   if (driver_id !== undefined && isAdmin) { updates.push("driver_id = ?"); values.push(driver_id || null); }

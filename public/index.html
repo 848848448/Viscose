@@ -157,6 +157,7 @@
     .pickup-user{font-weight:700;font-size:1rem}
     .pickup-user .email{color:var(--text3);font-weight:400;font-size:0.8rem;margin-left:6px}
     .status{display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+    .status-pending{background:rgba(0,122,255,0.1);color:var(--blue);font-weight:700}
     .status-picked_up{background:rgba(255,149,0,0.1);color:var(--orange)}
     .status-in_process{background:rgba(0,122,255,0.1);color:var(--blue)}
     .status-ready{background:rgba(175,82,222,0.1);color:#af52de}
@@ -780,11 +781,11 @@
       <div id="page-driverpickups" class="hidden">
         <div class="page-head">
           <h2 data-i18n="my_deliveries">My Deliveries</h2>
+          <button class="btn btn-sm" onclick="openDriverRoute()" style="padding:6px 14px;font-size:13px">🗺️ Route</button>
           <div class="filter-tabs">
             <button class="filter-tab active" onclick="filterDriverPickups('all')" id="dFilterAll">All</button>
+            <button class="filter-tab" onclick="filterDriverPickups('pending')" id="dFilterPending">New</button>
             <button class="filter-tab" onclick="filterDriverPickups('picked_up')" id="dFilterPicked_up">Picked Up</button>
-            <button class="filter-tab" onclick="filterDriverPickups('in_process')" id="dFilterIn_process">In Process</button>
-            <button class="filter-tab" onclick="filterDriverPickups('ready')" id="dFilterReady">Ready</button>
             <button class="filter-tab" onclick="filterDriverPickups('delivered')" id="dFilterDelivered">Delivered</button>
           </div>
         </div>
@@ -1578,12 +1579,15 @@ function filterDriverPickups(f) { driverFilter = f; document.querySelectorAll('#
 function renderDriverPickups() {
   const filtered = driverFilter === 'all' ? driverPickupsData : driverPickupsData.filter(p => p.status === driverFilter);
   const c = document.getElementById('driverPickupList');
-  if (!filtered.length) { c.innerHTML = '<div class="empty">No deliveries assigned to you.</div>'; return; }
+  if (!filtered.length) { c.innerHTML = '<div class="empty">No pickups available.</div>'; return; }
   c.innerHTML = filtered.map(p => {
     const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
     const navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr);
     const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
-    return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-user">${esc(p.user_name)}</span><span class="status status-${p.status}">${p.status.replace('_',' ')}</span></div><div class="pickup-addr">${esc(p.addr_label || 'Address')}</div><div class="pickup-detail">${esc(addr)}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">📷 Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">📷 Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}<div class="pickup-actions"><a href="${navUrl}" target="_blank" rel="noopener" class="map-link nav-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Navigate</a><a href="${mapUrl}" target="_blank" rel="noopener" class="map-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Map</a>${p.status === 'delivered' ? '' : p.status === 'picked_up' ? `<button class="btn btn-sm btn-dark" onclick="driverDeliverPhoto(${p.id})" style="padding:8px 12px">📷 Take Photo & Deliver</button>` : `<button class="btn btn-sm" onclick="driverPickupPhoto(${p.id})" style="padding:8px 12px">📷 Pick Up</button>`}<span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
+    let actionBtn = '';
+    if (p.status === 'pending') actionBtn = `<button class="btn btn-sm btn-dark" onclick="driverPickupPhoto(${p.id})" style="padding:8px 12px">📷 Pick Up</button>`;
+    else if (p.status === 'picked_up') actionBtn = `<button class="btn btn-sm btn-dark" onclick="driverDeliverPhoto(${p.id})" style="padding:8px 12px">📷 Deliver</button>`;
+    return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-user">${esc(p.user_name)}</span><span class="status status-${p.status}">${p.status === 'pending' ? 'NEW' : p.status.replace('_',' ')}</span></div><div class="pickup-addr">${esc(p.addr_label || 'Address')}</div><div class="pickup-detail">${esc(addr)}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">📷 Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">📷 Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}<div class="pickup-actions"><a href="${navUrl}" target="_blank" rel="noopener" class="map-link nav-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Navigate</a><a href="${mapUrl}" target="_blank" rel="noopener" class="map-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Map</a>${actionBtn}<span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
   }).join('');
 }
 async function driverUpdateStatus(id, status) { if (!status) return; try { await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status }) }); loadDriverPickups(); } catch(e) { alert(e.message); } }
@@ -1610,6 +1614,18 @@ function driverPhotoAction(id, status, photoField) {
 }
 function driverPickupPhoto(id) { driverPhotoAction(id, 'picked_up', 'pickup_photo'); }
 function driverDeliverPhoto(id) { driverPhotoAction(id, 'delivered', 'delivery_photo'); }
+function openDriverRoute() {
+  const active = driverPickupsData.filter(p => p.status === 'pending' || p.status === 'picked_up');
+  if (!active.length) { alert('No active pickups for route.'); return; }
+  const waypoints = active.map(p => [p.street, p.city, p.state, p.zip].filter(Boolean).join(', '));
+  const origin = waypoints[0];
+  const dest = waypoints[waypoints.length - 1];
+  const mid = waypoints.slice(1, -1);
+  let url = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(origin) + '&destination=' + encodeURIComponent(dest);
+  if (mid.length) url += '&waypoints=' + mid.map(w => encodeURIComponent(w)).join('|');
+  url += '&travelmode=driving';
+  window.open(url, '_blank');
+}
 
 // FACTORY
 let factoryData = [], factoryFilter = 'all';
