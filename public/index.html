@@ -275,6 +275,12 @@
     .info-row .lbl{color:var(--text3);min-width:110px;font-weight:500}
     .info-row .val{font-weight:600}
 
+    /* TOAST */
+    .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--accent-fg);padding:12px 24px;border-radius:24px;font-size:0.88rem;font-weight:600;z-index:11000;box-shadow:0 4px 16px rgba(0,0,0,0.2);animation:toastIn 0.25s ease-out;white-space:nowrap}
+    @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+    .toast.out{animation:toastOut 0.2s ease-in forwards}
+    @keyframes toastOut{to{opacity:0;transform:translateX(-50%) translateY(20px)}}
+
     /* THEME TOGGLE */
     .theme-toggle{display:flex;align-items:center;gap:14px;padding:14px 0}
     .theme-toggle span{font-weight:500}
@@ -643,6 +649,10 @@
       <div id="page-pickups" class="hidden">
         <div class="page-head">
           <h2>Pickup Requests</h2>
+          <button class="btn btn-sm" onclick="exportPickupsCSV()" style="gap:6px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
         </div>
         <div class="toolbar">
           <div class="filter-tabs">
@@ -1885,8 +1895,8 @@ async function saveProfile() {
     await api('/profile', { method: 'PUT', body: JSON.stringify({ name: document.getElementById('settingsName').value }) });
     currentUser.name = document.getElementById('settingsName').value;
     document.getElementById('sidebarName').textContent = currentUser.name;
-    document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-ok">Profile updated.</div>';
-  } catch(e) { document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
+    showToast('Profile saved');
+  } catch(e) { showToast('Save failed'); }
 }
 
 async function changePassword() {
@@ -2303,7 +2313,7 @@ function dmCtxReply() {
 function dmCtxCopy() {
   document.getElementById('dmCtx').classList.add('hidden');
   if (!dmCtxMsg?.message) return;
-  navigator.clipboard.writeText(dmCtxMsg.message).catch(() => {});
+  navigator.clipboard.writeText(dmCtxMsg.message).then(() => showToast('Copied')).catch(() => {});
 }
 
 function dmCtxDelete() {
@@ -2324,7 +2334,8 @@ async function dmDoDelete(mode) {
     const el = document.getElementById('msg-' + dmCtxMsg.id);
     if (el) el.remove();
     dmMessagesCache = dmMessagesCache.filter(m => m.id !== dmCtxMsg.id);
-  } catch(e) { alert(e.message); }
+    showToast('Message deleted');
+  } catch(e) { showToast('Delete failed'); }
 }
 
 async function dmCtxForward() {
@@ -2359,8 +2370,9 @@ async function forwardDmTo(userId) {
       media: dmCtxMsg.media || '',
       media_type: dmCtxMsg.media_type || ''
     })});
+    showToast('Message forwarded');
     await loadDmMessages();
-  } catch(e) { alert(e.message); }
+  } catch(e) { showToast('Forward failed'); }
 }
 
 function setDmReply(msgId, senderName, msgText) {
@@ -2660,6 +2672,35 @@ function insertDmEmoji(emoji) {
 
 // PRESENCE HEARTBEAT
 setInterval(() => { if (currentUser) api('/presence', { method: 'POST' }).catch(() => {}); }, 30000);
+
+// TOAST NOTIFICATIONS
+function showToast(msg, duration = 2500) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 200); }, duration);
+}
+
+// CSV EXPORT
+function exportPickupsCSV() {
+  if (!allPickupsData.length) { alert('No pickups to export'); return; }
+  const headers = ['ID','User','Address','Street','City','State','Zip','Status','Notes','Admin Notes','Driver','Requested','Updated'];
+  const rows = allPickupsData.map(p => [
+    p.id, p.user_name||'', p.addr_label||'', p.street||'', p.city||'', p.state||'', p.zip||'',
+    p.status, (p.notes||'').replace(/"/g,'""'), (p.admin_notes||'').replace(/"/g,'""'),
+    p.driver_name||'', p.requested_at||'', p.updated_at||''
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `pickups-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 // Add React to context menu
 const origShowDmCtx = showDmCtx;
