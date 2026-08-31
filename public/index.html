@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viscose</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1d1d1f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111'/><text x='50' y='68' text-anchor='middle' font-size='60' font-weight='bold' fill='white'>V</text></svg>">
@@ -229,6 +234,31 @@
 
     /* CHECKBOX */
     .pickup-check{width:20px;height:20px;accent-color:var(--blue);cursor:pointer;flex-shrink:0}
+
+    /* PULL TO REFRESH */
+    .ptr-indicator{text-align:center;height:0;overflow:hidden;transition:height 0.2s;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:0.8rem}
+    .ptr-indicator.active{height:50px}
+    .ptr-spinner{width:24px;height:24px;border:2.5px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* PROFILE AVATAR */
+    .profile-avatar{width:80px;height:80px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:var(--text2);overflow:hidden;cursor:pointer;position:relative;margin:0 auto 12px}
+    .profile-avatar img{width:100%;height:100%;object-fit:cover}
+    .profile-avatar .avatar-edit{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);color:#fff;font-size:0.6rem;text-align:center;padding:3px 0;font-weight:600}
+
+    /* GLOBAL SEARCH */
+    .gsearch-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column}
+    .gsearch-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--line)}
+    .gsearch-bar input{flex:1;padding:10px 16px;border:none;border-radius:22px;background:var(--bg);color:var(--text);font-size:1rem;font-family:inherit;outline:none}
+    .gsearch-bar input::placeholder{color:var(--text3)}
+    .gsearch-results{flex:1;overflow-y:auto;padding:8px 16px}
+    .gsearch-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--radius);cursor:pointer;transition:background 0.15s}
+    .gsearch-item:hover,.gsearch-item:active{background:var(--bg3)}
+    .gsearch-icon{width:40px;height:40px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .gsearch-icon svg{width:18px;height:18px;stroke:var(--text2);fill:none;stroke-width:2}
+    .gsearch-title{font-weight:600;font-size:0.93rem}
+    .gsearch-sub{font-size:0.78rem;color:var(--text3)}
+    .gsearch-cat{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;color:var(--text3);padding:16px 0 6px}
 
     /* DASHBOARD */
     .dash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:28px}
@@ -507,7 +537,7 @@
   <div class="mob-head">
     <button onclick="toggleMobileMenu()" id="menuBtn">&#9776;</button>
     <span class="logo">Viscose</span>
-    <span style="width:36px"></span>
+    <button onclick="openGSearch()" title="Search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
   </div>
   <div class="mob-overlay" id="mobOverlay" onclick="toggleMobileMenu()"></div>
   <div class="app">
@@ -553,9 +583,12 @@
     <main class="main">
 
       <!-- DASHBOARD -->
+      <div class="ptr-indicator" id="ptrIndicator"><div class="ptr-spinner"></div></div>
       <div id="page-dashboard">
         <div class="page-head"><h2>Dashboard</h2></div>
         <div class="dash-stats" id="dashStats"></div>
+        <div class="section-title">This Week</div>
+        <div id="dashChart" style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px;box-shadow:var(--card-shadow);overflow-x:auto"></div>
         <div class="section-title">Recent Pickups</div>
         <div id="dashPickups"></div>
       </div>
@@ -685,6 +718,11 @@
         </div>
         <div class="settings-section">
           <h3>Profile</h3>
+          <div class="profile-avatar" onclick="document.getElementById('avatarInput').click()" id="profileAvatar">
+            <span id="avatarInitial">?</span>
+            <div class="avatar-edit">EDIT</div>
+            <input type="file" id="avatarInput" accept="image/*" onchange="handleAvatarUpload(this)" hidden>
+          </div>
           <div class="field"><label>Name</label><input id="settingsName" placeholder="Your name"></div>
           <div class="field"><label>Email</label><input id="settingsEmail" type="email" disabled style="opacity:0.5"></div>
           <button class="btn btn-dark" onclick="saveProfile()">Save Profile</button>
@@ -706,6 +744,17 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- GLOBAL SEARCH -->
+  <div class="gsearch-overlay hidden" id="gsearchOverlay">
+    <div class="gsearch-bar">
+      <button onclick="closeGSearch()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text);padding:4px 8px">&larr;</button>
+      <input id="gsearchInput" placeholder="Search messages, pickups, users..." oninput="doGSearch(this.value)">
+    </div>
+    <div class="gsearch-results" id="gsearchResults">
+      <div style="text-align:center;padding:40px;color:var(--text3);font-size:0.9rem">Type to search...</div>
+    </div>
   </div>
 
   <!-- DM FAB -->
@@ -1138,12 +1187,36 @@ async function loadDashboard() {
     const ready = pickups.filter(p => p.status === 'ready').length;
     const delivered = pickups.filter(p => p.status === 'delivered').length;
 
+    const total = pickups.length;
     document.getElementById('dashStats').innerHTML = `
-      <div class="stat-card"><div class="stat-num">${addresses.length}</div><div class="stat-label">Addresses</div></div>
+      <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total</div></div>
       <div class="stat-card"><div class="stat-num" style="color:var(--orange)">${pickedUp}</div><div class="stat-label">Picked Up</div></div>
       <div class="stat-card"><div class="stat-num" style="color:var(--blue)">${inProcess}</div><div class="stat-label">In Process</div></div>
       <div class="stat-card"><div class="stat-num" style="color:#af52de">${ready}</div><div class="stat-label">Ready</div></div>
       <div class="stat-card"><div class="stat-num" style="color:var(--green)">${delivered}</div><div class="stat-label">Delivered</div></div>
+    `;
+
+    // Weekly bar chart
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const today = new Date();
+    const weekData = Array(7).fill(0);
+    const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay());
+    weekStart.setHours(0,0,0,0);
+    pickups.forEach(p => {
+      const d = new Date(p.requested_at);
+      if (d >= weekStart) { weekData[d.getDay()]++; }
+    });
+    const maxVal = Math.max(...weekData, 1);
+    document.getElementById('dashChart').innerHTML = `
+      <div style="display:flex;align-items:flex-end;gap:8px;height:100px;padding:0 4px">
+        ${weekData.map((v, i) => `
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <span style="font-size:0.7rem;font-weight:600;color:var(--text2)">${v || ''}</span>
+            <div style="width:100%;background:${i === today.getDay() ? 'var(--blue)' : 'var(--bg3)'};border-radius:4px 4px 0 0;height:${Math.max(v / maxVal * 70, 4)}px;transition:height 0.3s"></div>
+            <span style="font-size:0.65rem;color:var(--text3);font-weight:600">${days[i]}</span>
+          </div>
+        `).join('')}
+      </div>
     `;
 
     const recent = pickups.slice(0, 5);
@@ -1766,6 +1839,8 @@ async function loadSettings() {
     document.getElementById('settingsRole').textContent = d.user.role;
     document.getElementById('settingsCreated').textContent = new Date(d.user.created_at).toLocaleDateString();
     document.getElementById('settingsAlert').innerHTML = '';
+    if (d.user.avatar) currentUser.avatar = d.user.avatar;
+    renderAvatar();
     ['currentPass','newPass','confirmPass'].forEach(f => document.getElementById(f).value = '');
     const theme = localStorage.getItem('viscose_theme');
     document.getElementById('darkToggle').checked = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme:dark)').matches);
@@ -2315,6 +2390,127 @@ async function sendDm() {
 document.addEventListener('scroll', (e) => {
   if (e.target.id === 'dmMessages') updateScrollBtn();
 }, true);
+
+// SERVICE WORKER
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+// GLOBAL SEARCH
+let gsearchTimer = null;
+function openGSearch() {
+  document.getElementById('gsearchOverlay').classList.remove('hidden');
+  document.getElementById('gsearchInput').value = '';
+  document.getElementById('gsearchInput').focus();
+  document.getElementById('gsearchResults').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:0.9rem">Type to search...</div>';
+}
+function closeGSearch() {
+  document.getElementById('gsearchOverlay').classList.add('hidden');
+}
+function doGSearch(q) {
+  clearTimeout(gsearchTimer);
+  if (q.length < 2) {
+    document.getElementById('gsearchResults').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:0.9rem">Type to search...</div>';
+    return;
+  }
+  gsearchTimer = setTimeout(async () => {
+    try {
+      const d = await api('/search?q=' + encodeURIComponent(q));
+      const r = d.results || [];
+      if (!r.length) {
+        document.getElementById('gsearchResults').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:0.9rem">No results found</div>';
+        return;
+      }
+      const grouped = {};
+      r.forEach(item => {
+        if (!grouped[item.type]) grouped[item.type] = [];
+        grouped[item.type].push(item);
+      });
+      const icons = {
+        user: '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+        pickup: '<svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
+        message: '<svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>'
+      };
+      const labels = { user: 'Users', pickup: 'Pickups', message: 'Messages' };
+      let html = '';
+      for (const type of ['user', 'pickup', 'message']) {
+        if (!grouped[type]) continue;
+        html += `<div class="gsearch-cat">${labels[type]}</div>`;
+        grouped[type].forEach(item => {
+          html += `<div class="gsearch-item" onclick="gsearchGo('${type}',${JSON.stringify(item.id)},'${item.extra || ''}')">
+            <div class="gsearch-icon">${icons[type]}</div>
+            <div><div class="gsearch-title">${esc(item.title)}</div><div class="gsearch-sub">${esc(item.sub)}</div></div>
+          </div>`;
+        });
+      }
+      document.getElementById('gsearchResults').innerHTML = html;
+    } catch(e) { console.error(e); }
+  }, 300);
+}
+function gsearchGo(type, id, extra) {
+  closeGSearch();
+  if (type === 'user') { showPage('users'); }
+  else if (type === 'pickup') { showPage(currentUser.role === 'driver' ? 'driverpickups' : 'pickups'); }
+  else if (type === 'message' && extra) { openDM(); openDmChat(parseInt(extra), '', ''); }
+}
+
+// PULL TO REFRESH
+let ptrStartY = 0;
+let ptrActive = false;
+document.addEventListener('touchstart', (e) => {
+  if (window.scrollY === 0 && !document.getElementById('dmOverlay')?.classList.contains('hidden') === false) {
+    ptrStartY = e.touches[0].clientY;
+    ptrActive = true;
+  }
+}, { passive: true });
+document.addEventListener('touchmove', (e) => {
+  if (!ptrActive) return;
+  const dy = e.touches[0].clientY - ptrStartY;
+  if (dy > 60 && window.scrollY === 0) {
+    document.getElementById('ptrIndicator').classList.add('active');
+  }
+}, { passive: true });
+document.addEventListener('touchend', () => {
+  if (!ptrActive) return;
+  ptrActive = false;
+  const ptr = document.getElementById('ptrIndicator');
+  if (ptr.classList.contains('active')) {
+    const page = location.hash.replace('#', '') || 'dashboard';
+    showPage(page);
+    setTimeout(() => ptr.classList.remove('active'), 800);
+  }
+});
+
+// PROFILE AVATAR
+function handleAvatarUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = function() {
+    const canvas = document.createElement('canvas');
+    const size = Math.min(img.width, img.height, 200);
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const sx = (img.width - size) / 2, sy = (img.height - size) / 2;
+    ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+    currentUser.avatar = dataUrl;
+    renderAvatar();
+    api('/profile', { method: 'PUT', body: JSON.stringify({ name: currentUser.name, avatar: dataUrl }) }).catch(() => {});
+  };
+  img.src = URL.createObjectURL(file);
+  input.value = '';
+}
+function renderAvatar() {
+  const el = document.getElementById('profileAvatar');
+  if (!el) return;
+  if (currentUser.avatar) {
+    el.innerHTML = `<img src="${currentUser.avatar}"><div class="avatar-edit">EDIT</div><input type="file" id="avatarInput" accept="image/*" onchange="handleAvatarUpload(this)" hidden>`;
+  } else {
+    const initial = (currentUser.name || '?')[0].toUpperCase();
+    el.innerHTML = `<span id="avatarInitial">${initial}</span><div class="avatar-edit">EDIT</div><input type="file" id="avatarInput" accept="image/*" onchange="handleAvatarUpload(this)" hidden>`;
+  }
+}
 
 init();
 </script>

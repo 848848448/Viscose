@@ -7,16 +7,20 @@ async function hashPassword(password) {
 
 export async function onRequestGet(context) {
   const { env, data } = context;
-  const user = await env.DB.prepare("SELECT id, email, name, role, created_at FROM users WHERE id = ?")
+  const user = await env.DB.prepare("SELECT id, email, name, role, avatar, created_at FROM users WHERE id = ?")
     .bind(data.user.user_id).first();
   return Response.json({ user });
 }
 
 export async function onRequestPut(context) {
   const { env, data } = context;
-  const { name } = await context.request.json();
+  const { name, avatar } = await context.request.json();
   if (!name) return Response.json({ error: 'Name is required' }, { status: 400 });
-  await env.DB.prepare("UPDATE users SET name = ? WHERE id = ?").bind(name, data.user.user_id).run();
+  if (avatar !== undefined) {
+    await env.DB.prepare("UPDATE users SET name = ?, avatar = ? WHERE id = ?").bind(name, avatar || '', data.user.user_id).run();
+  } else {
+    await env.DB.prepare("UPDATE users SET name = ? WHERE id = ?").bind(name, data.user.user_id).run();
+  }
   return Response.json({ success: true });
 }
 
