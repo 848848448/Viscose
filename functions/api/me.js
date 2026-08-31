@@ -1,3 +1,4 @@
 export async function onRequestGet(context) {
-  return new Response(JSON.stringify({ user: context.data.user }), { headers: { 'Content-Type': 'application/json' } });
+  const u = context.data.user;
+  return Response.json({ user: { id: u.user_id, email: u.email, name: u.name, role: u.role } });
 }

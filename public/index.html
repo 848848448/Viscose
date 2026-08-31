@@ -765,6 +765,18 @@
       <div class="modal-foot"><button class="btn" onclick="closeModal('dmFwdModal')">Cancel</button></div>
     </div>
   </div>
+
+  <!-- DM Delete Modal -->
+  <div id="dmDelModal" class="overlay hidden" onclick="if(event.target===this)closeModal('dmDelModal')" style="z-index:10002">
+    <div class="modal" style="max-width:300px;text-align:center">
+      <p style="margin:0 0 16px;font-size:0.95rem">Delete message?</p>
+      <div id="dmDelBtns" style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn danger" onclick="dmDoDelete('everyone')" id="dmDelEveryoneBtn" style="width:100%">Delete for everyone</button>
+        <button class="btn" onclick="dmDoDelete('me')" style="width:100%;background:#e0e0e0;color:#333">Delete for me</button>
+        <button class="btn" onclick="closeModal('dmDelModal')" style="width:100%;background:transparent;color:var(--fg)">Cancel</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- MODALS -->
@@ -1791,7 +1803,17 @@ function showDmFab() {
   const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
   const isDriver = currentUser.role === 'driver';
   document.getElementById('dmFab').classList.toggle('hidden', !isAdmin && !isDriver);
-  if (isAdmin || isDriver) pollDmUnread();
+  if (isAdmin || isDriver) {
+    pollDmUnread();
+    try {
+      const saved = sessionStorage.getItem('dmChat');
+      if (saved) {
+        const c = JSON.parse(saved);
+        openDM();
+        openDmChat(c.userId, c.name, c.role);
+      }
+    } catch(e) {}
+  }
 }
 
 async function pollDmUnread() {
@@ -1819,6 +1841,7 @@ function openDM() {
 function closeDM() {
   document.getElementById('dmOverlay').classList.add('hidden');
   dmCurrentChat = null;
+  sessionStorage.removeItem('dmChat');
   dmReplyTo = null;
   cancelDmMedia();
   if (dmPollInterval) { clearInterval(dmPollInterval); dmPollInterval = null; }
@@ -1829,6 +1852,7 @@ function dmBackToList() {
   document.getElementById('dmListView').classList.remove('hidden');
   document.getElementById('dmChatView').classList.add('hidden');
   dmCurrentChat = null;
+  sessionStorage.removeItem('dmChat');
   if (dmPollInterval) { clearInterval(dmPollInterval); dmPollInterval = null; }
   loadDmConversations();
 }
@@ -1880,6 +1904,7 @@ function formatDmTime(dateStr) {
 
 async function openDmChat(userId, name, role) {
   dmCurrentChat = { userId, name, role };
+  sessionStorage.setItem('dmChat', JSON.stringify(dmCurrentChat));
   dmReplyTo = null;
   dmPendingMedia = null;
   document.getElementById('dmReplyBar').classList.add('hidden');
@@ -1899,7 +1924,6 @@ async function openDmChat(userId, name, role) {
   document.getElementById('dmChatView').classList.remove('hidden');
 
   await loadDmMessages();
-  document.getElementById('dmInput').focus();
 
   if (dmPollInterval) clearInterval(dmPollInterval);
   dmPollInterval = setInterval(() => loadDmMessages(true), 3000);
@@ -2032,10 +2056,8 @@ function showDmCtx(e, msgId) {
     items += `<button onclick="dmCtxCopy()"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>`;
   }
   items += `<button onclick="dmCtxForward()"><svg viewBox="0 0 24 24"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>Forward</button>`;
-  if (isMine) {
-    items += `<div class="dm-ctx-sep"></div>`;
-    items += `<button class="danger" onclick="dmCtxDelete()"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Delete</button>`;
-  }
+  items += `<div class="dm-ctx-sep"></div>`;
+  items += `<button class="danger" onclick="dmCtxDelete()"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Delete</button>`;
   ctx.innerHTML = items;
   ctx.classList.remove('hidden');
 
@@ -2067,13 +2089,24 @@ function dmCtxCopy() {
   navigator.clipboard.writeText(dmCtxMsg.message).catch(() => {});
 }
 
-async function dmCtxDelete() {
+function dmCtxDelete() {
   document.getElementById('dmCtx').classList.add('hidden');
   if (!dmCtxMsg) return;
-  if (!confirm('Delete this message?')) return;
+  const isMine = dmCtxMsg.sender_id === currentUser.id;
+  document.getElementById('dmDelEveryoneBtn').classList.toggle('hidden', !isMine);
+  document.getElementById('dmDelModal').classList.remove('hidden');
+}
+
+async function dmDoDelete(mode) {
+  closeModal('dmDelModal');
+  if (!dmCtxMsg) return;
   try {
-    await api('/messages?id=' + dmCtxMsg.id, { method: 'DELETE' });
-    await loadDmMessages();
+    if (mode === 'everyone') {
+      await api('/messages?id=' + dmCtxMsg.id, { method: 'DELETE' });
+    }
+    const el = document.getElementById('msg-' + dmCtxMsg.id);
+    if (el) el.remove();
+    dmMessagesCache = dmMessagesCache.filter(m => m.id !== dmCtxMsg.id);
   } catch(e) { alert(e.message); }
 }
 
