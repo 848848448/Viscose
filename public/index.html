@@ -1085,8 +1085,9 @@ function showApp() {
     document.querySelector('[data-page="mypickups"]').classList.add('hidden');
   }
   if (currentUser.role !== 'superadmin') document.getElementById('roleField').classList.add('hidden');
+  requestNotifPermission();
   showDmFab();
-  setInterval(pollDmUnread, 30000);
+  setInterval(pollDmUnread, 10000);
   const hash = location.hash.replace('#', '') || (isDriver ? 'driverpickups' : 'dashboard');
   showPage(hash.startsWith('reset=') ? (isDriver ? 'driverpickups' : 'dashboard') : hash);
 }
@@ -1795,12 +1796,27 @@ async function changePassword() {
 
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
+// NOTIFICATIONS
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+function showNotif(title, body, onClick) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (document.visibilityState === 'visible' && document.getElementById('dmOverlay') && !document.getElementById('dmOverlay').classList.contains('hidden')) return;
+  const n = new Notification(title, { body, icon: '/favicon.ico', tag: 'viscose-dm-' + Date.now(), renotify: true });
+  if (onClick) n.onclick = () => { window.focus(); onClick(); n.close(); };
+  setTimeout(() => n.close(), 5000);
+}
+
 // DIRECT MESSAGES
 let dmCurrentChat = null;
 let dmReplyTo = null;
 let dmPendingMedia = null;
 let dmPollInterval = null;
 let dmUnreadTotal = 0;
+let dmLastConvState = {};
 let dmMessagesCache = [];
 let dmLongPressTimer = null;
 let dmCtxMsg = null;
@@ -1825,13 +1841,22 @@ function showDmFab() {
 async function pollDmUnread() {
   try {
     const d = await api('/messages');
-    dmUnreadTotal = (d.conversations || []).reduce((sum, c) => sum + (c.unread || 0), 0);
+    const convs = d.conversations || [];
+    dmUnreadTotal = convs.reduce((sum, c) => sum + (c.unread || 0), 0);
     const badge = document.getElementById('dmBadge');
     if (dmUnreadTotal > 0) {
       badge.textContent = dmUnreadTotal > 99 ? '99+' : dmUnreadTotal;
       badge.classList.remove('hidden');
     } else {
       badge.classList.add('hidden');
+    }
+    for (const c of convs) {
+      const prev = dmLastConvState[c.user_id] || 0;
+      if (c.unread > prev && c.last_sender && c.last_sender !== currentUser.name) {
+        const preview = c.last_message ? (c.last_message.length > 60 ? c.last_message.slice(0, 60) + '…' : c.last_message) : '📷 Photo';
+        showNotif(c.last_sender, preview, () => { openDM(); openDmChat(c.user_id, c.name, c.role); });
+      }
+      dmLastConvState[c.user_id] = c.unread;
     }
   } catch(e) {}
 }
