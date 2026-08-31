@@ -13,7 +13,7 @@ export async function onRequestGet(context) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
 
-  const users = await env.DB.prepare("SELECT id, email, name, role, created_at FROM users ORDER BY created_at DESC").all();
+  const users = await env.DB.prepare("SELECT id, email, name, role, phone, billing_address, billing_city, billing_state, billing_zip, billing_country, created_at FROM users ORDER BY created_at DESC").all();
   return new Response(JSON.stringify({ users: users.results }), { headers: { 'Content-Type': 'application/json' } });
 }
 
@@ -25,9 +25,9 @@ export async function onRequestPost(context) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
 
-  const { email, name, password, role } = await context.request.json();
-  if (!email || !name || !password) {
-    return new Response(JSON.stringify({ error: 'Missing fields' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  const { email, name, password, role, phone, billing_address, billing_city, billing_state, billing_zip, billing_country } = await context.request.json();
+  if (!email || !name || !password || !phone || !billing_address || !billing_city || !billing_state || !billing_zip) {
+    return new Response(JSON.stringify({ error: 'All fields are required (name, email, password, phone, billing address)' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
   }
 
   const assignRole = role || 'user';
@@ -41,8 +41,8 @@ export async function onRequestPost(context) {
   const hash = await hashPassword(password);
   const userEmail = email.toLowerCase().trim();
   try {
-    await env.DB.prepare("INSERT INTO users (email, name, password_hash, role, created_by) VALUES (?, ?, ?, ?, ?)")
-      .bind(userEmail, name, hash, assignRole, currentUser.user_id).run();
+    await env.DB.prepare("INSERT INTO users (email, name, password_hash, role, created_by, phone, billing_address, billing_city, billing_state, billing_zip, billing_country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .bind(userEmail, name, hash, assignRole, currentUser.user_id, phone, billing_address, billing_city, billing_state, billing_zip, billing_country || 'US').run();
   } catch (e) {
     if (e.message?.includes('UNIQUE')) {
       return new Response(JSON.stringify({ error: 'Email already exists' }), { status: 409, headers: { 'Content-Type': 'application/json' } });

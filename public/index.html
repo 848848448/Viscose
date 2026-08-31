@@ -1106,9 +1106,19 @@
   <div class="modal">
     <h3>Add User</h3>
     <div id="userModalAlert"></div>
-    <div class="field"><label>Name</label><input id="newUserName" placeholder="Full name"></div>
-    <div class="field"><label>Email</label><input id="newUserEmail" type="email" placeholder="user@company.com"></div>
-    <div class="field"><label>Password</label><input id="newUserPass" type="password" placeholder="Temporary password"></div>
+    <div class="field"><label>Name</label><input id="newUserName" placeholder="Full name" required></div>
+    <div class="field"><label>Email</label><input id="newUserEmail" type="email" placeholder="user@company.com" required></div>
+    <div class="field"><label>Phone</label><input id="newUserPhone" type="tel" placeholder="Phone number" required></div>
+    <div class="field"><label>Password</label><input id="newUserPass" type="password" placeholder="Temporary password" required></div>
+    <div class="field"><label>Billing Address</label><input id="newUserBillingAddress" placeholder="Street address" required></div>
+    <div style="display:flex;gap:8px">
+      <div class="field" style="flex:1"><label>City</label><input id="newUserCity" placeholder="City" required></div>
+      <div class="field" style="flex:1"><label>State</label><input id="newUserState" placeholder="State" required></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div class="field" style="flex:1"><label>Zip</label><input id="newUserZip" placeholder="Zip code" required></div>
+      <div class="field" style="flex:1"><label>Country</label><input id="newUserCountry" placeholder="Country" value="US"></div>
+    </div>
     <div class="field" id="roleField"><label>Role</label>
       <select id="newUserRole"><option value="user">User</option><option value="driver">Driver</option><option value="admin">Admin</option></select>
     </div>
@@ -1391,8 +1401,8 @@ async function loadUsers() {
     document.getElementById('userTableBody').innerHTML = d.users.map(u => `<tr><td style="font-weight:600">${esc(u.name)}</td><td style="color:var(--text2)">${esc(u.email)}</td><td><span class="badge badge-${u.role === 'superadmin' ? 'sa' : u.role}">${u.role}</span></td><td style="color:var(--text3);font-size:0.85rem">${new Date(u.created_at).toLocaleDateString()}</td><td>${u.role !== 'superadmin' ? `<button class="btn btn-red btn-xs" onclick="deleteUser(${u.id},'${esc(u.name)}')">Remove</button>` : ''}</td></tr>`).join('');
   } catch(e) { console.error(e); }
 }
-function openUserModal() { ['newUserName','newUserEmail','newUserPass'].forEach(f => document.getElementById(f).value = ''); document.getElementById('newUserRole').value = 'user'; document.getElementById('userModalAlert').innerHTML = ''; document.getElementById('userModal').classList.remove('hidden'); }
-async function createUser() { try { await api('/users', { method: 'POST', body: JSON.stringify({ name: document.getElementById('newUserName').value, email: document.getElementById('newUserEmail').value, password: document.getElementById('newUserPass').value, role: document.getElementById('newUserRole').value }) }); closeModal('userModal'); loadUsers(); } catch(e) { document.getElementById('userModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; } }
+function openUserModal() { ['newUserName','newUserEmail','newUserPhone','newUserPass','newUserBillingAddress','newUserCity','newUserState','newUserZip'].forEach(f => document.getElementById(f).value = ''); document.getElementById('newUserCountry').value = 'US'; document.getElementById('newUserRole').value = 'user'; document.getElementById('userModalAlert').innerHTML = ''; document.getElementById('userModal').classList.remove('hidden'); }
+async function createUser() { const name = document.getElementById('newUserName').value.trim(); const email = document.getElementById('newUserEmail').value.trim(); const phone = document.getElementById('newUserPhone').value.trim(); const password = document.getElementById('newUserPass').value; const billing_address = document.getElementById('newUserBillingAddress').value.trim(); const billing_city = document.getElementById('newUserCity').value.trim(); const billing_state = document.getElementById('newUserState').value.trim(); const billing_zip = document.getElementById('newUserZip').value.trim(); const billing_country = document.getElementById('newUserCountry').value.trim(); const role = document.getElementById('newUserRole').value; if (!name || !email || !phone || !password || !billing_address || !billing_city || !billing_state || !billing_zip) { document.getElementById('userModalAlert').innerHTML = '<div class="alert alert-error">All fields are required</div>'; return; } try { await api('/users', { method: 'POST', body: JSON.stringify({ name, email, password, phone, role, billing_address, billing_city, billing_state, billing_zip, billing_country: billing_country || 'US' }) }); closeModal('userModal'); loadUsers(); } catch(e) { document.getElementById('userModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; } }
 async function deleteUser(id, name) { if (!confirm('Remove ' + name + '?')) return; try { await api('/users?id=' + id, { method: 'DELETE' }); loadUsers(); } catch(e) { alert(e.message); } }
 
 // ALL ADDRESSES
