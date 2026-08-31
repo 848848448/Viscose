@@ -127,6 +127,29 @@ export async function onRequestPut(context) {
     }
   }
 
+  if (driver_id && driver_id !== pickup.driver_id && env.RESEND_API_KEY) {
+    try {
+      const driver = await env.DB.prepare("SELECT email, name FROM users WHERE id = ?").bind(driver_id).first();
+      if (driver) {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: env.EMAIL_FROM || 'Viscose <onboarding@resend.dev>',
+            to: [driver.email],
+            subject: `New Pickup Assigned — ${pickup.addr_label || 'Address'}`,
+            html: `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px">
+              <h2 style="margin-bottom:8px">New Pickup Assignment</h2>
+              <p>Hello ${driver.name},</p>
+              <p>You've been assigned a new pickup for <strong>${pickup.addr_label || 'an address'}</strong>.</p>
+              <p style="margin-top:24px"><a href="${env.SITE_URL || 'https://viscose.pages.dev'}/#driverpickups" style="background:#111;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500">View Pickups</a></p>
+            </div>`
+          })
+        });
+      }
+    } catch(e) { console.error('Driver notification failed:', e); }
+  }
+
   return Response.json({ success: true });
 }
 
