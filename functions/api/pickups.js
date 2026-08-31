@@ -3,16 +3,28 @@ export async function onRequestGet(context) {
   const user = data.user;
   const url = new URL(context.request.url);
   const isAdmin = user.role === 'superadmin' || user.role === 'admin';
+  const isDriver = user.role === 'driver';
 
   let query, params;
   if (isAdmin && !url.searchParams.get('mine')) {
+    query = `SELECT p.*, u.name as user_name, u.email as user_email,
+      a.label as addr_label, a.street, a.city, a.state, a.zip, a.country,
+      d.name as driver_name
+      FROM pickups p
+      JOIN users u ON p.user_id = u.id
+      JOIN addresses a ON p.address_id = a.id
+      LEFT JOIN users d ON p.driver_id = d.id
+      ORDER BY CASE p.status WHEN 'picked_up' THEN 0 WHEN 'in_process' THEN 1 WHEN 'ready' THEN 2 ELSE 3 END, p.requested_at DESC`;
+    params = [];
+  } else if (isDriver) {
     query = `SELECT p.*, u.name as user_name, u.email as user_email,
       a.label as addr_label, a.street, a.city, a.state, a.zip, a.country
       FROM pickups p
       JOIN users u ON p.user_id = u.id
       JOIN addresses a ON p.address_id = a.id
+      WHERE p.driver_id = ?
       ORDER BY CASE p.status WHEN 'picked_up' THEN 0 WHEN 'in_process' THEN 1 WHEN 'ready' THEN 2 ELSE 3 END, p.requested_at DESC`;
-    params = [];
+    params = [user.user_id];
   } else {
     query = `SELECT p.*, a.label as addr_label, a.street, a.city, a.state, a.zip, a.country
       FROM pickups p
@@ -53,22 +65,28 @@ export async function onRequestPut(context) {
   const { env, data } = context;
   const user = data.user;
   const isAdmin = user.role === 'superadmin' || user.role === 'admin';
+  const isDriver = user.role === 'driver';
 
-  const { id, status, admin_notes } = await context.request.json();
+  const { id, status, admin_notes, driver_id } = await context.request.json();
   if (!id) return Response.json({ error: 'Missing pickup id' }, { status: 400 });
 
-  if (!isAdmin) {
-    return Response.json({ error: 'Only admins can update pickup status' }, { status: 403 });
+  if (!isAdmin && !isDriver) {
+    return Response.json({ error: 'Not authorized' }, { status: 403 });
   }
 
   const pickup = await env.DB.prepare("SELECT p.*, u.email as user_email, u.name as user_name, a.label as addr_label FROM pickups p JOIN users u ON p.user_id = u.id JOIN addresses a ON p.address_id = a.id WHERE p.id = ?").bind(id).first();
   if (!pickup) return Response.json({ error: 'Pickup not found' }, { status: 404 });
 
+  if (isDriver && pickup.driver_id !== user.user_id) {
+    return Response.json({ error: 'Not assigned to you' }, { status: 403 });
+  }
+
   const oldStatus = pickup.status;
   const updates = [];
   const values = [];
   if (status) { updates.push("status = ?"); values.push(status); }
-  if (admin_notes !== undefined) { updates.push("admin_notes = ?"); values.push(admin_notes); }
+  if (admin_notes !== undefined && isAdmin) { updates.push("admin_notes = ?"); values.push(admin_notes); }
+  if (driver_id !== undefined && isAdmin) { updates.push("driver_id = ?"); values.push(driver_id || null); }
   updates.push("updated_at = datetime('now')");
 
   if (updates.length === 1) return Response.json({ error: 'Nothing to update' }, { status: 400 });

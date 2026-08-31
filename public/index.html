@@ -122,6 +122,7 @@
     .badge-sa{background:rgba(255,59,48,0.1);color:var(--red)}
     .badge-admin{background:rgba(0,122,255,0.1);color:var(--blue)}
     .badge-user{background:rgba(52,199,89,0.1);color:var(--green)}
+    .badge-driver{background:rgba(175,82,222,0.1);color:#af52de}
 
     /* ADDRESS CARDS */
     .addr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
@@ -395,6 +396,9 @@
         <a href="#alladdresses" data-page="alladdresses" id="navAllAddr" class="hidden">
           <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           All Addresses</a>
+        <a href="#driverpickups" data-page="driverpickups" id="navDriver" class="hidden">
+          <svg class="icon" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          My Deliveries</a>
         <a href="#admins" data-page="admins" id="navAdmins" class="hidden">
           <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           Manage Admins</a>
@@ -502,6 +506,21 @@
         </div>
       </div>
 
+      <!-- DRIVER PICKUPS -->
+      <div id="page-driverpickups" class="hidden">
+        <div class="page-head">
+          <h2>My Deliveries</h2>
+          <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterDriverPickups('all')" id="dFilterAll">All</button>
+            <button class="filter-tab" onclick="filterDriverPickups('picked_up')" id="dFilterPicked_up">Picked Up</button>
+            <button class="filter-tab" onclick="filterDriverPickups('in_process')" id="dFilterIn_process">In Process</button>
+            <button class="filter-tab" onclick="filterDriverPickups('ready')" id="dFilterReady">Ready</button>
+            <button class="filter-tab" onclick="filterDriverPickups('delivered')" id="dFilterDelivered">Delivered</button>
+          </div>
+        </div>
+        <div id="driverPickupList"></div>
+      </div>
+
       <!-- ALL ADDRESSES -->
       <div id="page-alladdresses" class="hidden">
         <div class="page-head">
@@ -595,6 +614,9 @@
         <option value="delivered">Delivered</option>
       </select>
     </div>
+    <div class="field" id="driverAssignField"><label>Assign Driver</label>
+      <select id="updatePickupDriver"><option value="">No driver</option></select>
+    </div>
     <div class="field"><label>Admin Notes</label><textarea id="updatePickupNotes" placeholder="Notes for this pickup..."></textarea></div>
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('pickupUpdateModal')">Cancel</button>
@@ -665,7 +687,7 @@
     <div class="field"><label>Email</label><input id="newUserEmail" type="email" placeholder="user@company.com"></div>
     <div class="field"><label>Password</label><input id="newUserPass" type="password" placeholder="Temporary password"></div>
     <div class="field" id="roleField"><label>Role</label>
-      <select id="newUserRole"><option value="user">User</option><option value="admin">Admin</option></select>
+      <select id="newUserRole"><option value="user">User</option><option value="driver">Driver</option><option value="admin">Admin</option></select>
     </div>
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('userModal')">Cancel</button>
@@ -840,18 +862,24 @@ function showApp() {
   document.getElementById('sidebarName').textContent = currentUser.name;
   document.getElementById('sidebarRole').textContent = currentUser.role;
   const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
+  const isDriver = currentUser.role === 'driver';
   document.getElementById('navUsers').classList.toggle('hidden', !isAdmin);
   document.getElementById('navAllAddr').classList.toggle('hidden', !isAdmin);
   document.getElementById('navPickups').classList.toggle('hidden', !isAdmin);
+  document.getElementById('navDriver').classList.toggle('hidden', !isDriver);
   document.getElementById('navAdmins').classList.toggle('hidden', currentUser.role !== 'superadmin');
+  if (isDriver) {
+    document.querySelector('[data-page="addresses"]').classList.add('hidden');
+    document.querySelector('[data-page="mypickups"]').classList.add('hidden');
+  }
   if (currentUser.role !== 'superadmin') document.getElementById('roleField').classList.add('hidden');
-  const hash = location.hash.replace('#', '') || 'dashboard';
-  showPage(hash.startsWith('reset=') ? 'dashboard' : hash);
+  const hash = location.hash.replace('#', '') || (isDriver ? 'driverpickups' : 'dashboard');
+  showPage(hash.startsWith('reset=') ? (isDriver ? 'driverpickups' : 'dashboard') : hash);
 }
 
 function showPage(page) {
-  const valid = ['dashboard','addresses','mypickups','users','pickups','alladdresses','admins','settings'];
-  if (!valid.includes(page)) page = 'dashboard';
+  const valid = ['dashboard','addresses','mypickups','users','pickups','alladdresses','admins','settings','driverpickups'];
+  if (!valid.includes(page)) page = currentUser?.role === 'driver' ? 'driverpickups' : 'dashboard';
   location.hash = page;
   document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
   document.getElementById('page-' + page).classList.remove('hidden');
@@ -866,6 +894,7 @@ function showPage(page) {
   if (page === 'pickups') loadAllPickups();
   if (page === 'admins') loadAdmins();
   if (page === 'alladdresses') loadUserOptions();
+  if (page === 'driverpickups') loadDriverPickups();
   if (page === 'settings') loadSettings();
 }
 
@@ -1342,6 +1371,7 @@ function renderPickups() {
       ${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)" alt="Pickup photo"></div>` : ''}
       ${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}
       ${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
+      ${p.driver_name ? `<div style="font-size:0.82rem;color:var(--text2);margin-top:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> ${esc(p.driver_name)}</div>` : ''}
       <div class="pickup-actions">
         <a href="${mapUrl}" target="_blank" rel="noopener" class="map-link">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
@@ -1349,7 +1379,7 @@ function renderPickups() {
         <a href="${navUrl}" target="_blank" rel="noopener" class="map-link nav-link">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
           Navigate</a>
-        <button class="btn btn-sm" onclick="openPickupUpdate(${p.id},'${p.status}','${esc(p.admin_notes || '')}')">Update</button>
+        <button class="btn btn-sm" onclick="openPickupUpdate(${p.id},'${p.status}','${esc(p.admin_notes || '')}',${p.driver_id||'null'})">Update</button>
         <span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>
       </div>
       <div class="comments-section">
@@ -1361,6 +1391,78 @@ function renderPickups() {
       </div>
     </div>`;
   }).join('');
+}
+
+// DRIVER PICKUPS
+let driverPickupsData = [];
+let driverFilter = 'all';
+
+async function loadDriverPickups() {
+  try {
+    const d = await api('/pickups');
+    driverPickupsData = d.pickups;
+    renderDriverPickups();
+  } catch(e) { console.error(e); }
+}
+
+function filterDriverPickups(f) {
+  driverFilter = f;
+  document.querySelectorAll('#page-driverpickups .filter-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('dFilter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
+  renderDriverPickups();
+}
+
+function renderDriverPickups() {
+  const filtered = driverFilter === 'all' ? driverPickupsData : driverPickupsData.filter(p => p.status === driverFilter);
+  const c = document.getElementById('driverPickupList');
+  if (!filtered.length) { c.innerHTML = '<div class="empty">No deliveries assigned to you.</div>'; return; }
+  c.innerHTML = filtered.map(p => {
+    const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
+    const navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr);
+    const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
+    return `<div class="pickup-card">
+      <div class="pickup-header">
+        <span class="pickup-user">${esc(p.user_name)}</span>
+        <span class="status status-${p.status}">${p.status.replace('_',' ')}</span>
+      </div>
+      <div class="pickup-addr">${esc(p.addr_label || 'Address')}</div>
+      <div class="pickup-detail">${esc(addr)}</div>
+      ${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)" alt="Pickup photo"></div>` : ''}
+      ${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}
+      ${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
+      <div class="pickup-actions">
+        <a href="${navUrl}" target="_blank" rel="noopener" class="map-link nav-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          Navigate</a>
+        <a href="${mapUrl}" target="_blank" rel="noopener" class="map-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          Map</a>
+        ${p.status !== 'delivered' ? `<select class="btn btn-sm" onchange="driverUpdateStatus(${p.id}, this.value)" style="padding:8px 12px">
+          <option value="">Update Status</option>
+          <option value="picked_up">Picked Up</option>
+          <option value="in_process">In Process</option>
+          <option value="ready">Ready for Delivery</option>
+          <option value="delivered">Delivered</option>
+        </select>` : ''}
+        <span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>
+      </div>
+      <div class="comments-section">
+        <button class="comments-toggle" onclick="toggleComments(${p.id}, this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Messages
+        </button>
+        <div id="comments-${p.id}" class="hidden"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function driverUpdateStatus(id, status) {
+  if (!status) return;
+  try {
+    await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status }) });
+    loadDriverPickups();
+  } catch(e) { alert(e.message); }
 }
 
 // CSV EXPORT
@@ -1413,17 +1515,29 @@ async function executeBulkUpdate() {
   } catch(e) { alert(e.message); }
 }
 
-function openPickupUpdate(id, status, notes) {
+async function openPickupUpdate(id, status, notes, driverId) {
   document.getElementById('updatePickupId').value = id;
   document.getElementById('updatePickupStatus').value = status;
   document.getElementById('updatePickupNotes').value = notes;
+  try {
+    const d = await api('/users');
+    const drivers = d.users.filter(u => u.role === 'driver');
+    const sel = document.getElementById('updatePickupDriver');
+    sel.innerHTML = '<option value="">No driver</option>' + drivers.map(u => `<option value="${u.id}" ${u.id == driverId ? 'selected' : ''}>${esc(u.name)}</option>`).join('');
+  } catch(e) {}
   document.getElementById('pickupUpdateModal').classList.remove('hidden');
 }
 
 async function updatePickup() {
   const id = parseInt(document.getElementById('updatePickupId').value);
+  const driverVal = document.getElementById('updatePickupDriver').value;
   try {
-    await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status: document.getElementById('updatePickupStatus').value, admin_notes: document.getElementById('updatePickupNotes').value }) });
+    await api('/pickups', { method: 'PUT', body: JSON.stringify({
+      id,
+      status: document.getElementById('updatePickupStatus').value,
+      admin_notes: document.getElementById('updatePickupNotes').value,
+      driver_id: driverVal ? parseInt(driverVal) : null
+    })});
     closeModal('pickupUpdateModal'); loadAllPickups();
   } catch(e) { alert(e.message); }
 }
