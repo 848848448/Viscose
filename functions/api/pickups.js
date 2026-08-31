@@ -68,7 +68,7 @@ export async function onRequestPut(context) {
   const isAdmin = user.role === 'superadmin' || user.role === 'admin';
   const isDriver = user.role === 'driver';
 
-  const { id, status, admin_notes, driver_id, priority } = await context.request.json();
+  const { id, status, admin_notes, driver_id, priority, delivery_photo } = await context.request.json();
   if (!id) return Response.json({ error: 'Missing pickup id' }, { status: 400 });
 
   if (!isAdmin && !isDriver) {
@@ -89,6 +89,7 @@ export async function onRequestPut(context) {
   if (admin_notes !== undefined && isAdmin) { updates.push("admin_notes = ?"); values.push(admin_notes); }
   if (driver_id !== undefined && isAdmin) { updates.push("driver_id = ?"); values.push(driver_id || null); }
   if (priority && ['urgent','normal','low'].includes(priority) && isAdmin) { updates.push("priority = ?"); values.push(priority); }
+  if (delivery_photo) { updates.push("delivery_photo = ?"); values.push(delivery_photo); }
   updates.push("updated_at = datetime('now')");
 
   if (updates.length === 1) return Response.json({ error: 'Nothing to update' }, { status: 400 });
