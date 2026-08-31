@@ -34,9 +34,6 @@ export async function onRequestPost(context) {
   if (assignRole === 'superadmin') {
     return new Response(JSON.stringify({ error: 'Cannot create superadmin' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
-  if (assignRole === 'admin' && currentUser.role !== 'superadmin') {
-    return new Response(JSON.stringify({ error: 'Only superadmin can create admins' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
-  }
 
   const hash = await hashPassword(password);
   const userEmail = email.toLowerCase().trim();
@@ -103,10 +100,6 @@ export async function onRequestDelete(context) {
   if (target.role === 'superadmin') {
     return new Response(JSON.stringify({ error: 'Cannot delete superadmin' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
-  if (target.role === 'admin' && currentUser.role !== 'superadmin') {
-    return new Response(JSON.stringify({ error: 'Only superadmin can delete admins' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
-  }
-
   await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(userId).run();
   return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 }

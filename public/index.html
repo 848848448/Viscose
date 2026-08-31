@@ -1312,7 +1312,7 @@ function showApp() {
   document.getElementById('navPickups').classList.toggle('hidden', !isAdmin);
   document.getElementById('navDriver').classList.toggle('hidden', !isDriver);
   document.getElementById('navFactory').classList.toggle('hidden', !isFactory);
-  document.getElementById('navAdmins').classList.toggle('hidden', currentUser.role !== 'superadmin');
+  document.getElementById('navAdmins').classList.toggle('hidden', !isAdmin);
   document.getElementById('navTracking').classList.toggle('hidden', !isAdmin);
   document.getElementById('navActivityLog').classList.toggle('hidden', !isAdmin);
   if (isDriver || isFactory) {
@@ -1320,7 +1320,7 @@ function showApp() {
     document.querySelector('[data-page="mypickups"]').classList.add('hidden');
     document.querySelector('[data-page="dashboard"]').classList.add('hidden');
   }
-  if (currentUser.role !== 'superadmin') document.getElementById('roleField').classList.add('hidden');
+  if (!isAdmin) document.getElementById('roleField').classList.add('hidden');
   requestNotifPermission();
   showDmFab();
   setInterval(pollDmUnread, 10000);
