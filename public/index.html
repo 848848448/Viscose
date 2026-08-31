@@ -252,6 +252,13 @@
     .toggle-track::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform 0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
     .toggle-switch input:checked + .toggle-track::after{transform:translateX(24px)}
 
+    /* PASSWORD TOGGLE */
+    .pass-wrap{position:relative}
+    .pass-wrap input{padding-right:48px}
+    .pass-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;display:flex;align-items:center}
+    .pass-toggle:hover{color:var(--text)}
+    .pass-toggle svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
     /* PHOTO UPLOAD */
     .photo-upload{margin-bottom:16px}
     .photo-upload label{display:flex;align-items:center;justify-content:center;gap:10px;padding:32px;border:2px dashed var(--line);border-radius:var(--radius);cursor:pointer;color:var(--text2);font-weight:500;font-size:0.9rem;transition:all 0.2s}
@@ -319,7 +326,7 @@
     <div id="setupAlert"></div>
     <div class="field"><label>Name</label><input id="setupName" type="text" placeholder="Your name"></div>
     <div class="field"><label>Email</label><input id="setupEmail" type="email" placeholder="you@company.com"></div>
-    <div class="field"><label>Password</label><input id="setupPass" type="password" placeholder="Min 8 characters"></div>
+    <div class="field"><label>Password</label><div class="pass-wrap"><input id="setupPass" type="password" placeholder="Min 8 characters"><button type="button" class="pass-toggle" onclick="togglePass('setupPass',this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
     <button class="btn btn-dark btn-full" onclick="doSetup()">Create Account</button>
   </div>
 </div>
@@ -332,7 +339,7 @@
     <p class="sub">Sign in to your account.</p>
     <div id="loginAlert"></div>
     <div class="field"><label>Email</label><input id="loginEmail" type="email" placeholder="you@company.com"></div>
-    <div class="field"><label>Password</label><input id="loginPass" type="password" placeholder="Your password"></div>
+    <div class="field"><label>Password</label><div class="pass-wrap"><input id="loginPass" type="password" placeholder="Your password"><button type="button" class="pass-toggle" onclick="togglePass('loginPass',this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
     <button class="btn btn-dark btn-full" onclick="doLogin()">Sign In</button>
     <a class="forgot-link" onclick="showForgotPassword()">Forgot password?</a>
   </div>
@@ -557,11 +564,16 @@
     </div>
     <div class="field"><label>Notes (optional)</label><textarea id="pickupNotes" placeholder="Any special instructions..."></textarea></div>
     <div class="photo-upload">
-      <label id="photoLabel" for="pickupPhoto">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-        Add Photo
-      </label>
-      <input type="file" id="pickupPhoto" accept="image/*" onchange="handlePhotoSelect(this)">
+      <div id="photoLabel" style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('pickupPhotoCam').click()" style="flex:1;min-width:120px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Camera</button>
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('pickupPhotoGal').click()" style="flex:1;min-width:120px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Gallery</button>
+      </div>
+      <input type="file" id="pickupPhotoCam" accept="image/*" capture="environment" onchange="handlePhotoSelect(this)" style="display:none">
+      <input type="file" id="pickupPhotoGal" accept="image/*" onchange="handlePhotoSelect(this)" style="display:none">
       <div id="photoPreview" class="photo-preview hidden"></div>
     </div>
     <div class="modal-foot">
@@ -675,6 +687,15 @@ async function api(path, opts = {}) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Request failed');
   return data;
+}
+
+function togglePass(id, btn) {
+  const input = document.getElementById(id);
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.innerHTML = show
+    ? '<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 }
 
 function toggleMobileMenu() {
@@ -1069,7 +1090,8 @@ function handlePhotoSelect(input) {
 
 function removePhoto() {
   pendingPhoto = null;
-  document.getElementById('pickupPhoto').value = '';
+  document.getElementById('pickupPhotoCam').value = '';
+  document.getElementById('pickupPhotoGal').value = '';
   document.getElementById('photoPreview').classList.add('hidden');
   document.getElementById('photoLabel').style.display = '';
 }
