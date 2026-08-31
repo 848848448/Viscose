@@ -26,11 +26,14 @@ export async function onRequestPost(context) {
   }
 
   const { email, name, password, role, phone, billing_address, billing_city, billing_state, billing_zip, billing_country } = await context.request.json();
-  if (!email || !name || !password || !phone || !billing_address || !billing_city || !billing_state || !billing_zip) {
-    return new Response(JSON.stringify({ error: 'All fields are required (name, email, password, phone, billing address)' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  if (!email || !name || !password) {
+    return new Response(JSON.stringify({ error: 'Name, email and password are required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  }
+  const assignRole = role || 'user';
+  if (assignRole === 'user' && (!phone || !billing_address || !billing_city || !billing_state || !billing_zip)) {
+    return new Response(JSON.stringify({ error: 'Phone and billing address are required for users' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
   }
 
-  const assignRole = role || 'user';
   if (assignRole === 'superadmin') {
     return new Response(JSON.stringify({ error: 'Cannot create superadmin' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
@@ -39,7 +42,7 @@ export async function onRequestPost(context) {
   const userEmail = email.toLowerCase().trim();
   try {
     await env.DB.prepare("INSERT INTO users (email, name, password_hash, role, created_by, phone, billing_address, billing_city, billing_state, billing_zip, billing_country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-      .bind(userEmail, name, hash, assignRole, currentUser.user_id, phone, billing_address, billing_city, billing_state, billing_zip, billing_country || 'US').run();
+      .bind(userEmail, name, hash, assignRole, currentUser.user_id, phone || '', billing_address || '', billing_city || '', billing_state || '', billing_zip || '', billing_country || 'US').run();
   } catch (e) {
     if (e.message?.includes('UNIQUE')) {
       return new Response(JSON.stringify({ error: 'Email already exists' }), { status: 409, headers: { 'Content-Type': 'application/json' } });
