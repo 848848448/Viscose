@@ -132,7 +132,7 @@
     .badge-driver{background:rgba(175,82,222,0.1);color:#af52de}
 
     /* ADDRESS CARDS */
-    .addr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+    .addr-grid{display:grid;grid-template-columns:1fr;gap:16px}
     .addr-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--card-shadow);transition:box-shadow 0.2s,transform 0.2s}
     .addr-card:hover{box-shadow:var(--hover-shadow);transform:translateY(-2px)}
     .addr-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -170,6 +170,10 @@
     .pickup-photo img{width:100%;max-height:300px;object-fit:cover;display:block;border-radius:10px;cursor:pointer}
     .pickup-actions{display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--line)}
     .pickup-meta{font-size:0.78rem;color:var(--text3);margin-left:auto}
+    .pickup-priority{font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:12px;text-transform:uppercase}
+    .priority-urgent{background:rgba(255,59,48,0.12);color:var(--red)}
+    .priority-normal{background:rgba(0,122,255,0.08);color:var(--blue)}
+    .priority-low{background:rgba(52,199,89,0.08);color:var(--green)}
 
     /* CHAT (WhatsApp/Telegram style) */
     .comments-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
@@ -325,11 +329,10 @@
     .dm-fab svg{width:26px;height:26px;fill:#fff}
     .dm-fab .dm-badge{position:absolute;top:-2px;right:-2px;background:var(--red);color:#fff;font-size:0.65rem;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg)}
 
-    /* DM OVERLAY - full screen like WhatsApp */
+    /* DM OVERLAY */
     .dm-overlay{position:fixed;inset:0;background:var(--bg);z-index:600;display:flex;flex-direction:column}
     .dm-top-bar{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#075e54;color:#fff;min-height:56px}
-    :root:not([data-theme="dark"]) .dm-top-bar,
-    :root[data-theme="light"] .dm-top-bar{background:#075e54;color:#fff}
+    :root:not([data-theme="dark"]) .dm-top-bar,:root[data-theme="light"] .dm-top-bar{background:#075e54;color:#fff}
     :root[data-theme="dark"] .dm-top-bar{background:#1f2c34;color:#fff}
     @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .dm-top-bar{background:#1f2c34;color:#fff}}
     .dm-back{background:none;border:none;cursor:pointer;color:#fff;padding:6px;border-radius:8px;display:flex;align-items:center}
@@ -416,6 +419,12 @@
     @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .dm-msg-wrap.other .dm-time{color:rgba(255,255,255,0.45)}}
     .dm-check{width:16px;height:10px;flex-shrink:0}
 
+    /* Pinned message bar */
+    .dm-pinned-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg2);border-bottom:1px solid var(--line);font-size:0.82rem;cursor:pointer}
+    .dm-pinned-bar:hover{background:var(--bg3)}
+    .dm-pinned-bar svg{width:14px;height:14px;stroke:var(--orange);fill:none;stroke-width:2;flex-shrink:0}
+    .dm-pinned-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2)}
+
     /* Context menu */
     .dm-ctx{position:fixed;z-index:700;background:var(--bg2);border:1px solid var(--line);border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);overflow:hidden;min-width:180px;animation:dmCtxIn 0.12s ease-out}
     @keyframes dmCtxIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
@@ -450,6 +459,15 @@
     .dm-send-btn{width:44px;height:44px;border-radius:50%;background:#25d366;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.1s}
     .dm-send-btn:active{transform:scale(0.9)}
     .dm-send-btn svg{width:20px;height:20px;fill:#fff}
+
+    /* Voice record button */
+    .dm-voice-btn{width:44px;height:44px;border-radius:50%;background:var(--bg3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s}
+    .dm-voice-btn.recording{background:var(--red);animation:pulse 1s infinite}
+    .dm-voice-btn svg{width:20px;height:20px;stroke:var(--text2);fill:none;stroke-width:2}
+    .dm-voice-btn.recording svg{stroke:#fff}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+    .dm-audio-player{width:100%;max-width:240px}
+    .dm-audio-player audio{width:100%;height:32px}
 
     /* Scroll to bottom */
     .dm-scroll-btn{position:absolute;bottom:10px;right:14px;width:40px;height:40px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;transition:opacity 0.2s}
@@ -493,6 +511,40 @@
     .dm-emoji-panel button{background:none;border:none;font-size:1.5rem;cursor:pointer;padding:6px;border-radius:8px;line-height:1;text-align:center}
     .dm-emoji-panel button:active{background:var(--bg3)}
 
+    /* Starred messages panel */
+    .starred-panel{position:fixed;inset:0;background:var(--bg);z-index:650;display:flex;flex-direction:column}
+    .starred-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--line)}
+    .starred-list{flex:1;overflow-y:auto;padding:8px 16px}
+    .starred-item{padding:14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px}
+    .starred-item-name{font-size:0.75rem;font-weight:600;color:var(--blue);margin-bottom:4px}
+    .starred-item-text{font-size:0.9rem;margin-bottom:4px}
+    .starred-item-time{font-size:0.7rem;color:var(--text3)}
+    .starred-item-actions{display:flex;gap:8px;margin-top:6px}
+
+    /* Activity log */
+    .log-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:0.88rem}
+    .log-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);margin-top:6px;flex-shrink:0}
+    .log-content{flex:1}
+    .log-time{font-size:0.72rem;color:var(--text3);margin-top:2px}
+
+    /* Live tracking map */
+    .tracking-map{width:100%;height:300px;background:var(--bg3);border-radius:var(--radius-lg);border:1px solid var(--line);overflow:hidden;position:relative;margin-bottom:16px}
+    .tracking-placeholder{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;color:var(--text3);font-size:0.9rem}
+    .driver-marker{position:absolute;width:32px;height:32px;background:var(--blue);border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);z-index:2}
+    .driver-marker svg{width:16px;height:16px;fill:#fff}
+
+    /* Print receipt */
+    @media print{
+      body *{visibility:hidden}
+      #printArea,#printArea *{visibility:visible}
+      #printArea{position:absolute;left:0;top:0;width:100%}
+    }
+
+    /* Language switcher */
+    .lang-switch{display:flex;gap:4px}
+    .lang-btn{padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:600;border:1px solid var(--line);background:var(--bg2);color:var(--text2);cursor:pointer}
+    .lang-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
     /* MOBILE */
     .mob-head{
       display:flex;position:fixed;top:0;left:0;right:0;z-index:150;
@@ -506,7 +558,6 @@
     .mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:190}
     .mob-overlay.open{display:block}
 
-    .addr-grid{grid-template-columns:1fr}
     .filter-tabs{width:100%}
     .pickup-meta{margin-left:0;width:100%}
     .settings-section{padding:18px}
@@ -571,7 +622,9 @@
   <div class="mob-head">
     <button onclick="toggleMobileMenu()" id="menuBtn">&#9776;</button>
     <span class="logo">Viscose</span>
-    <button onclick="openGSearch()" title="Search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+    <div style="display:flex;gap:4px">
+      <button onclick="openGSearch()" title="Search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+    </div>
   </div>
   <div class="mob-overlay" id="mobOverlay" onclick="toggleMobileMenu()"></div>
   <div class="app">
@@ -599,6 +652,12 @@
         <a href="#driverpickups" data-page="driverpickups" id="navDriver" class="hidden">
           <svg class="icon" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
           My Deliveries</a>
+        <a href="#tracking" data-page="tracking" id="navTracking" class="hidden">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+          Live Tracking</a>
+        <a href="#activitylog" data-page="activitylog" id="navActivityLog" class="hidden">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Activity Log</a>
         <a href="#admins" data-page="admins" id="navAdmins" class="hidden">
           <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           Manage Admins</a>
@@ -619,7 +678,7 @@
       <!-- DASHBOARD -->
       <div class="ptr-indicator" id="ptrIndicator"><div class="ptr-spinner"></div></div>
       <div id="page-dashboard">
-        <div class="page-head"><h2>Dashboard</h2></div>
+        <div class="page-head"><h2 data-i18n="dashboard">Dashboard</h2></div>
         <div class="dash-stats" id="dashStats"></div>
         <div class="section-title">This Week</div>
         <div id="dashChart" style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px;box-shadow:var(--card-shadow);overflow-x:auto"></div>
@@ -630,7 +689,7 @@
       <!-- ADDRESSES -->
       <div id="page-addresses" class="hidden">
         <div class="page-head">
-          <h2>My Addresses</h2>
+          <h2 data-i18n="my_addresses">My Addresses</h2>
           <button class="btn btn-dark btn-sm" onclick="openAddressModal()">+ Add Address</button>
         </div>
         <div class="addr-grid" id="myAddressList"></div>
@@ -639,7 +698,7 @@
       <!-- MY PICKUPS -->
       <div id="page-mypickups" class="hidden">
         <div class="page-head">
-          <h2>My Pickups</h2>
+          <h2 data-i18n="my_pickups">My Pickups</h2>
           <button class="btn btn-dark btn-sm" onclick="openPickupModal()">+ Request Pickup</button>
         </div>
         <div id="myPickupList"></div>
@@ -648,7 +707,7 @@
       <!-- ADMIN PICKUPS -->
       <div id="page-pickups" class="hidden">
         <div class="page-head">
-          <h2>Pickup Requests</h2>
+          <h2 data-i18n="pickup_requests">Pickup Requests</h2>
           <button class="btn btn-sm" onclick="exportPickupsCSV()" style="gap:6px">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export CSV
@@ -688,7 +747,7 @@
       <!-- USERS -->
       <div id="page-users" class="hidden">
         <div class="page-head">
-          <h2>Users</h2>
+          <h2 data-i18n="users">Users</h2>
           <button class="btn btn-dark btn-sm" onclick="openUserModal()">+ Add User</button>
         </div>
         <div class="card overflow-x">
@@ -716,7 +775,7 @@
       <!-- DRIVER PICKUPS -->
       <div id="page-driverpickups" class="hidden">
         <div class="page-head">
-          <h2>My Deliveries</h2>
+          <h2 data-i18n="my_deliveries">My Deliveries</h2>
           <div class="filter-tabs">
             <button class="filter-tab active" onclick="filterDriverPickups('all')" id="dFilterAll">All</button>
             <button class="filter-tab" onclick="filterDriverPickups('picked_up')" id="dFilterPicked_up">Picked Up</button>
@@ -726,6 +785,25 @@
           </div>
         </div>
         <div id="driverPickupList"></div>
+      </div>
+
+      <!-- LIVE TRACKING -->
+      <div id="page-tracking" class="hidden">
+        <div class="page-head"><h2>Live Driver Tracking</h2></div>
+        <div class="tracking-map" id="trackingMap">
+          <div class="tracking-placeholder" id="trackingPlaceholder">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Loading driver locations...</span>
+          </div>
+        </div>
+        <div class="section-title">Active Drivers</div>
+        <div id="trackingDriverList"></div>
+      </div>
+
+      <!-- ACTIVITY LOG -->
+      <div id="page-activitylog" class="hidden">
+        <div class="page-head"><h2>Activity Log</h2></div>
+        <div id="activityLogList"></div>
       </div>
 
       <!-- ALL ADDRESSES -->
@@ -741,8 +819,16 @@
 
       <!-- SETTINGS -->
       <div id="page-settings" class="hidden">
-        <div class="page-head"><h2>Account Settings</h2></div>
+        <div class="page-head"><h2 data-i18n="settings">Account Settings</h2></div>
         <div id="settingsAlert"></div>
+        <div class="settings-section">
+          <h3>Language</h3>
+          <div class="lang-switch" id="langSwitch">
+            <button class="lang-btn active" onclick="setLang('en')">English</button>
+            <button class="lang-btn" onclick="setLang('yi')">יידיש</button>
+            <button class="lang-btn" onclick="setLang('he')">עברית</button>
+          </div>
+        </div>
         <div class="settings-section">
           <h3>Appearance</h3>
           <div class="theme-toggle">
@@ -795,6 +881,15 @@
     </div>
   </div>
 
+  <!-- STARRED MESSAGES PANEL -->
+  <div class="starred-panel hidden" id="starredPanel">
+    <div class="starred-header">
+      <button onclick="document.getElementById('starredPanel').classList.add('hidden')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text);padding:4px 8px">&larr;</button>
+      <h2 style="font-size:1.1rem;font-weight:700">Starred Messages</h2>
+    </div>
+    <div class="starred-list" id="starredList"></div>
+  </div>
+
   <!-- DM FAB -->
   <button class="dm-fab hidden" id="dmFab" onclick="openDM()">
     <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
@@ -807,6 +902,9 @@
       <div class="dm-top-bar">
         <button class="dm-back" onclick="closeDM()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
         <div class="dm-top-title">Messages</div>
+        <button onclick="openStarred()" style="background:none;border:none;cursor:pointer;color:#fff;padding:6px" title="Starred">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </button>
       </div>
       <div class="dm-list" id="dmConvList"></div>
     </div>
@@ -818,6 +916,10 @@
           <div class="dm-chat-name" id="dmChatName"></div>
           <div class="dm-chat-role" id="dmChatRole"></div>
         </div>
+      </div>
+      <div class="dm-pinned-bar hidden" id="dmPinnedBar" onclick="scrollToMsg(this.dataset.msgId)">
+        <svg viewBox="0 0 24 24"><path d="M12 2l4 4-1 1 3 3-4 4-3-3-1 1-4-4z"/><line x1="5" y1="19" x2="10" y2="14"/></svg>
+        <span class="dm-pinned-text" id="dmPinnedText"></span>
       </div>
       <div class="dm-messages" id="dmMessages" style="position:relative"></div>
       <div class="dm-typing" id="dmTyping"></div>
@@ -845,6 +947,9 @@
         <div class="dm-input-wrap">
           <input type="text" placeholder="Type a message..." id="dmInput" onkeydown="if(event.key==='Enter')sendDm()" oninput="dmTypingNotify()">
         </div>
+        <button class="dm-voice-btn" id="dmVoiceBtn" onmousedown="startVoiceRecord()" onmouseup="stopVoiceRecord()" ontouchstart="startVoiceRecord()" ontouchend="stopVoiceRecord()">
+          <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
         <button class="dm-send-btn" onclick="sendDm()">
           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
@@ -871,7 +976,7 @@
       <div id="dmDelBtns" style="display:flex;flex-direction:column;gap:8px">
         <button class="btn danger" onclick="dmDoDelete('everyone')" id="dmDelEveryoneBtn" style="width:100%">Delete for everyone</button>
         <button class="btn" onclick="dmDoDelete('me')" style="width:100%;background:#e0e0e0;color:#333">Delete for me</button>
-        <button class="btn" onclick="closeModal('dmDelModal')" style="width:100%;background:transparent;color:var(--fg)">Cancel</button>
+        <button class="btn" onclick="closeModal('dmDelModal')" style="width:100%;background:transparent;color:var(--text)">Cancel</button>
       </div>
     </div>
   </div>
@@ -885,14 +990,21 @@
     <div class="field"><label>Address</label>
       <select id="pickupAddress"><option value="">Select address...</option></select>
     </div>
+    <div class="field"><label>Priority</label>
+      <select id="pickupPriority">
+        <option value="normal">Normal</option>
+        <option value="urgent">Urgent</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
     <div class="field"><label>Notes (optional)</label><textarea id="pickupNotes" placeholder="Any special instructions..."></textarea></div>
     <div class="photo-upload">
       <div id="photoLabel" style="display:flex;gap:10px;flex-wrap:wrap">
         <button type="button" class="btn btn-sm" onclick="document.getElementById('pickupPhotoCam').click()" style="flex:1;min-width:120px">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           Camera</button>
         <button type="button" class="btn btn-sm" onclick="document.getElementById('pickupPhotoGal').click()" style="flex:1;min-width:120px">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
           Gallery</button>
       </div>
       <input type="file" id="pickupPhotoCam" accept="image/*" capture="environment" onchange="handlePhotoSelect(this)" style="display:none">
@@ -920,6 +1032,13 @@
     </div>
     <div class="field" id="driverAssignField"><label>Assign Driver</label>
       <select id="updatePickupDriver"><option value="">No driver</option></select>
+    </div>
+    <div class="field"><label>Priority</label>
+      <select id="updatePickupPriority">
+        <option value="normal">Normal</option>
+        <option value="urgent">Urgent</option>
+        <option value="low">Low</option>
+      </select>
     </div>
     <div class="field"><label>Admin Notes</label><textarea id="updatePickupNotes" placeholder="Notes for this pickup..."></textarea></div>
     <div class="modal-foot">
@@ -1000,11 +1119,32 @@
   </div>
 </div>
 
+<!-- PRINT AREA (hidden) -->
+<div id="printArea" class="hidden"></div>
+
 <script>
 let token = localStorage.getItem('viscose_token');
 let currentUser = null;
 let pendingPhoto = null;
 const API = '/api';
+
+// ===== I18N =====
+const LANGS = {
+  en: { dashboard:'Dashboard', my_addresses:'My Addresses', my_pickups:'My Pickups', pickup_requests:'Pickup Requests', users:'Users', settings:'Account Settings', my_deliveries:'My Deliveries' },
+  yi: { dashboard:'דעשבארד', my_addresses:'מיינע אדרעסן', my_pickups:'מיינע פיקאפס', pickup_requests:'פיקאפ רעקוועסטס', users:'יוזערס', settings:'אקאונט סעטינגס', my_deliveries:'מיינע דעליווערעס' },
+  he: { dashboard:'לוח בקרה', my_addresses:'הכתובות שלי', my_pickups:'האיסופים שלי', pickup_requests:'בקשות איסוף', users:'משתמשים', settings:'הגדרות חשבון', my_deliveries:'המשלוחים שלי' }
+};
+let currentLang = localStorage.getItem('viscose_lang') || 'en';
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('viscose_lang', lang);
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.includes(lang === 'en' ? 'En' : lang === 'yi' ? 'יידיש' : 'עברית')));
+  document.documentElement.dir = (lang === 'yi' || lang === 'he') ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (LANGS[lang]?.[key]) el.textContent = LANGS[lang][key];
+  });
+}
 
 async function api(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json' };
@@ -1031,24 +1171,13 @@ function toggleMobileMenu() {
 
 async function init() {
   loadTheme();
+  setLang(currentLang);
   const hash = location.hash;
-  if (hash && hash.startsWith('#reset=')) {
-    showResetForm(hash.replace('#reset=', ''));
-    return;
-  }
+  if (hash && hash.startsWith('#reset=')) { showResetForm(hash.replace('#reset=', '')); return; }
   if (token) {
-    try {
-      const data = await api('/me');
-      currentUser = data.user;
-      showApp();
-    } catch {
-      token = null;
-      localStorage.removeItem('viscose_token');
-      checkSetup();
-    }
-  } else {
-    checkSetup();
-  }
+    try { const data = await api('/me'); currentUser = data.user; showApp(); }
+    catch { token = null; localStorage.removeItem('viscose_token'); checkSetup(); }
+  } else { checkSetup(); }
 }
 
 async function checkSetup() {
@@ -1070,33 +1199,25 @@ function showScreen(id) {
 
 async function doSetup() {
   try {
-    const res = await fetch(API + '/setup', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: document.getElementById('setupName').value, email: document.getElementById('setupEmail').value, password: document.getElementById('setupPass').value })
-    });
+    const res = await fetch(API + '/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: document.getElementById('setupName').value, email: document.getElementById('setupEmail').value, password: document.getElementById('setupPass').value }) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Setup failed');
     document.getElementById('setupAlert').innerHTML = '<div class="alert alert-ok">Account created. Signing in...</div>';
     setTimeout(() => showScreen('loginScreen'), 1200);
-  } catch (e) {
-    document.getElementById('setupAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>';
-  }
+  } catch (e) { document.getElementById('setupAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
 
 async function doLogin() {
   try {
-    const res = await fetch(API + '/login', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: document.getElementById('loginEmail').value, password: document.getElementById('loginPass').value })
-    });
+    const res = await fetch(API + '/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: document.getElementById('loginEmail').value, password: document.getElementById('loginPass').value }) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Login failed');
     token = data.token; currentUser = data.user;
     localStorage.setItem('viscose_token', token);
     showApp();
-  } catch (e) {
-    document.getElementById('loginAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>';
-  }
+  } catch (e) { document.getElementById('loginAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
 
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
@@ -1112,7 +1233,6 @@ function showForgotPassword() {
   document.getElementById('resetTokenForm').classList.add('hidden');
   showScreen('forgotScreen');
 }
-
 function showResetForm(resetToken) {
   window._resetToken = resetToken;
   document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-ok">Enter your new password below.</div>';
@@ -1120,18 +1240,13 @@ function showResetForm(resetToken) {
   document.getElementById('resetTokenForm').classList.remove('hidden');
   showScreen('forgotScreen');
 }
-
 async function sendResetEmail() {
   const email = document.getElementById('forgotEmail').value;
   if (!email) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">Enter your email.</div>'; return; }
-  try {
-    await fetch(API + '/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
-    document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-ok">If that email exists, a reset link has been sent. Check your inbox.</div>';
-  } catch(e) {
-    document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>';
-  }
+  try { await fetch(API + '/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+    document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-ok">If that email exists, a reset link has been sent.</div>';
+  } catch(e) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
-
 async function submitPasswordReset() {
   const np = document.getElementById('resetNewPass').value;
   const cp = document.getElementById('resetConfirmPass').value;
@@ -1139,13 +1254,10 @@ async function submitPasswordReset() {
   if (np.length < 6) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">Password must be at least 6 characters.</div>'; return; }
   try {
     const res = await fetch(API + '/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: window._resetToken, new_password: np }) });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Reset failed');
-    document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-ok">Password reset successful! Redirecting to login...</div>';
+    const data = await res.json(); if (!res.ok) throw new Error(data.error || 'Reset failed');
+    document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-ok">Password reset successful! Redirecting...</div>';
     setTimeout(() => { location.hash = ''; showScreen('loginScreen'); }, 2000);
-  } catch(e) {
-    document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>';
-  }
+  } catch(e) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
 
 // THEME
@@ -1153,7 +1265,6 @@ function loadTheme() {
   const saved = localStorage.getItem('viscose_theme');
   if (saved) document.documentElement.setAttribute('data-theme', saved);
 }
-
 function toggleTheme() {
   const isDark = document.getElementById('darkToggle').checked;
   const theme = isDark ? 'dark' : 'light';
@@ -1172,6 +1283,8 @@ function showApp() {
   document.getElementById('navPickups').classList.toggle('hidden', !isAdmin);
   document.getElementById('navDriver').classList.toggle('hidden', !isDriver);
   document.getElementById('navAdmins').classList.toggle('hidden', currentUser.role !== 'superadmin');
+  document.getElementById('navTracking').classList.toggle('hidden', !isAdmin);
+  document.getElementById('navActivityLog').classList.toggle('hidden', !isAdmin);
   if (isDriver) {
     document.querySelector('[data-page="addresses"]').classList.add('hidden');
     document.querySelector('[data-page="mypickups"]').classList.add('hidden');
@@ -1180,12 +1293,13 @@ function showApp() {
   requestNotifPermission();
   showDmFab();
   setInterval(pollDmUnread, 10000);
+  if (isDriver) startDriverLocationSharing();
   const hash = location.hash.replace('#', '') || (isDriver ? 'driverpickups' : 'dashboard');
   showPage(hash.startsWith('reset=') ? (isDriver ? 'driverpickups' : 'dashboard') : hash);
 }
 
 function showPage(page) {
-  const valid = ['dashboard','addresses','mypickups','users','pickups','alladdresses','admins','settings','driverpickups'];
+  const valid = ['dashboard','addresses','mypickups','users','pickups','alladdresses','admins','settings','driverpickups','tracking','activitylog'];
   if (!valid.includes(page)) page = currentUser?.role === 'driver' ? 'driverpickups' : 'dashboard';
   location.hash = page;
   document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
@@ -1203,6 +1317,8 @@ function showPage(page) {
   if (page === 'alladdresses') loadUserOptions();
   if (page === 'driverpickups') loadDriverPickups();
   if (page === 'settings') loadSettings();
+  if (page === 'tracking') loadTracking();
+  if (page === 'activitylog') loadActivityLog();
 }
 
 window.addEventListener('hashchange', () => {
@@ -1216,65 +1332,32 @@ async function loadDashboard() {
   try {
     const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
     let pickups = [], addresses = [];
-    try {
-      const addrData = await api('/addresses');
-      addresses = addrData.addresses || [];
-    } catch(e) {}
-    try {
-      const pickupsData = await api('/pickups' + (isAdmin ? '' : '?mine=1'));
-      pickups = pickupsData.pickups || [];
-    } catch(e) {}
-
+    try { const addrData = await api('/addresses'); addresses = addrData.addresses || []; } catch(e) {}
+    try { const pickupsData = await api('/pickups' + (isAdmin ? '' : '?mine=1')); pickups = pickupsData.pickups || []; } catch(e) {}
     const pickedUp = pickups.filter(p => p.status === 'picked_up').length;
     const inProcess = pickups.filter(p => p.status === 'in_process').length;
     const ready = pickups.filter(p => p.status === 'ready').length;
     const delivered = pickups.filter(p => p.status === 'delivered').length;
-
     const total = pickups.length;
     document.getElementById('dashStats').innerHTML = `
       <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total</div></div>
       <div class="stat-card"><div class="stat-num" style="color:var(--orange)">${pickedUp}</div><div class="stat-label">Picked Up</div></div>
       <div class="stat-card"><div class="stat-num" style="color:var(--blue)">${inProcess}</div><div class="stat-label">In Process</div></div>
       <div class="stat-card"><div class="stat-num" style="color:#af52de">${ready}</div><div class="stat-label">Ready</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:var(--green)">${delivered}</div><div class="stat-label">Delivered</div></div>
-    `;
-
-    // Weekly bar chart
+      <div class="stat-card"><div class="stat-num" style="color:var(--green)">${delivered}</div><div class="stat-label">Delivered</div></div>`;
     const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     const today = new Date();
     const weekData = Array(7).fill(0);
-    const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay());
-    weekStart.setHours(0,0,0,0);
-    pickups.forEach(p => {
-      const d = new Date(p.requested_at);
-      if (d >= weekStart) { weekData[d.getDay()]++; }
-    });
+    const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay()); weekStart.setHours(0,0,0,0);
+    pickups.forEach(p => { const d = new Date(p.requested_at); if (d >= weekStart) weekData[d.getDay()]++; });
     const maxVal = Math.max(...weekData, 1);
-    document.getElementById('dashChart').innerHTML = `
-      <div style="display:flex;align-items:flex-end;gap:8px;height:100px;padding:0 4px">
-        ${weekData.map((v, i) => `
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <span style="font-size:0.7rem;font-weight:600;color:var(--text2)">${v || ''}</span>
-            <div style="width:100%;background:${i === today.getDay() ? 'var(--blue)' : 'var(--bg3)'};border-radius:4px 4px 0 0;height:${Math.max(v / maxVal * 70, 4)}px;transition:height 0.3s"></div>
-            <span style="font-size:0.65rem;color:var(--text3);font-weight:600">${days[i]}</span>
-          </div>
-        `).join('')}
-      </div>
-    `;
-
+    document.getElementById('dashChart').innerHTML = `<div style="display:flex;align-items:flex-end;gap:8px;height:100px;padding:0 4px">${weekData.map((v, i) => `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:0.7rem;font-weight:600;color:var(--text2)">${v || ''}</span><div style="width:100%;background:${i === today.getDay() ? 'var(--blue)' : 'var(--bg3)'};border-radius:4px 4px 0 0;height:${Math.max(v / maxVal * 70, 4)}px;transition:height 0.3s"></div><span style="font-size:0.65rem;color:var(--text3);font-weight:600">${days[i]}</span></div>`).join('')}</div>`;
     const recent = pickups.slice(0, 5);
     const c = document.getElementById('dashPickups');
     if (!recent.length) { c.innerHTML = '<div class="empty">No pickup requests yet.</div>'; return; }
     c.innerHTML = recent.map(p => {
       const addr = [p.street, p.city, p.state, p.zip].filter(Boolean).join(', ');
-      return `<div class="pickup-card">
-        <div class="pickup-header">
-          <span class="pickup-addr">${esc(p.addr_label || p.user_name || 'Pickup')}</span>
-          <span class="status status-${p.status}">${p.status}</span>
-        </div>
-        <div class="pickup-detail">${esc(addr)}</div>
-        <div style="font-size:0.78rem;color:var(--text3);margin-top:6px">${new Date(p.requested_at).toLocaleDateString()}</div>
-      </div>`;
+      return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-addr">${esc(p.addr_label || p.user_name || 'Pickup')}</span><span class="status status-${p.status}">${p.status}</span></div><div class="pickup-detail">${esc(addr)}</div><div style="font-size:0.78rem;color:var(--text3);margin-top:6px">${new Date(p.requested_at).toLocaleDateString()}</div></div>`;
     }).join('');
   } catch(e) { console.error(e); }
 }
@@ -1283,186 +1366,65 @@ async function loadDashboard() {
 async function loadMyAddresses() {
   try { const d = await api('/addresses'); renderAddresses(d.addresses, 'myAddressList', true); } catch(e) { console.error(e); }
 }
-
 function renderAddresses(list, cid, canEdit) {
   const c = document.getElementById(cid);
   if (!list.length) { c.innerHTML = '<div class="empty">No addresses added yet.</div>'; return; }
   c.innerHTML = list.map(a => {
     const full = [a.street, a.city, a.state, a.zip, a.country].filter(Boolean).join(', ');
     const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(full);
-    return `<div class="addr-card">
-      <div class="addr-card-top">
-        <span class="label">${esc(a.label || 'Address')}</span>
-        ${canEdit ? `<div class="actions">
-          <button onclick="editAddress(${a.id},'${esc(a.label)}','${esc(a.street)}','${esc(a.city)}','${esc(a.state)}','${esc(a.zip)}','${esc(a.country)}')" title="Edit">&#9998;</button>
-          <button onclick="deleteAddress(${a.id})" title="Delete">&times;</button>
-        </div>` : ''}
-      </div>
-      <div class="addr-body">${esc(full)}</div>
-      <a href="${mapUrl}" target="_blank" rel="noopener" class="map-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-        View on Map</a>
-    </div>`;
+    return `<div class="addr-card"><div class="addr-card-top"><span class="label">${esc(a.label || 'Address')}</span>${canEdit ? `<div class="actions"><button onclick="editAddress(${a.id},'${esc(a.label)}','${esc(a.street)}','${esc(a.city)}','${esc(a.state)}','${esc(a.zip)}','${esc(a.country)}')" title="Edit">&#9998;</button><button onclick="deleteAddress(${a.id})" title="Delete">&times;</button></div>` : ''}</div><div class="addr-body">${esc(full)}</div><a href="${mapUrl}" target="_blank" rel="noopener" class="map-link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>View on Map</a></div>`;
   }).join('');
 }
-
-function openAddressModal() {
-  document.getElementById('addrEditId').value = '';
-  document.getElementById('addrModalTitle').textContent = 'Add Address';
-  ['addrLabel','addrStreet','addrCity','addrState','addrZip','addrCountry'].forEach(f => document.getElementById(f).value = '');
-  document.getElementById('addressModal').classList.remove('hidden');
-}
-
-function editAddress(id, label, street, city, state, zip, country) {
-  document.getElementById('addrEditId').value = id;
-  document.getElementById('addrModalTitle').textContent = 'Edit Address';
-  document.getElementById('addrLabel').value = label;
-  document.getElementById('addrStreet').value = street;
-  document.getElementById('addrCity').value = city;
-  document.getElementById('addrState').value = state;
-  document.getElementById('addrZip').value = zip;
-  document.getElementById('addrCountry').value = country;
-  document.getElementById('addressModal').classList.remove('hidden');
-}
-
+function openAddressModal() { document.getElementById('addrEditId').value = ''; document.getElementById('addrModalTitle').textContent = 'Add Address'; ['addrLabel','addrStreet','addrCity','addrState','addrZip','addrCountry'].forEach(f => document.getElementById(f).value = ''); document.getElementById('addressModal').classList.remove('hidden'); }
+function editAddress(id, label, street, city, state, zip, country) { document.getElementById('addrEditId').value = id; document.getElementById('addrModalTitle').textContent = 'Edit Address'; document.getElementById('addrLabel').value = label; document.getElementById('addrStreet').value = street; document.getElementById('addrCity').value = city; document.getElementById('addrState').value = state; document.getElementById('addrZip').value = zip; document.getElementById('addrCountry').value = country; document.getElementById('addressModal').classList.remove('hidden'); }
 async function saveAddress() {
   const editId = document.getElementById('addrEditId').value;
   const body = { label: document.getElementById('addrLabel').value, street: document.getElementById('addrStreet').value, city: document.getElementById('addrCity').value, state: document.getElementById('addrState').value, zip: document.getElementById('addrZip').value, country: document.getElementById('addrCountry').value };
   if (!body.street) return alert('Street is required');
-  try {
-    if (editId) await api('/addresses', { method: 'PUT', body: JSON.stringify({ id: parseInt(editId), ...body }) });
-    else await api('/addresses', { method: 'POST', body: JSON.stringify(body) });
-    closeModal('addressModal'); loadMyAddresses();
-  } catch (e) { alert(e.message); }
+  try { if (editId) await api('/addresses', { method: 'PUT', body: JSON.stringify({ id: parseInt(editId), ...body }) }); else await api('/addresses', { method: 'POST', body: JSON.stringify(body) }); closeModal('addressModal'); loadMyAddresses(); } catch (e) { alert(e.message); }
 }
-
-async function deleteAddress(id) {
-  if (!confirm('Delete this address?')) return;
-  try { await api('/addresses?id=' + id, { method: 'DELETE' }); loadMyAddresses(); } catch(e) { alert(e.message); }
-}
+async function deleteAddress(id) { if (!confirm('Delete this address?')) return; try { await api('/addresses?id=' + id, { method: 'DELETE' }); loadMyAddresses(); } catch(e) { alert(e.message); } }
 
 // USERS
 async function loadUsers() {
-  try {
-    const d = await api('/users');
-    document.getElementById('userTableBody').innerHTML = d.users.map(u => `<tr>
-      <td style="font-weight:600">${esc(u.name)}</td>
-      <td style="color:var(--text2)">${esc(u.email)}</td>
-      <td><span class="badge badge-${u.role === 'superadmin' ? 'sa' : u.role}">${u.role}</span></td>
-      <td style="color:var(--text3);font-size:0.85rem">${new Date(u.created_at).toLocaleDateString()}</td>
-      <td>${u.role !== 'superadmin' ? `<button class="btn btn-red btn-xs" onclick="deleteUser(${u.id},'${esc(u.name)}')">Remove</button>` : ''}</td>
-    </tr>`).join('');
+  try { const d = await api('/users');
+    document.getElementById('userTableBody').innerHTML = d.users.map(u => `<tr><td style="font-weight:600">${esc(u.name)}</td><td style="color:var(--text2)">${esc(u.email)}</td><td><span class="badge badge-${u.role === 'superadmin' ? 'sa' : u.role}">${u.role}</span></td><td style="color:var(--text3);font-size:0.85rem">${new Date(u.created_at).toLocaleDateString()}</td><td>${u.role !== 'superadmin' ? `<button class="btn btn-red btn-xs" onclick="deleteUser(${u.id},'${esc(u.name)}')">Remove</button>` : ''}</td></tr>`).join('');
   } catch(e) { console.error(e); }
 }
-
-function openUserModal() {
-  ['newUserName','newUserEmail','newUserPass'].forEach(f => document.getElementById(f).value = '');
-  document.getElementById('newUserRole').value = 'user';
-  document.getElementById('userModalAlert').innerHTML = '';
-  document.getElementById('userModal').classList.remove('hidden');
-}
-
-async function createUser() {
-  try {
-    await api('/users', { method: 'POST', body: JSON.stringify({ name: document.getElementById('newUserName').value, email: document.getElementById('newUserEmail').value, password: document.getElementById('newUserPass').value, role: document.getElementById('newUserRole').value }) });
-    closeModal('userModal'); loadUsers();
-  } catch(e) { document.getElementById('userModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
-}
-
-async function deleteUser(id, name) {
-  if (!confirm('Remove ' + name + '?')) return;
-  try { await api('/users?id=' + id, { method: 'DELETE' }); loadUsers(); } catch(e) { alert(e.message); }
-}
+function openUserModal() { ['newUserName','newUserEmail','newUserPass'].forEach(f => document.getElementById(f).value = ''); document.getElementById('newUserRole').value = 'user'; document.getElementById('userModalAlert').innerHTML = ''; document.getElementById('userModal').classList.remove('hidden'); }
+async function createUser() { try { await api('/users', { method: 'POST', body: JSON.stringify({ name: document.getElementById('newUserName').value, email: document.getElementById('newUserEmail').value, password: document.getElementById('newUserPass').value, role: document.getElementById('newUserRole').value }) }); closeModal('userModal'); loadUsers(); } catch(e) { document.getElementById('userModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; } }
+async function deleteUser(id, name) { if (!confirm('Remove ' + name + '?')) return; try { await api('/users?id=' + id, { method: 'DELETE' }); loadUsers(); } catch(e) { alert(e.message); } }
 
 // ALL ADDRESSES
-async function loadUserOptions() {
-  try {
-    const d = await api('/users');
-    document.getElementById('userFilter').innerHTML = '<option value="">Select user...</option>' + d.users.map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.email)})</option>`).join('');
-  } catch(e) { console.error(e); }
-}
-
-async function loadAllAddresses() {
-  const uid = document.getElementById('userFilter').value;
-  if (!uid) { document.getElementById('allAddressList').innerHTML = ''; return; }
-  try { const d = await api('/addresses?user_id=' + uid); renderAddresses(d.addresses, 'allAddressList', false); } catch(e) { console.error(e); }
-}
+async function loadUserOptions() { try { const d = await api('/users'); document.getElementById('userFilter').innerHTML = '<option value="">Select user...</option>' + d.users.map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.email)})</option>`).join(''); } catch(e) { console.error(e); } }
+async function loadAllAddresses() { const uid = document.getElementById('userFilter').value; if (!uid) { document.getElementById('allAddressList').innerHTML = ''; return; } try { const d = await api('/addresses?user_id=' + uid); renderAddresses(d.addresses, 'allAddressList', false); } catch(e) { console.error(e); } }
 
 // ADMINS
-async function loadAdmins() {
-  try {
-    const d = await api('/users');
-    const admins = d.users.filter(u => u.role === 'superadmin' || u.role === 'admin');
-    document.getElementById('adminTableBody').innerHTML = admins.map(u => `<tr>
-      <td style="font-weight:600">${esc(u.name)}</td>
-      <td style="color:var(--text2)">${esc(u.email)}</td>
-      <td><span class="badge badge-${u.role === 'superadmin' ? 'sa' : 'admin'}">${u.role}</span></td>
-      <td>${u.role === 'admin' ? `<button class="btn btn-red btn-xs" onclick="removeAdmin(${u.id},'${esc(u.name)}')">Remove</button>` : ''}</td>
-    </tr>`).join('');
-  } catch(e) { console.error(e); }
-}
-
-function openAdminModal() {
-  ['newAdminName','newAdminEmail','newAdminPass'].forEach(f => document.getElementById(f).value = '');
-  document.getElementById('adminModalAlert').innerHTML = '';
-  document.getElementById('adminModal').classList.remove('hidden');
-}
-
-async function createAdmin() {
-  try {
-    await api('/users', { method: 'POST', body: JSON.stringify({ name: document.getElementById('newAdminName').value, email: document.getElementById('newAdminEmail').value, password: document.getElementById('newAdminPass').value, role: 'admin' }) });
-    closeModal('adminModal'); loadAdmins();
-  } catch(e) { document.getElementById('adminModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
-}
-
-async function removeAdmin(id, name) {
-  if (!confirm('Remove admin ' + name + '?')) return;
-  try { await api('/users?id=' + id, { method: 'DELETE' }); loadAdmins(); } catch(e) { alert(e.message); }
-}
+async function loadAdmins() { try { const d = await api('/users'); const admins = d.users.filter(u => u.role === 'superadmin' || u.role === 'admin'); document.getElementById('adminTableBody').innerHTML = admins.map(u => `<tr><td style="font-weight:600">${esc(u.name)}</td><td style="color:var(--text2)">${esc(u.email)}</td><td><span class="badge badge-${u.role === 'superadmin' ? 'sa' : 'admin'}">${u.role}</span></td><td>${u.role === 'admin' ? `<button class="btn btn-red btn-xs" onclick="removeAdmin(${u.id},'${esc(u.name)}')">Remove</button>` : ''}</td></tr>`).join(''); } catch(e) { console.error(e); } }
+function openAdminModal() { ['newAdminName','newAdminEmail','newAdminPass'].forEach(f => document.getElementById(f).value = ''); document.getElementById('adminModalAlert').innerHTML = ''; document.getElementById('adminModal').classList.remove('hidden'); }
+async function createAdmin() { try { await api('/users', { method: 'POST', body: JSON.stringify({ name: document.getElementById('newAdminName').value, email: document.getElementById('newAdminEmail').value, password: document.getElementById('newAdminPass').value, role: 'admin' }) }); closeModal('adminModal'); loadAdmins(); } catch(e) { document.getElementById('adminModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; } }
+async function removeAdmin(id, name) { if (!confirm('Remove admin ' + name + '?')) return; try { await api('/users?id=' + id, { method: 'DELETE' }); loadAdmins(); } catch(e) { alert(e.message); } }
 
 // PHOTO HANDLING
 function handlePhotoSelect(input) {
-  const file = input.files[0];
-  if (!file) return;
+  const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
     const img = new Image();
     img.onload = function() {
       const canvas = document.createElement('canvas');
-      const max = 800;
-      let w = img.width, h = img.height;
-      if (w > max || h > max) {
-        if (w > h) { h = Math.round(h * max / w); w = max; }
-        else { w = Math.round(w * max / h); h = max; }
-      }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const max = 800; let w = img.width, h = img.height;
+      if (w > max || h > max) { if (w > h) { h = Math.round(h * max / w); w = max; } else { w = Math.round(w * max / h); h = max; } }
+      canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       pendingPhoto = canvas.toDataURL('image/jpeg', 0.7);
-      const preview = document.getElementById('photoPreview');
-      preview.innerHTML = `<img src="${pendingPhoto}"><button class="remove" onclick="removePhoto()" type="button">&times;</button>`;
-      preview.classList.remove('hidden');
+      document.getElementById('photoPreview').innerHTML = `<img src="${pendingPhoto}"><button class="remove" onclick="removePhoto()" type="button">&times;</button>`;
+      document.getElementById('photoPreview').classList.remove('hidden');
       document.getElementById('photoLabel').style.display = 'none';
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+    }; img.src = e.target.result;
+  }; reader.readAsDataURL(file);
 }
-
-function removePhoto() {
-  pendingPhoto = null;
-  document.getElementById('pickupPhotoCam').value = '';
-  document.getElementById('pickupPhotoGal').value = '';
-  document.getElementById('photoPreview').classList.add('hidden');
-  document.getElementById('photoLabel').style.display = '';
-}
-
-function viewPhoto(src) {
-  const viewer = document.createElement('div');
-  viewer.className = 'photo-viewer';
-  viewer.innerHTML = `<img src="${src}">`;
-  viewer.onclick = () => viewer.remove();
-  document.body.appendChild(viewer);
-}
+function removePhoto() { pendingPhoto = null; document.getElementById('pickupPhotoCam').value = ''; document.getElementById('pickupPhotoGal').value = ''; document.getElementById('photoPreview').classList.add('hidden'); document.getElementById('photoLabel').style.display = ''; }
+function viewPhoto(src) { const viewer = document.createElement('div'); viewer.className = 'photo-viewer'; viewer.innerHTML = `<img src="${src}">`; viewer.onclick = () => viewer.remove(); document.body.appendChild(viewer); }
 
 // PICKUPS (user)
 async function loadMyPickups() {
@@ -1473,27 +1435,8 @@ async function loadMyPickups() {
     c.innerHTML = d.pickups.map(p => {
       const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
       const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
-      return `<div class="pickup-card">
-        <div class="pickup-header">
-          <span class="pickup-addr">${esc(p.addr_label || 'Address')}</span>
-          <span class="status status-${p.status}">${p.status}</span>
-        </div>
-        <div class="pickup-detail"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:500">${esc(addr)}</a></div>
-        ${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)" alt="Pickup photo"></div>` : ''}
-        ${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}
-        ${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
-        <div class="pickup-actions">
-          <span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>
-          ${p.status === 'picked_up' ? `<button class="btn btn-red btn-xs" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}
-        </div>
-        <div class="comments-section">
-          <button class="comments-toggle" onclick="toggleComments(${p.id}, this)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Comments
-          </button>
-          <div id="comments-${p.id}" class="hidden"></div>
-        </div>
-      </div>`;
+      const priorityHtml = p.priority && p.priority !== 'normal' ? `<span class="pickup-priority priority-${p.priority}">${p.priority}</span>` : '';
+      return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-addr">${esc(p.addr_label || 'Address')} ${priorityHtml}</span><span class="status status-${p.status}">${p.status}</span></div><div class="pickup-detail"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:500">${esc(addr)}</a></div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}<div class="pickup-actions"><span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>${p.status === 'picked_up' ? `<button class="btn btn-red btn-xs" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}<button class="btn btn-xs" onclick="printReceipt(${p.id})">Print</button></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
     }).join('');
   } catch(e) { console.error(e); }
 }
@@ -1508,6 +1451,7 @@ async function openPickupModal() {
       return `<option value="${a.id}">${esc(a.label || 'Address')} — ${esc(full)}</option>`;
     }).join('');
     document.getElementById('pickupNotes').value = '';
+    document.getElementById('pickupPriority').value = 'normal';
     document.getElementById('pickupModalAlert').innerHTML = '';
     removePhoto();
     document.getElementById('pickupModal').classList.remove('hidden');
@@ -1517,97 +1461,48 @@ async function openPickupModal() {
 async function submitPickup() {
   const address_id = document.getElementById('pickupAddress').value;
   if (!address_id) { document.getElementById('pickupModalAlert').innerHTML = '<div class="alert alert-error">Select an address.</div>'; return; }
-  try {
-    await api('/pickups', { method: 'POST', body: JSON.stringify({
-      address_id: parseInt(address_id),
-      notes: document.getElementById('pickupNotes').value,
-      photo: pendingPhoto || ''
-    })});
-    closeModal('pickupModal'); loadMyPickups();
-  } catch(e) { document.getElementById('pickupModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
+  try { await api('/pickups', { method: 'POST', body: JSON.stringify({ address_id: parseInt(address_id), notes: document.getElementById('pickupNotes').value, photo: pendingPhoto || '', priority: document.getElementById('pickupPriority').value }) }); closeModal('pickupModal'); loadMyPickups(); } catch(e) { document.getElementById('pickupModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
 
-async function cancelPickup(id) {
-  if (!confirm('Cancel this pickup request?')) return;
-  try { await api('/pickups?id=' + id, { method: 'DELETE' }); loadMyPickups(); } catch(e) { alert(e.message); }
+async function cancelPickup(id) { if (!confirm('Cancel this pickup request?')) return; try { await api('/pickups?id=' + id, { method: 'DELETE' }); loadMyPickups(); } catch(e) { alert(e.message); } }
+
+// PRINT RECEIPT
+function printReceipt(id) {
+  const pickups = allPickupsData.length ? allPickupsData : [];
+  let p;
+  try { p = pickups.find(x => x.id === id); } catch(e) {}
+  if (!p) { showToast('Loading...'); return; }
+  const addr = [p.street, p.city, p.state, p.zip].filter(Boolean).join(', ');
+  const area = document.getElementById('printArea');
+  area.classList.remove('hidden');
+  area.innerHTML = `<div style="padding:20px;font-family:system-ui;max-width:400px"><h2 style="margin-bottom:16px">Pickup Receipt</h2><table style="width:100%;font-size:14px"><tr><td style="padding:6px 0;font-weight:600">Name:</td><td>${esc(p.user_name||'')}</td></tr><tr><td style="padding:6px 0;font-weight:600">Address:</td><td>${esc(p.addr_label||'')} - ${esc(addr)}</td></tr><tr><td style="padding:6px 0;font-weight:600">Status:</td><td>${p.status}</td></tr><tr><td style="padding:6px 0;font-weight:600">Date:</td><td>${new Date(p.requested_at).toLocaleDateString()}</td></tr>${p.notes ? `<tr><td style="padding:6px 0;font-weight:600">Notes:</td><td>${esc(p.notes)}</td></tr>` : ''}</table><hr style="margin:20px 0"><p style="font-size:12px;color:#999;text-align:center">Viscose Pickup Service</p></div>`;
+  window.print();
+  setTimeout(() => area.classList.add('hidden'), 500);
 }
 
 // COMMENTS
-async function toggleComments(pickupId, btn) {
-  const container = document.getElementById('comments-' + pickupId);
-  if (!container.classList.contains('hidden')) {
-    container.classList.add('hidden');
-    return;
-  }
-  container.classList.remove('hidden');
-  await loadComments(pickupId);
-}
-
+async function toggleComments(pickupId, btn) { const container = document.getElementById('comments-' + pickupId); if (!container.classList.contains('hidden')) { container.classList.add('hidden'); return; } container.classList.remove('hidden'); await loadComments(pickupId); }
 async function loadComments(pickupId) {
   const container = document.getElementById('comments-' + pickupId);
   try {
     const d = await api('/pickup-comments?pickup_id=' + pickupId);
     const comments = d.comments || [];
-    const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
-
-    let messagesHtml = '';
-    let lastDate = '';
+    let messagesHtml = ''; let lastDate = '';
     comments.forEach(c => {
       const dt = new Date(c.created_at);
       const dateStr = dt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-      if (dateStr !== lastDate) {
-        messagesHtml += `<div class="chat-date-sep"><span>${dateStr}</span></div>`;
-        lastDate = dateStr;
-      }
+      if (dateStr !== lastDate) { messagesHtml += `<div class="chat-date-sep"><span>${dateStr}</span></div>`; lastDate = dateStr; }
       const isMine = c.user_id === currentUser.id;
       const timeStr = dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
       const roleTag = (c.user_role === 'admin' || c.user_role === 'superadmin') ? ' (Admin)' : '';
-      messagesHtml += `
-        <div class="chat-row ${isMine ? 'mine' : 'other'}">
-          ${!isMine ? `<div class="chat-name">${esc(c.user_name)}${roleTag}</div>` : ''}
-          <div class="chat-bubble">
-            ${esc(c.message)}
-            <div class="chat-time">${timeStr}${isMine ? ' <svg class="chat-check" viewBox="0 0 24 24"><polyline points="2 12 7 17 22 2"/></svg>' : ''}</div>
-          </div>
-        </div>`;
+      messagesHtml += `<div class="chat-row ${isMine ? 'mine' : 'other'}">${!isMine ? `<div class="chat-name">${esc(c.user_name)}${roleTag}</div>` : ''}<div class="chat-bubble">${esc(c.message)}<div class="chat-time">${timeStr}${isMine ? ' <svg class="chat-check" viewBox="0 0 24 24"><polyline points="2 12 7 17 22 2"/></svg>' : ''}</div></div></div>`;
     });
-
-    container.innerHTML = `
-      <div class="chat-container">
-        <div class="chat-header">
-          <div class="chat-header-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-          <div>
-            <div class="chat-header-text">Messages</div>
-            <div class="chat-header-sub">${comments.length} message${comments.length !== 1 ? 's' : ''}</div>
-          </div>
-        </div>
-        <div class="chat-messages" id="chatMessages-${pickupId}">
-          ${comments.length ? messagesHtml : '<div class="chat-empty">No messages yet. Start the conversation!</div>'}
-        </div>
-        <div class="chat-input-bar">
-          <input type="text" placeholder="Type a message..." id="commentInput-${pickupId}" onkeydown="if(event.key==='Enter')sendComment(${pickupId})">
-          <button class="chat-send-btn" onclick="sendComment(${pickupId})">
-            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          </button>
-        </div>
-      </div>`;
-
+    container.innerHTML = `<div class="chat-container"><div class="chat-header"><div class="chat-header-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div><div class="chat-header-text">Messages</div><div class="chat-header-sub">${comments.length} message${comments.length !== 1 ? 's' : ''}</div></div></div><div class="chat-messages" id="chatMessages-${pickupId}">${comments.length ? messagesHtml : '<div class="chat-empty">No messages yet.</div>'}</div><div class="chat-input-bar"><input type="text" placeholder="Type a message..." id="commentInput-${pickupId}" onkeydown="if(event.key==='Enter')sendComment(${pickupId})"><button class="chat-send-btn" onclick="sendComment(${pickupId})"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div>`;
     const msgBox = document.getElementById('chatMessages-' + pickupId);
     if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
-  } catch(e) {
-    container.innerHTML = '<div style="color:var(--text3);font-size:0.85rem;padding:8px">Could not load messages</div>';
-  }
+  } catch(e) { container.innerHTML = '<div style="color:var(--text3);font-size:0.85rem;padding:8px">Could not load messages</div>'; }
 }
-
-async function sendComment(pickupId) {
-  const input = document.getElementById('commentInput-' + pickupId);
-  const msg = input.value.trim();
-  if (!msg) return;
-  try {
-    await api('/pickup-comments', { method: 'POST', body: JSON.stringify({ pickup_id: pickupId, message: msg }) });
-    await loadComments(pickupId);
-  } catch(e) { alert(e.message); }
-}
+async function sendComment(pickupId) { const input = document.getElementById('commentInput-' + pickupId); const msg = input.value.trim(); if (!msg) return; try { await api('/pickup-comments', { method: 'POST', body: JSON.stringify({ pickup_id: pickupId, message: msg }) }); await loadComments(pickupId); } catch(e) { alert(e.message); } }
 
 // PICKUPS (admin)
 let allPickupsData = [];
@@ -1615,70 +1510,18 @@ let pickupFilter = 'all';
 let dateFilter = 'all';
 let selectedPickups = new Set();
 
-async function loadAllPickups() {
-  try {
-    const d = await api('/pickups');
-    allPickupsData = d.pickups;
-    selectedPickups.clear();
-    updateBulkUI();
-    renderPickups();
-  } catch(e) { console.error(e); }
-}
-
-function filterPickups(f) {
-  pickupFilter = f;
-  document.querySelectorAll('#page-pickups .filter-tabs:first-child .filter-tab').forEach(b => b.classList.remove('active'));
-  document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
-  renderPickups();
-}
-
-function filterDate(f) {
-  dateFilter = f;
-  document.querySelectorAll('#dateFilters .filter-tab').forEach(b => b.classList.remove('active'));
-  document.getElementById('date' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
-  renderPickups();
-}
-
+async function loadAllPickups() { try { const d = await api('/pickups'); allPickupsData = d.pickups; selectedPickups.clear(); updateBulkUI(); renderPickups(); } catch(e) { console.error(e); } }
+function filterPickups(f) { pickupFilter = f; document.querySelectorAll('#page-pickups .filter-tabs:first-child .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderPickups(); }
+function filterDate(f) { dateFilter = f; document.querySelectorAll('#dateFilters .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('date' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderPickups(); }
 function getFilteredPickups() {
   let filtered = pickupFilter === 'all' ? allPickupsData : allPickupsData.filter(p => p.status === pickupFilter);
-
-  if (dateFilter !== 'all') {
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    filtered = filtered.filter(p => {
-      const d = new Date(p.requested_at);
-      if (dateFilter === 'today') return d >= startOfDay;
-      if (dateFilter === 'week') { const w = new Date(startOfDay); w.setDate(w.getDate() - w.getDay()); return d >= w; }
-      if (dateFilter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-      return true;
-    });
-  }
-
+  if (dateFilter !== 'all') { const now = new Date(); const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()); filtered = filtered.filter(p => { const d = new Date(p.requested_at); if (dateFilter === 'today') return d >= startOfDay; if (dateFilter === 'week') { const w = new Date(startOfDay); w.setDate(w.getDate() - w.getDay()); return d >= w; } if (dateFilter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); return true; }); }
   const q = (document.getElementById('pickupSearch')?.value || '').toLowerCase();
-  if (q) {
-    filtered = filtered.filter(p => {
-      const text = [p.user_name, p.user_email, p.addr_label, p.street, p.city, p.state, p.zip, p.notes, p.admin_notes, p.status].filter(Boolean).join(' ').toLowerCase();
-      return text.includes(q);
-    });
-  }
-
+  if (q) { filtered = filtered.filter(p => { const text = [p.user_name, p.user_email, p.addr_label, p.street, p.city, p.state, p.zip, p.notes, p.admin_notes, p.status].filter(Boolean).join(' ').toLowerCase(); return text.includes(q); }); }
   return filtered;
 }
-
-function togglePickupSelect(id) {
-  if (selectedPickups.has(id)) selectedPickups.delete(id);
-  else selectedPickups.add(id);
-  updateBulkUI();
-  const card = document.querySelector(`[data-pickup-id="${id}"]`);
-  if (card) card.classList.toggle('selected', selectedPickups.has(id));
-}
-
-function updateBulkUI() {
-  const n = selectedPickups.size;
-  document.getElementById('bulkBtn').style.display = n > 0 ? '' : 'none';
-  document.getElementById('routeBtn').style.display = n > 1 ? '' : 'none';
-  document.getElementById('bulkCount').textContent = n;
-}
+function togglePickupSelect(id) { if (selectedPickups.has(id)) selectedPickups.delete(id); else selectedPickups.add(id); updateBulkUI(); const card = document.querySelector(`[data-pickup-id="${id}"]`); if (card) card.classList.toggle('selected', selectedPickups.has(id)); }
+function updateBulkUI() { const n = selectedPickups.size; document.getElementById('bulkBtn').style.display = n > 0 ? '' : 'none'; document.getElementById('routeBtn').style.display = n > 1 ? '' : 'none'; document.getElementById('bulkCount').textContent = n; }
 
 function renderPickups() {
   const filtered = getFilteredPickups();
@@ -1689,60 +1532,16 @@ function renderPickups() {
     const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
     const navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr);
     const checked = selectedPickups.has(p.id) ? 'checked' : '';
-    return `<div class="pickup-card ${checked ? 'selected' : ''}" data-pickup-id="${p.id}">
-      <div class="pickup-header">
-        <div style="display:flex;align-items:center;gap:10px">
-          <input type="checkbox" class="pickup-check" ${checked} onchange="togglePickupSelect(${p.id})">
-          <span class="pickup-user">${esc(p.user_name)}<span class="email">${esc(p.user_email)}</span></span>
-        </div>
-        <span class="status status-${p.status}">${p.status}</span>
-      </div>
-      <div class="pickup-addr">${esc(p.addr_label || 'Address')}</div>
-      <div class="pickup-detail">${esc(addr)}</div>
-      ${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)" alt="Pickup photo"></div>` : ''}
-      ${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}
-      ${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
-      ${p.driver_name ? `<div style="font-size:0.82rem;color:var(--text2);margin-top:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> ${esc(p.driver_name)}</div>` : ''}
-      <div class="pickup-actions">
-        <a href="${mapUrl}" target="_blank" rel="noopener" class="map-link">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-          Map</a>
-        <a href="${navUrl}" target="_blank" rel="noopener" class="map-link nav-link">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          Navigate</a>
-        <button class="btn btn-sm" onclick="openPickupUpdate(${p.id},'${p.status}','${esc(p.admin_notes || '')}',${p.driver_id||'null'})">Update</button>
-        <span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>
-      </div>
-      <div class="comments-section">
-        <button class="comments-toggle" onclick="toggleComments(${p.id}, this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Comments
-        </button>
-        <div id="comments-${p.id}" class="hidden"></div>
-      </div>
-    </div>`;
+    const priorityHtml = p.priority && p.priority !== 'normal' ? `<span class="pickup-priority priority-${p.priority}">${p.priority}</span>` : '';
+    return `<div class="pickup-card ${checked ? 'selected' : ''}" data-pickup-id="${p.id}"><div class="pickup-header"><div style="display:flex;align-items:center;gap:10px"><input type="checkbox" class="pickup-check" ${checked} onchange="togglePickupSelect(${p.id})"><span class="pickup-user">${esc(p.user_name)}<span class="email">${esc(p.user_email)}</span></span></div><div style="display:flex;gap:6px;align-items:center">${priorityHtml}<span class="status status-${p.status}">${p.status}</span></div></div><div class="pickup-addr">${esc(p.addr_label || 'Address')}</div><div class="pickup-detail">${esc(addr)}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}${p.driver_name ? `<div style="font-size:0.82rem;color:var(--text2);margin-top:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> ${esc(p.driver_name)}</div>` : ''}<div class="pickup-actions"><a href="${mapUrl}" target="_blank" rel="noopener" class="map-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Map</a><a href="${navUrl}" target="_blank" rel="noopener" class="map-link nav-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Navigate</a><button class="btn btn-sm" onclick="openPickupUpdate(${p.id},'${p.status}','${esc(p.admin_notes || '')}',${p.driver_id||'null'},'${p.priority||'normal'}')">Update</button><button class="btn btn-xs" onclick="printReceipt(${p.id})">Print</button><span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
   }).join('');
 }
 
 // DRIVER PICKUPS
 let driverPickupsData = [];
 let driverFilter = 'all';
-
-async function loadDriverPickups() {
-  try {
-    const d = await api('/pickups');
-    driverPickupsData = d.pickups;
-    renderDriverPickups();
-  } catch(e) { console.error(e); }
-}
-
-function filterDriverPickups(f) {
-  driverFilter = f;
-  document.querySelectorAll('#page-driverpickups .filter-tab').forEach(b => b.classList.remove('active'));
-  document.getElementById('dFilter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
-  renderDriverPickups();
-}
-
+async function loadDriverPickups() { try { const d = await api('/pickups'); driverPickupsData = d.pickups; renderDriverPickups(); } catch(e) { console.error(e); } }
+function filterDriverPickups(f) { driverFilter = f; document.querySelectorAll('#page-driverpickups .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('dFilter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderDriverPickups(); }
 function renderDriverPickups() {
   const filtered = driverFilter === 'all' ? driverPickupsData : driverPickupsData.filter(p => p.status === driverFilter);
   const c = document.getElementById('driverPickupList');
@@ -1751,126 +1550,46 @@ function renderDriverPickups() {
     const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
     const navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr);
     const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
-    return `<div class="pickup-card">
-      <div class="pickup-header">
-        <span class="pickup-user">${esc(p.user_name)}</span>
-        <span class="status status-${p.status}">${p.status.replace('_',' ')}</span>
-      </div>
-      <div class="pickup-addr">${esc(p.addr_label || 'Address')}</div>
-      <div class="pickup-detail">${esc(addr)}</div>
-      ${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)" alt="Pickup photo"></div>` : ''}
-      ${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}
-      ${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}
-      <div class="pickup-actions">
-        <a href="${navUrl}" target="_blank" rel="noopener" class="map-link nav-link">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          Navigate</a>
-        <a href="${mapUrl}" target="_blank" rel="noopener" class="map-link">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-          Map</a>
-        ${p.status !== 'delivered' ? `<select class="btn btn-sm" onchange="driverUpdateStatus(${p.id}, this.value)" style="padding:8px 12px">
-          <option value="">Update Status</option>
-          <option value="picked_up">Picked Up</option>
-          <option value="in_process">In Process</option>
-          <option value="ready">Ready for Delivery</option>
-          <option value="delivered">Delivered</option>
-        </select>` : ''}
-        <span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>
-      </div>
-      <div class="comments-section">
-        <button class="comments-toggle" onclick="toggleComments(${p.id}, this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Messages
-        </button>
-        <div id="comments-${p.id}" class="hidden"></div>
-      </div>
-    </div>`;
+    return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-user">${esc(p.user_name)}</span><span class="status status-${p.status}">${p.status.replace('_',' ')}</span></div><div class="pickup-addr">${esc(p.addr_label || 'Address')}</div><div class="pickup-detail">${esc(addr)}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}<div class="pickup-actions"><a href="${navUrl}" target="_blank" rel="noopener" class="map-link nav-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Navigate</a><a href="${mapUrl}" target="_blank" rel="noopener" class="map-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Map</a>${p.status !== 'delivered' ? `<select class="btn btn-sm" onchange="driverUpdateStatus(${p.id}, this.value)" style="padding:8px 12px"><option value="">Update Status</option><option value="picked_up">Picked Up</option><option value="in_process">In Process</option><option value="ready">Ready</option><option value="delivered">Delivered</option></select>` : ''}<span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
   }).join('');
 }
-
-async function driverUpdateStatus(id, status) {
-  if (!status) return;
-  try {
-    await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status }) });
-    loadDriverPickups();
-  } catch(e) { alert(e.message); }
-}
+async function driverUpdateStatus(id, status) { if (!status) return; try { await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status }) }); loadDriverPickups(); } catch(e) { alert(e.message); } }
 
 // CSV EXPORT
 function exportCSV() {
-  const data = getFilteredPickups();
-  if (!data.length) { alert('No data to export.'); return; }
-  const headers = ['Name','Email','Address Label','Street','City','State','Zip','Country','Status','Notes','Admin Notes','Date'];
-  const rows = data.map(p => [
-    p.user_name, p.user_email, p.addr_label, p.street, p.city, p.state, p.zip, p.country,
-    p.status, p.notes || '', p.admin_notes || '', new Date(p.requested_at).toLocaleDateString()
-  ].map(v => '"' + String(v).replace(/"/g, '""') + '"'));
+  const data = getFilteredPickups(); if (!data.length) { alert('No data to export.'); return; }
+  const headers = ['Name','Email','Address Label','Street','City','State','Zip','Country','Status','Priority','Notes','Admin Notes','Date'];
+  const rows = data.map(p => [p.user_name, p.user_email, p.addr_label, p.street, p.city, p.state, p.zip, p.country, p.status, p.priority||'normal', p.notes || '', p.admin_notes || '', new Date(p.requested_at).toLocaleDateString()].map(v => '"' + String(v).replace(/"/g, '""') + '"'));
   const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'pickups-' + new Date().toISOString().split('T')[0] + '.csv';
-  a.click(); URL.revokeObjectURL(url);
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'pickups-' + new Date().toISOString().split('T')[0] + '.csv'; a.click(); URL.revokeObjectURL(url);
 }
 
-// ROUTE PLANNING
 function planRoute() {
   const selected = allPickupsData.filter(p => selectedPickups.has(p.id));
-  if (selected.length < 2) { alert('Select at least 2 pickups for route planning.'); return; }
+  if (selected.length < 2) { alert('Select at least 2 pickups.'); return; }
   const waypoints = selected.map(p => [p.street, p.city, p.state, p.zip].filter(Boolean).join(', '));
   const dest = encodeURIComponent(waypoints.pop());
   const wps = waypoints.map(w => encodeURIComponent(w)).join('|');
   window.open('https://www.google.com/maps/dir/?api=1&destination=' + dest + '&waypoints=' + wps, '_blank');
 }
 
-// BULK UPDATE
-function openBulkModal() {
-  document.getElementById('bulkModalCount').textContent = selectedPickups.size;
-  document.getElementById('bulkStatus').value = 'in_process';
-  document.getElementById('bulkNotes').value = '';
-  document.getElementById('bulkModal').classList.remove('hidden');
-}
+function openBulkModal() { document.getElementById('bulkModalCount').textContent = selectedPickups.size; document.getElementById('bulkStatus').value = 'in_process'; document.getElementById('bulkNotes').value = ''; document.getElementById('bulkModal').classList.remove('hidden'); }
+async function executeBulkUpdate() { const status = document.getElementById('bulkStatus').value; const notes = document.getElementById('bulkNotes').value; const ids = [...selectedPickups]; try { for (const id of ids) { await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status, admin_notes: notes || undefined }) }); } closeModal('bulkModal'); selectedPickups.clear(); updateBulkUI(); loadAllPickups(); } catch(e) { alert(e.message); } }
 
-async function executeBulkUpdate() {
-  const status = document.getElementById('bulkStatus').value;
-  const notes = document.getElementById('bulkNotes').value;
-  const ids = [...selectedPickups];
-  try {
-    for (const id of ids) {
-      await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status, admin_notes: notes || undefined }) });
-    }
-    closeModal('bulkModal');
-    selectedPickups.clear();
-    updateBulkUI();
-    loadAllPickups();
-  } catch(e) { alert(e.message); }
-}
-
-async function openPickupUpdate(id, status, notes, driverId) {
+async function openPickupUpdate(id, status, notes, driverId, priority) {
   document.getElementById('updatePickupId').value = id;
   document.getElementById('updatePickupStatus').value = status;
   document.getElementById('updatePickupNotes').value = notes;
-  try {
-    const d = await api('/users');
-    const drivers = d.users.filter(u => u.role === 'driver');
-    const sel = document.getElementById('updatePickupDriver');
-    sel.innerHTML = '<option value="">No driver</option>' + drivers.map(u => `<option value="${u.id}" ${u.id == driverId ? 'selected' : ''}>${esc(u.name)}</option>`).join('');
-  } catch(e) {}
+  document.getElementById('updatePickupPriority').value = priority || 'normal';
+  try { const d = await api('/users'); const drivers = d.users.filter(u => u.role === 'driver'); document.getElementById('updatePickupDriver').innerHTML = '<option value="">No driver</option>' + drivers.map(u => `<option value="${u.id}" ${u.id == driverId ? 'selected' : ''}>${esc(u.name)}</option>`).join(''); } catch(e) {}
   document.getElementById('pickupUpdateModal').classList.remove('hidden');
 }
 
 async function updatePickup() {
   const id = parseInt(document.getElementById('updatePickupId').value);
   const driverVal = document.getElementById('updatePickupDriver').value;
-  try {
-    await api('/pickups', { method: 'PUT', body: JSON.stringify({
-      id,
-      status: document.getElementById('updatePickupStatus').value,
-      admin_notes: document.getElementById('updatePickupNotes').value,
-      driver_id: driverVal ? parseInt(driverVal) : null
-    })});
-    closeModal('pickupUpdateModal'); loadAllPickups();
-  } catch(e) { alert(e.message); }
+  try { await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status: document.getElementById('updatePickupStatus').value, admin_notes: document.getElementById('updatePickupNotes').value, driver_id: driverVal ? parseInt(driverVal) : null, priority: document.getElementById('updatePickupPriority').value }) }); closeModal('pickupUpdateModal'); loadAllPickups(); } catch(e) { alert(e.message); }
 }
 
 // SETTINGS
@@ -1887,60 +1606,92 @@ async function loadSettings() {
     ['currentPass','newPass','confirmPass'].forEach(f => document.getElementById(f).value = '');
     const theme = localStorage.getItem('viscose_theme');
     document.getElementById('darkToggle').checked = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme:dark)').matches);
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.lang-btn').forEach(b => { if ((currentLang === 'en' && b.textContent === 'English') || (currentLang === 'yi' && b.textContent === 'יידיש') || (currentLang === 'he' && b.textContent === 'עברית')) b.classList.add('active'); });
   } catch(e) { console.error(e); }
 }
-
-async function saveProfile() {
-  try {
-    await api('/profile', { method: 'PUT', body: JSON.stringify({ name: document.getElementById('settingsName').value }) });
-    currentUser.name = document.getElementById('settingsName').value;
-    document.getElementById('sidebarName').textContent = currentUser.name;
-    showToast('Profile saved');
-  } catch(e) { showToast('Save failed'); }
-}
-
+async function saveProfile() { try { await api('/profile', { method: 'PUT', body: JSON.stringify({ name: document.getElementById('settingsName').value }) }); currentUser.name = document.getElementById('settingsName').value; document.getElementById('sidebarName').textContent = currentUser.name; showToast('Profile saved'); } catch(e) { showToast('Save failed'); } }
 async function changePassword() {
   const newP = document.getElementById('newPass').value;
-  if (newP !== document.getElementById('confirmPass').value) {
-    document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-error">New passwords do not match.</div>';
-    return;
-  }
-  try {
-    await api('/profile', { method: 'POST', body: JSON.stringify({ current_password: document.getElementById('currentPass').value, new_password: newP }) });
-    document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-ok">Password changed successfully.</div>';
-    ['currentPass','newPass','confirmPass'].forEach(f => document.getElementById(f).value = '');
-  } catch(e) { document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
+  if (newP !== document.getElementById('confirmPass').value) { document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-error">New passwords do not match.</div>'; return; }
+  try { await api('/profile', { method: 'POST', body: JSON.stringify({ current_password: document.getElementById('currentPass').value, new_password: newP }) }); document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-ok">Password changed successfully.</div>'; ['currentPass','newPass','confirmPass'].forEach(f => document.getElementById(f).value = ''); } catch(e) { document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
 
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-// NOTIFICATIONS
-function requestNotifPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
+// LIVE TRACKING
+let trackingInterval = null;
+async function loadTracking() {
+  if (trackingInterval) clearInterval(trackingInterval);
+  await refreshTracking();
+  trackingInterval = setInterval(refreshTracking, 5000);
 }
+async function refreshTracking() {
+  try {
+    const d = await api('/location');
+    const locs = d.locations || {};
+    const driverList = document.getElementById('trackingDriverList');
+    const entries = Object.entries(locs);
+    if (!entries.length) {
+      document.getElementById('trackingPlaceholder').innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg><span>No active drivers right now</span>';
+      driverList.innerHTML = '<div class="empty">No drivers sharing location</div>';
+      return;
+    }
+    const users = await api('/users');
+    const userMap = {};
+    (users.users || []).forEach(u => { userMap[u.id] = u; });
+
+    let driverHtml = '';
+    entries.forEach(([id, loc]) => {
+      const u = userMap[id] || { name: 'Driver #' + id };
+      const mapsUrl = `https://www.google.com/maps?q=${loc.lat},${loc.lng}`;
+      const ago = Math.round((Date.now() - loc.updated) / 1000);
+      driverHtml += `<div class="pickup-card" style="margin-bottom:10px"><div class="pickup-header"><span class="pickup-user">${esc(u.name)}</span><span style="font-size:0.78rem;color:var(--text3)">${ago < 60 ? ago + 's ago' : Math.round(ago/60) + 'm ago'}</span></div><div class="pickup-detail">Lat: ${loc.lat.toFixed(5)}, Lng: ${loc.lng.toFixed(5)}</div><div class="pickup-actions"><a href="${mapsUrl}" target="_blank" rel="noopener" class="map-link nav-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Open in Maps</a></div></div>`;
+    });
+    driverList.innerHTML = driverHtml;
+    document.getElementById('trackingPlaceholder').innerHTML = `<span style="font-size:1.2rem;font-weight:700">${entries.length} active driver${entries.length > 1 ? 's' : ''}</span><span>Open Google Maps to see live locations</span>`;
+  } catch(e) { console.error(e); }
+}
+
+// DRIVER LOCATION SHARING
+function startDriverLocationSharing() {
+  if (!navigator.geolocation) return;
+  setInterval(() => {
+    navigator.geolocation.getCurrentPosition(pos => {
+      api('/location', { method: 'POST', body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }) }).catch(() => {});
+    }, () => {}, { enableHighAccuracy: true, timeout: 10000 });
+  }, 15000);
+  navigator.geolocation.getCurrentPosition(pos => {
+    api('/location', { method: 'POST', body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }) }).catch(() => {});
+  }, () => {}, { enableHighAccuracy: true });
+}
+
+// ACTIVITY LOG
+async function loadActivityLog() {
+  try {
+    const d = await api('/activity-log');
+    const logs = d.logs || [];
+    const c = document.getElementById('activityLogList');
+    if (!logs.length) { c.innerHTML = '<div class="empty">No activity yet.</div>'; return; }
+    c.innerHTML = logs.map(l => {
+      const dt = new Date(l.created_at);
+      return `<div class="log-item"><div class="log-dot"></div><div class="log-content"><strong>${esc(l.user_name)}</strong> changed pickup for <strong>${esc(l.pickup_user_name)}</strong> (${esc(l.addr_label)}) from <span class="status status-${l.old_status}">${l.old_status || 'new'}</span> to <span class="status status-${l.new_status}">${l.new_status}</span><div class="log-time">${dt.toLocaleDateString()} ${dt.toLocaleTimeString(undefined, {hour:'2-digit',minute:'2-digit'})}</div></div></div>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+// NOTIFICATIONS
+function requestNotifPermission() { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); }
 function showNotif(title, body, onClick) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   if (document.visibilityState === 'visible' && document.getElementById('dmOverlay') && !document.getElementById('dmOverlay').classList.contains('hidden')) return;
-  const n = new Notification(title, { body, icon: '/favicon.ico', tag: 'viscose-dm-' + Date.now(), renotify: true });
+  const n = new Notification(title, { body, icon: '/icon-192.png', tag: 'viscose-dm-' + Date.now(), renotify: true });
   if (onClick) n.onclick = () => { window.focus(); onClick(); n.close(); };
   setTimeout(() => n.close(), 5000);
 }
 
 // DIRECT MESSAGES
-let dmCurrentChat = null;
-let dmReplyTo = null;
-let dmPendingMedia = null;
-let dmPollInterval = null;
-let dmUnreadTotal = 0;
-let dmLastConvState = {};
-let dmMessagesCache = [];
-let dmReactionsCache = {};
-let dmLongPressTimer = null;
-let dmCtxMsg = null;
-let dmTypingTimer = null;
-let dmPresenceInterval = null;
+let dmCurrentChat = null, dmReplyTo = null, dmPendingMedia = null, dmPollInterval = null, dmUnreadTotal = 0, dmLastConvState = {}, dmMessagesCache = [], dmReactionsCache = {}, dmLongPressTimer = null, dmCtxMsg = null, dmTypingTimer = null, dmPresenceInterval = null;
 
 function showDmFab() {
   const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
@@ -1948,14 +1699,7 @@ function showDmFab() {
   document.getElementById('dmFab').classList.toggle('hidden', !isAdmin && !isDriver);
   if (isAdmin || isDriver) {
     pollDmUnread();
-    try {
-      const saved = sessionStorage.getItem('dmChat');
-      if (saved) {
-        const c = JSON.parse(saved);
-        openDM();
-        openDmChat(c.userId, c.name, c.role);
-      }
-    } catch(e) {}
+    try { const saved = sessionStorage.getItem('dmChat'); if (saved) { const c = JSON.parse(saved); openDM(); openDmChat(c.userId, c.name, c.role); } } catch(e) {}
   }
 }
 
@@ -1965,16 +1709,11 @@ async function pollDmUnread() {
     const convs = d.conversations || [];
     dmUnreadTotal = convs.reduce((sum, c) => sum + (c.unread || 0), 0);
     const badge = document.getElementById('dmBadge');
-    if (dmUnreadTotal > 0) {
-      badge.textContent = dmUnreadTotal > 99 ? '99+' : dmUnreadTotal;
-      badge.classList.remove('hidden');
-    } else {
-      badge.classList.add('hidden');
-    }
+    if (dmUnreadTotal > 0) { badge.textContent = dmUnreadTotal > 99 ? '99+' : dmUnreadTotal; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
     for (const c of convs) {
       const prev = dmLastConvState[c.user_id] || 0;
       if (c.unread > prev && c.last_sender && c.last_sender !== currentUser.name) {
-        const preview = c.last_message ? (c.last_message.length > 60 ? c.last_message.slice(0, 60) + '…' : c.last_message) : '📷 Photo';
+        const preview = c.last_message ? (c.last_message.length > 60 ? c.last_message.slice(0, 60) + '...' : c.last_message) : 'Photo';
         showNotif(c.last_sender, preview, () => { openDM(); openDmChat(c.user_id, c.name, c.role); });
       }
       dmLastConvState[c.user_id] = c.unread;
@@ -1982,72 +1721,30 @@ async function pollDmUnread() {
   } catch(e) {}
 }
 
-function openDM() {
-  document.getElementById('dmOverlay').classList.remove('hidden');
-  document.getElementById('dmListView').classList.remove('hidden');
-  document.getElementById('dmChatView').classList.add('hidden');
-  loadDmConversations();
-  if (dmPollInterval) clearInterval(dmPollInterval);
-}
-
-function closeDM() {
-  document.getElementById('dmOverlay').classList.add('hidden');
-  dmCurrentChat = null;
-  sessionStorage.removeItem('dmChat');
-  dmReplyTo = null;
-  cancelDmMedia();
-  if (dmPollInterval) { clearInterval(dmPollInterval); dmPollInterval = null; }
-  pollDmUnread();
-}
-
-function dmBackToList() {
-  document.getElementById('dmListView').classList.remove('hidden');
-  document.getElementById('dmChatView').classList.add('hidden');
-  dmCurrentChat = null;
-  sessionStorage.removeItem('dmChat');
-  if (dmPollInterval) { clearInterval(dmPollInterval); dmPollInterval = null; }
-  loadDmConversations();
-}
+function openDM() { document.getElementById('dmOverlay').classList.remove('hidden'); document.getElementById('dmListView').classList.remove('hidden'); document.getElementById('dmChatView').classList.add('hidden'); loadDmConversations(); if (dmPollInterval) clearInterval(dmPollInterval); }
+function closeDM() { document.getElementById('dmOverlay').classList.add('hidden'); dmCurrentChat = null; sessionStorage.removeItem('dmChat'); dmReplyTo = null; cancelDmMedia(); if (dmPollInterval) { clearInterval(dmPollInterval); dmPollInterval = null; } pollDmUnread(); }
+function dmBackToList() { document.getElementById('dmListView').classList.remove('hidden'); document.getElementById('dmChatView').classList.add('hidden'); dmCurrentChat = null; sessionStorage.removeItem('dmChat'); if (dmPollInterval) { clearInterval(dmPollInterval); dmPollInterval = null; } loadDmConversations(); }
 
 async function loadDmConversations() {
   const list = document.getElementById('dmConvList');
   try {
     const d = await api('/messages');
     const convs = d.conversations || [];
-    if (!convs.length) {
-      list.innerHTML = '<div class="dm-empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>No conversations yet</div>';
-      return;
-    }
+    if (!convs.length) { list.innerHTML = '<div class="dm-empty"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>No conversations yet</div>'; return; }
     list.innerHTML = convs.map(c => {
       const initial = (c.name || '?')[0].toUpperCase();
       const avatarClass = c.role === 'driver' ? 'driver' : 'admin';
       const roleTag = c.role === 'driver' ? 'Driver' : (c.role === 'superadmin' ? 'Super Admin' : 'Admin');
       const roleClass = c.role === 'driver' ? 'driver' : 'admin';
       const timeStr = c.last_message_at ? formatDmTime(c.last_message_at) : '';
-      const preview = c.last_message
-        ? (c.last_sender === currentUser.name ? '<svg width="16" height="11" viewBox="0 0 16 11" style="vertical-align:-1px;margin-right:2px"><polyline points="1 5 4 8 11 1" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>' : '') + esc(c.last_message)
-        : '<span style="color:var(--text3)">Start a conversation</span>';
-      return `<div class="dm-conv" onclick="openDmChat(${c.user_id}, '${esc(c.name)}', '${c.role}')">
-        <div class="dm-avatar ${avatarClass}">${initial}</div>
-        <div class="dm-conv-body">
-          <div class="dm-conv-name">${esc(c.name)} <span class="role-tag ${roleClass}">${roleTag}</span></div>
-          <div class="dm-conv-preview">${preview}</div>
-        </div>
-        <div class="dm-conv-right">
-          ${timeStr ? `<div class="dm-conv-time" ${c.unread > 0 ? 'style="color:#25d366;font-weight:600"' : ''}>${timeStr}</div>` : ''}
-          ${c.unread > 0 ? `<span class="dm-conv-unread">${c.unread}</span>` : ''}
-        </div>
-      </div>`;
+      const preview = c.last_message ? (c.last_sender === currentUser.name ? '<svg width="16" height="11" viewBox="0 0 16 11" style="vertical-align:-1px;margin-right:2px"><polyline points="1 5 4 8 11 1" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>' : '') + esc(c.last_message) : '<span style="color:var(--text3)">Start a conversation</span>';
+      return `<div class="dm-conv" onclick="openDmChat(${c.user_id}, '${esc(c.name)}', '${c.role}')"><div class="dm-avatar ${avatarClass}">${initial}</div><div class="dm-conv-body"><div class="dm-conv-name">${esc(c.name)} <span class="role-tag ${roleClass}">${roleTag}</span></div><div class="dm-conv-preview">${preview}</div></div><div class="dm-conv-right">${timeStr ? `<div class="dm-conv-time" ${c.unread > 0 ? 'style="color:#25d366;font-weight:600"' : ''}>${timeStr}</div>` : ''}${c.unread > 0 ? `<span class="dm-conv-unread">${c.unread}</span>` : ''}</div></div>`;
     }).join('');
-  } catch(e) {
-    list.innerHTML = '<div class="dm-empty">Could not load conversations</div>';
-  }
+  } catch(e) { list.innerHTML = '<div class="dm-empty">Could not load conversations</div>'; }
 }
 
 function formatDmTime(dateStr) {
-  const d = new Date(dateStr);
-  const now = new Date();
-  const diff = now - d;
+  const d = new Date(dateStr); const now = new Date(); const diff = now - d;
   if (diff < 86400000 && d.getDate() === now.getDate()) return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   if (diff < 86400000 * 2 && d.getDate() === now.getDate() - 1) return 'Yesterday';
   if (diff < 604800000) return d.toLocaleDateString(undefined, { weekday: 'short' });
@@ -2057,13 +1754,10 @@ function formatDmTime(dateStr) {
 async function openDmChat(userId, name, role) {
   dmCurrentChat = { userId, name, role };
   sessionStorage.setItem('dmChat', JSON.stringify(dmCurrentChat));
-  dmReplyTo = null;
-  dmPendingMedia = null;
+  dmReplyTo = null; dmPendingMedia = null;
   document.getElementById('dmReplyBar').classList.add('hidden');
   document.getElementById('dmMediaBar').classList.add('hidden');
   document.getElementById('dmInput').value = '';
-  document.getElementById('dmInput').placeholder = 'Type a message...';
-
   const initial = (name || '?')[0].toUpperCase();
   const avatarClass = role === 'driver' ? 'driver' : 'admin';
   const avatar = document.getElementById('dmChatAvatar');
@@ -2073,16 +1767,30 @@ async function openDmChat(userId, name, role) {
   document.getElementById('dmChatRole').textContent = role === 'superadmin' ? 'Super Admin' : role.charAt(0).toUpperCase() + role.slice(1);
   document.getElementById('dmTyping').innerHTML = '';
   document.getElementById('dmEmojiPanel').classList.add('hidden');
-
+  document.getElementById('dmPinnedBar').classList.add('hidden');
   document.getElementById('dmListView').classList.add('hidden');
   document.getElementById('dmChatView').classList.remove('hidden');
-
   await loadDmMessages();
   checkDmPresence();
-
+  loadPinnedMessage();
   if (dmPollInterval) clearInterval(dmPollInterval);
   dmPollInterval = setInterval(() => { loadDmMessages(true); checkDmTyping(); }, 3000);
-  setInterval(checkDmPresence, 15000);
+  if (dmPresenceInterval) clearInterval(dmPresenceInterval);
+  dmPresenceInterval = setInterval(checkDmPresence, 15000);
+}
+
+async function loadPinnedMessage() {
+  if (!dmCurrentChat) return;
+  try {
+    const d = await api('/pins?with=' + dmCurrentChat.userId);
+    const pins = d.pins || [];
+    const bar = document.getElementById('dmPinnedBar');
+    if (pins.length) {
+      bar.classList.remove('hidden');
+      bar.dataset.msgId = pins[0].id;
+      document.getElementById('dmPinnedText').textContent = pins[0].message || 'Pinned media';
+    } else { bar.classList.add('hidden'); }
+  } catch(e) {}
 }
 
 async function loadDmMessages(silent) {
@@ -2092,626 +1800,254 @@ async function loadDmMessages(silent) {
     const d = await api('/messages?with=' + dmCurrentChat.userId);
     const msgs = d.messages || [];
     dmMessagesCache = msgs;
-
-    try {
-      const ids = msgs.map(m => m.id).join(',');
-      if (ids) { const rd = await api('/reactions?ids=' + ids); dmReactionsCache = rd.reactions || {}; }
-    } catch(e) { dmReactionsCache = {}; }
-
-    let html = '';
-    let lastDate = '';
+    try { const ids = msgs.map(m => m.id).join(','); if (ids) { const rd = await api('/reactions?ids=' + ids); dmReactionsCache = rd.reactions || {}; } } catch(e) { dmReactionsCache = {}; }
+    let html = ''; let lastDate = '';
     msgs.forEach((m, i) => {
       const dt = new Date(m.created_at);
       const dateStr = dt.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-      const today = new Date();
-      const yesterday = new Date(today); yesterday.setDate(yesterday.getDate()-1);
+      const today = new Date(); const yesterday = new Date(today); yesterday.setDate(yesterday.getDate()-1);
       let dateLabel = dateStr;
       if (dt.toDateString() === today.toDateString()) dateLabel = 'Today';
       else if (dt.toDateString() === yesterday.toDateString()) dateLabel = 'Yesterday';
-
-      if (dateLabel !== lastDate) {
-        html += `<div class="dm-date-sep"><span>${dateLabel}</span></div>`;
-        lastDate = dateLabel;
-      }
+      if (dateLabel !== lastDate) { html += `<div class="dm-date-sep"><span>${dateLabel}</span></div>`; lastDate = dateLabel; }
       const isMine = m.sender_id === currentUser.id;
       const timeStr = dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-
       let replyHtml = '';
-      if (m.reply_to_id && m.reply_text) {
-        replyHtml = `<div class="dm-reply-preview" onclick="event.stopPropagation();scrollToMsg(${m.reply_to_id})">
-          <div class="dm-reply-name">${esc(m.reply_name || 'You')}</div>
-          <div class="dm-reply-text">${esc(m.reply_text)}</div>
-        </div>`;
-      }
-
+      if (m.reply_to_id && m.reply_text) { replyHtml = `<div class="dm-reply-preview" onclick="event.stopPropagation();scrollToMsg(${m.reply_to_id})"><div class="dm-reply-name">${esc(m.reply_name || 'You')}</div><div class="dm-reply-text">${esc(m.reply_text)}</div></div>`; }
       let mediaHtml = '';
       if (m.media) {
-        if (m.media_type === 'video') {
-          mediaHtml = `<div class="dm-media"><video src="${m.media}" controls playsinline></video></div>`;
-        } else {
-          mediaHtml = `<div class="dm-media"><img src="${m.media}" onclick="event.stopPropagation();viewPhoto(this.src)"></div>`;
-        }
+        if (m.media_type === 'video') { mediaHtml = `<div class="dm-media"><video src="${m.media}" controls playsinline></video></div>`; }
+        else if (m.media_type === 'audio') { mediaHtml = `<div class="dm-audio-player"><audio src="${m.media}" controls></audio></div>`; }
+        else { mediaHtml = `<div class="dm-media"><img src="${m.media}" onclick="event.stopPropagation();viewPhoto(this.src)"></div>`; }
       }
-
       let checkHtml = '';
       if (isMine) {
-        if (m.read_at) {
-          checkHtml = '<svg class="dm-check" viewBox="0 0 16 11"><polyline points="1 5.5 4 8.5 8 1.5" fill="none" stroke="#53bdeb" stroke-width="1.5"/><polyline points="5 5.5 8 8.5 14 1.5" fill="none" stroke="#53bdeb" stroke-width="1.5"/></svg>';
-        } else {
-          checkHtml = '<svg class="dm-check" viewBox="0 0 16 11"><polyline points="3 5.5 6 8.5 13 1.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
-        }
+        if (m.read_at) checkHtml = '<svg class="dm-check" viewBox="0 0 16 11"><polyline points="1 5.5 4 8.5 8 1.5" fill="none" stroke="#53bdeb" stroke-width="1.5"/><polyline points="5 5.5 8 8.5 14 1.5" fill="none" stroke="#53bdeb" stroke-width="1.5"/></svg>';
+        else checkHtml = '<svg class="dm-check" viewBox="0 0 16 11"><polyline points="3 5.5 6 8.5 13 1.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
       }
-
       const rxns = dmReactionsCache[m.id] || [];
       let rxnHtml = '';
       if (rxns.length) {
-        const grouped = {};
-        rxns.forEach(r => { if (!grouped[r.emoji]) grouped[r.emoji] = []; grouped[r.emoji].push(r); });
-        rxnHtml = '<div class="dm-reactions">' + Object.entries(grouped).map(([emoji, list]) =>
-          `<span class="dm-reaction${list.some(r => r.user_id === currentUser.id) ? ' mine' : ''}" onclick="event.stopPropagation();toggleReaction(${m.id},'${emoji}')">${emoji}<span class="dm-reaction-count">${list.length > 1 ? list.length : ''}</span></span>`
-        ).join('') + '</div>';
+        const grouped = {}; rxns.forEach(r => { if (!grouped[r.emoji]) grouped[r.emoji] = []; grouped[r.emoji].push(r); });
+        rxnHtml = '<div class="dm-reactions">' + Object.entries(grouped).map(([emoji, list]) => `<span class="dm-reaction${list.some(r => r.user_id === currentUser.id) ? ' mine' : ''}" onclick="event.stopPropagation();toggleReaction(${m.id},'${emoji}')">${emoji}<span class="dm-reaction-count">${list.length > 1 ? list.length : ''}</span></span>`).join('') + '</div>';
       }
-
-      html += `<div class="dm-msg-wrap ${isMine ? 'mine' : 'other'}" id="msg-${m.id}"
-        ontouchstart="dmTouchStart(event,${m.id})" ontouchend="dmTouchEnd()" ontouchmove="dmTouchMove(event)"
-        oncontextmenu="event.preventDefault();showDmCtx(event,${m.id})"
-        ondblclick="showReactPicker(event,${m.id})">
-        <div class="dm-bubble">
-          ${replyHtml}${mediaHtml}
-          ${m.message ? `<span class="dm-msg-text">${esc(m.message)}</span>` : ''}
-          <div class="dm-time-row"><span class="dm-time">${timeStr}</span>${checkHtml}</div>
-        </div>
-        ${rxnHtml}
-      </div>`;
+      const pinnedIcon = m.pinned ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:2px;opacity:0.5"><path d="M12 2l4 4-1 1 3 3-4 4-3-3-1 1-4-4z"/></svg>' : '';
+      html += `<div class="dm-msg-wrap ${isMine ? 'mine' : 'other'}" id="msg-${m.id}" ontouchstart="dmTouchStart(event,${m.id})" ontouchend="dmTouchEnd()" ontouchmove="dmTouchMove(event)" oncontextmenu="event.preventDefault();showDmCtx(event,${m.id})" ondblclick="showReactPicker(event,${m.id})"><div class="dm-bubble">${replyHtml}${mediaHtml}${m.message ? `<span class="dm-msg-text">${esc(m.message)}</span>` : ''}<div class="dm-time-row">${pinnedIcon}<span class="dm-time">${timeStr}</span>${checkHtml}</div></div>${rxnHtml}</div>`;
     });
-
-    if (!msgs.length) {
-      html = `<div class="dm-empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>No messages yet<br><span style="font-size:0.82rem">Send a message to start the conversation</span></div>`;
-    }
-
+    if (!msgs.length) html = `<div class="dm-empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>No messages yet<br><span style="font-size:0.82rem">Send a message to start the conversation</span></div>`;
     const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
     container.innerHTML = html;
     if (wasAtBottom || !silent) container.scrollTop = container.scrollHeight;
     updateScrollBtn();
-  } catch(e) {
-    if (!silent) container.innerHTML = '<div class="dm-empty">Could not load messages</div>';
-  }
+  } catch(e) { if (!silent) container.innerHTML = '<div class="dm-empty">Could not load messages</div>'; }
   if (!silent) pollDmUnread();
 }
 
-function scrollToMsg(msgId) {
-  const el = document.getElementById('msg-' + msgId);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    el.style.transition = 'background 0.3s';
-    el.style.background = 'rgba(37,211,102,0.15)';
-    setTimeout(() => { el.style.background = ''; }, 1500);
-  }
-}
+function scrollToMsg(msgId) { const el = document.getElementById('msg-' + msgId); if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.style.transition = 'background 0.3s'; el.style.background = 'rgba(37,211,102,0.15)'; setTimeout(() => { el.style.background = ''; }, 1500); } }
+function updateScrollBtn() { const container = document.getElementById('dmMessages'); let btn = document.getElementById('dmScrollBtn'); const far = container.scrollHeight - container.scrollTop - container.clientHeight > 200; if (far && !btn) { btn = document.createElement('button'); btn.className = 'dm-scroll-btn'; btn.id = 'dmScrollBtn'; btn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>'; btn.onclick = () => { container.scrollTop = container.scrollHeight; btn.remove(); }; container.appendChild(btn); } else if (!far && btn) { btn.remove(); } }
 
-function updateScrollBtn() {
-  const container = document.getElementById('dmMessages');
-  let btn = document.getElementById('dmScrollBtn');
-  const far = container.scrollHeight - container.scrollTop - container.clientHeight > 200;
-  if (far && !btn) {
-    btn = document.createElement('button');
-    btn.className = 'dm-scroll-btn';
-    btn.id = 'dmScrollBtn';
-    btn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>';
-    btn.onclick = () => { container.scrollTop = container.scrollHeight; btn.remove(); };
-    container.appendChild(btn);
-  } else if (!far && btn) {
-    btn.remove();
-  }
-}
-
-// Swipe to reply + long press for context menu
+// Swipe to reply + long press
 let dmSwipeState = null;
-function dmTouchStart(e, msgId) {
-  const touch = e.touches[0];
-  dmSwipeState = { msgId, startX: touch.clientX, startY: touch.clientY, swiping: false, triggered: false };
-  dmLongPressTimer = setTimeout(() => {
-    if (!dmSwipeState?.swiping) {
-      showDmCtx({ clientX: touch.clientX, clientY: touch.clientY, preventDefault(){} }, msgId);
-      if (navigator.vibrate) navigator.vibrate(30);
-      dmSwipeState = null;
-    }
-  }, 500);
-}
+function dmTouchStart(e, msgId) { const touch = e.touches[0]; dmSwipeState = { msgId, startX: touch.clientX, startY: touch.clientY, swiping: false, triggered: false }; dmLongPressTimer = setTimeout(() => { if (!dmSwipeState?.swiping) { showDmCtx({ clientX: touch.clientX, clientY: touch.clientY, preventDefault(){} }, msgId); if (navigator.vibrate) navigator.vibrate(30); dmSwipeState = null; } }, 500); }
 function dmTouchMove(e) {
-  if (!dmSwipeState) return;
-  const touch = e.touches[0];
-  const dx = touch.clientX - dmSwipeState.startX;
-  const dy = touch.clientY - dmSwipeState.startY;
-  if (!dmSwipeState.swiping && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
-    dmSwipeState.swiping = true;
-    clearTimeout(dmLongPressTimer);
-  }
+  if (!dmSwipeState) return; const touch = e.touches[0]; const dx = touch.clientX - dmSwipeState.startX; const dy = touch.clientY - dmSwipeState.startY;
+  if (!dmSwipeState.swiping && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) { dmSwipeState.swiping = true; clearTimeout(dmLongPressTimer); }
   if (!dmSwipeState.swiping) return;
-  const el = document.getElementById('msg-' + dmSwipeState.msgId);
-  if (!el) return;
-  const msg = dmMessagesCache.find(m => m.id === dmSwipeState.msgId);
-  const isMine = msg && msg.sender_id === currentUser.id;
-  const dir = isMine ? -1 : 1;
-  const offset = dx * dir;
-  if (offset < 0) return;
-  const clamped = Math.min(offset, 80);
-  el.classList.add('swiping');
-  el.style.transform = `translateX(${clamped * dir}px)`;
-  let icon = el.querySelector('.dm-swipe-icon');
-  if (!icon) {
-    icon = document.createElement('div');
-    icon.className = 'dm-swipe-icon';
-    icon.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>';
-    el.appendChild(icon);
-  }
+  const el = document.getElementById('msg-' + dmSwipeState.msgId); if (!el) return;
+  const msg = dmMessagesCache.find(m => m.id === dmSwipeState.msgId); const isMine = msg && msg.sender_id === currentUser.id; const dir = isMine ? -1 : 1; const offset = dx * dir; if (offset < 0) return; const clamped = Math.min(offset, 80);
+  el.classList.add('swiping'); el.style.transform = `translateX(${clamped * dir}px)`;
+  let icon = el.querySelector('.dm-swipe-icon'); if (!icon) { icon = document.createElement('div'); icon.className = 'dm-swipe-icon'; icon.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>'; el.appendChild(icon); }
   icon.classList.toggle('visible', clamped > 30);
-  if (clamped >= 60 && !dmSwipeState.triggered) {
-    dmSwipeState.triggered = true;
-    if (navigator.vibrate) navigator.vibrate(20);
-  }
+  if (clamped >= 60 && !dmSwipeState.triggered) { dmSwipeState.triggered = true; if (navigator.vibrate) navigator.vibrate(20); }
 }
-function dmTouchEnd() {
-  clearTimeout(dmLongPressTimer);
-  if (dmSwipeState?.triggered) {
-    const msg = dmMessagesCache.find(m => m.id === dmSwipeState.msgId);
-    if (msg) setDmReply(msg.id, msg.sender_name, msg.message || '📷 Photo');
-  }
-  if (dmSwipeState) {
-    const el = document.getElementById('msg-' + dmSwipeState.msgId);
-    if (el) {
-      el.classList.remove('swiping');
-      el.style.transform = '';
-      const icon = el.querySelector('.dm-swipe-icon');
-      if (icon) icon.remove();
-    }
-  }
-  dmSwipeState = null;
-}
+function dmTouchEnd() { clearTimeout(dmLongPressTimer); if (dmSwipeState?.triggered) { const msg = dmMessagesCache.find(m => m.id === dmSwipeState.msgId); if (msg) setDmReply(msg.id, msg.sender_name, msg.message || 'Photo'); } if (dmSwipeState) { const el = document.getElementById('msg-' + dmSwipeState.msgId); if (el) { el.classList.remove('swiping'); el.style.transform = ''; const icon = el.querySelector('.dm-swipe-icon'); if (icon) icon.remove(); } } dmSwipeState = null; }
 
 function showDmCtx(e, msgId) {
-  e.preventDefault();
-  const msg = dmMessagesCache.find(m => m.id === msgId);
-  if (!msg) return;
-  dmCtxMsg = msg;
+  e.preventDefault(); const msg = dmMessagesCache.find(m => m.id === msgId); if (!msg) return; dmCtxMsg = msg;
   const isMine = msg.sender_id === currentUser.id;
-
   const ctx = document.getElementById('dmCtx');
   let items = '';
+  items += `<button onclick="dmCtxReact()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>React</button>`;
   items += `<button onclick="dmCtxReply()"><svg viewBox="0 0 24 24"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>Reply</button>`;
-  if (msg.message) {
-    items += `<button onclick="dmCtxCopy()"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>`;
-  }
+  if (msg.message) items += `<button onclick="dmCtxCopy()"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>`;
   items += `<button onclick="dmCtxForward()"><svg viewBox="0 0 24 24"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>Forward</button>`;
+  items += `<button onclick="dmCtxPin()"><svg viewBox="0 0 24 24"><path d="M12 2l4 4-1 1 3 3-4 4-3-3-1 1-4-4z"/><line x1="5" y1="19" x2="10" y2="14"/></svg>${msg.pinned ? 'Unpin' : 'Pin'}</button>`;
+  items += `<button onclick="dmCtxStar()"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Star</button>`;
   items += `<div class="dm-ctx-sep"></div>`;
   items += `<button class="danger" onclick="dmCtxDelete()"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Delete</button>`;
-  ctx.innerHTML = items;
-  ctx.classList.remove('hidden');
-
-  let x = e.clientX, y = e.clientY;
-  ctx.style.left = '0'; ctx.style.top = '0';
-  const rect = ctx.getBoundingClientRect();
+  ctx.innerHTML = items; ctx.classList.remove('hidden');
+  let x = e.clientX, y = e.clientY; ctx.style.left = '0'; ctx.style.top = '0'; const rect = ctx.getBoundingClientRect();
   if (x + rect.width > window.innerWidth) x = window.innerWidth - rect.width - 8;
   if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - 8;
-  if (x < 8) x = 8;
-  if (y < 8) y = 8;
-  ctx.style.left = x + 'px';
-  ctx.style.top = y + 'px';
+  if (x < 8) x = 8; if (y < 8) y = 8; ctx.style.left = x + 'px'; ctx.style.top = y + 'px';
 }
 
 document.addEventListener('click', () => document.getElementById('dmCtx')?.classList.add('hidden'));
-document.addEventListener('touchstart', (e) => {
-  if (!e.target.closest('.dm-ctx')) document.getElementById('dmCtx')?.classList.add('hidden');
-});
+document.addEventListener('touchstart', (e) => { if (!e.target.closest('.dm-ctx')) document.getElementById('dmCtx')?.classList.add('hidden'); });
 
-function dmCtxReply() {
-  document.getElementById('dmCtx').classList.add('hidden');
-  if (!dmCtxMsg) return;
-  setDmReply(dmCtxMsg.id, dmCtxMsg.sender_name, dmCtxMsg.message || '📷 Photo');
-}
-
-function dmCtxCopy() {
-  document.getElementById('dmCtx').classList.add('hidden');
-  if (!dmCtxMsg?.message) return;
-  navigator.clipboard.writeText(dmCtxMsg.message).then(() => showToast('Copied')).catch(() => {});
-}
-
-function dmCtxDelete() {
-  document.getElementById('dmCtx').classList.add('hidden');
-  if (!dmCtxMsg) return;
-  const isMine = dmCtxMsg.sender_id === currentUser.id;
-  document.getElementById('dmDelEveryoneBtn').classList.toggle('hidden', !isMine);
-  document.getElementById('dmDelModal').classList.remove('hidden');
-}
-
-async function dmDoDelete(mode) {
-  closeModal('dmDelModal');
-  if (!dmCtxMsg) return;
-  try {
-    if (mode === 'everyone') {
-      await api('/messages?id=' + dmCtxMsg.id, { method: 'DELETE' });
-    }
-    const el = document.getElementById('msg-' + dmCtxMsg.id);
-    if (el) el.remove();
-    dmMessagesCache = dmMessagesCache.filter(m => m.id !== dmCtxMsg.id);
-    showToast('Message deleted');
-  } catch(e) { showToast('Delete failed'); }
-}
+function dmCtxReact() { document.getElementById('dmCtx').classList.add('hidden'); if (dmCtxMsg) showReactPicker({ preventDefault(){}, clientX: 0, clientY: 0 }, dmCtxMsg.id); }
+function dmCtxReply() { document.getElementById('dmCtx').classList.add('hidden'); if (!dmCtxMsg) return; setDmReply(dmCtxMsg.id, dmCtxMsg.sender_name, dmCtxMsg.message || 'Photo'); }
+function dmCtxCopy() { document.getElementById('dmCtx').classList.add('hidden'); if (!dmCtxMsg?.message) return; navigator.clipboard.writeText(dmCtxMsg.message).then(() => showToast('Copied')).catch(() => {}); }
+function dmCtxDelete() { document.getElementById('dmCtx').classList.add('hidden'); if (!dmCtxMsg) return; document.getElementById('dmDelEveryoneBtn').classList.toggle('hidden', dmCtxMsg.sender_id !== currentUser.id); document.getElementById('dmDelModal').classList.remove('hidden'); }
+async function dmCtxPin() { document.getElementById('dmCtx').classList.add('hidden'); if (!dmCtxMsg) return; try { await api('/pins', { method: 'POST', body: JSON.stringify({ message_id: dmCtxMsg.id, action: dmCtxMsg.pinned ? 'unpin' : 'pin' }) }); showToast(dmCtxMsg.pinned ? 'Unpinned' : 'Pinned'); await loadDmMessages(true); loadPinnedMessage(); } catch(e) { showToast('Failed'); } }
+async function dmCtxStar() { document.getElementById('dmCtx').classList.add('hidden'); if (!dmCtxMsg) return; try { await api('/starred', { method: 'POST', body: JSON.stringify({ message_id: dmCtxMsg.id }) }); showToast('Starred'); } catch(e) { showToast('Failed'); } }
+async function dmDoDelete(mode) { closeModal('dmDelModal'); if (!dmCtxMsg) return; try { if (mode === 'everyone') await api('/messages?id=' + dmCtxMsg.id, { method: 'DELETE' }); const el = document.getElementById('msg-' + dmCtxMsg.id); if (el) el.remove(); dmMessagesCache = dmMessagesCache.filter(m => m.id !== dmCtxMsg.id); showToast('Message deleted'); } catch(e) { showToast('Delete failed'); } }
 
 async function dmCtxForward() {
-  document.getElementById('dmCtx').classList.add('hidden');
-  if (!dmCtxMsg) return;
-  try {
-    const d = await api('/messages');
-    const convs = (d.conversations || []).filter(c => c.user_id !== dmCurrentChat?.userId);
-    const list = document.getElementById('dmFwdList');
-    if (!convs.length) { list.innerHTML = '<div class="dm-empty">No other contacts</div>'; }
-    else {
-      list.innerHTML = convs.map(c => {
-        const initial = (c.name || '?')[0].toUpperCase();
-        const cls = c.role === 'driver' ? 'driver' : 'admin';
-        return `<div class="dm-fwd-item" onclick="forwardDmTo(${c.user_id})">
-          <div class="dm-avatar ${cls}">${initial}</div>
-          <span class="dm-fwd-name">${esc(c.name)}</span>
-        </div>`;
-      }).join('');
-    }
+  document.getElementById('dmCtx').classList.add('hidden'); if (!dmCtxMsg) return;
+  try { const d = await api('/messages'); const convs = (d.conversations || []).filter(c => c.user_id !== dmCurrentChat?.userId); const list = document.getElementById('dmFwdList');
+    if (!convs.length) list.innerHTML = '<div class="dm-empty">No other contacts</div>';
+    else list.innerHTML = convs.map(c => { const initial = (c.name || '?')[0].toUpperCase(); const cls = c.role === 'driver' ? 'driver' : 'admin'; return `<div class="dm-fwd-item" onclick="forwardDmTo(${c.user_id})"><div class="dm-avatar ${cls}">${initial}</div><span class="dm-fwd-name">${esc(c.name)}</span></div>`; }).join('');
     document.getElementById('dmFwdModal').classList.remove('hidden');
   } catch(e) { alert(e.message); }
 }
+async function forwardDmTo(userId) { closeModal('dmFwdModal'); if (!dmCtxMsg) return; try { await api('/messages', { method: 'POST', body: JSON.stringify({ receiver_id: userId, message: dmCtxMsg.message ? 'Forwarded:\n' + dmCtxMsg.message : '', media: dmCtxMsg.media || '', media_type: dmCtxMsg.media_type || '' }) }); showToast('Message forwarded'); await loadDmMessages(); } catch(e) { showToast('Forward failed'); } }
 
-async function forwardDmTo(userId) {
-  closeModal('dmFwdModal');
-  if (!dmCtxMsg) return;
-  try {
-    await api('/messages', { method: 'POST', body: JSON.stringify({
-      receiver_id: userId,
-      message: dmCtxMsg.message ? '⤳ Forwarded:\n' + dmCtxMsg.message : '',
-      media: dmCtxMsg.media || '',
-      media_type: dmCtxMsg.media_type || ''
-    })});
-    showToast('Message forwarded');
-    await loadDmMessages();
-  } catch(e) { showToast('Forward failed'); }
-}
-
-function setDmReply(msgId, senderName, msgText) {
-  dmReplyTo = msgId;
-  document.getElementById('dmReplyName').textContent = senderName;
-  document.getElementById('dmReplyMsg').textContent = msgText;
-  document.getElementById('dmReplyBar').classList.remove('hidden');
-  document.getElementById('dmInput').focus();
-}
-
-function cancelDmReply() {
-  dmReplyTo = null;
-  document.getElementById('dmReplyBar').classList.add('hidden');
-}
+function setDmReply(msgId, senderName, msgText) { dmReplyTo = msgId; document.getElementById('dmReplyName').textContent = senderName; document.getElementById('dmReplyMsg').textContent = msgText; document.getElementById('dmReplyBar').classList.remove('hidden'); document.getElementById('dmInput').focus(); }
+function cancelDmReply() { dmReplyTo = null; document.getElementById('dmReplyBar').classList.add('hidden'); }
 
 function handleDmMedia(input) {
-  const file = input.files[0];
-  if (!file) return;
+  const file = input.files[0]; if (!file) return;
   const isVideo = file.type.startsWith('video/');
   const reader = new FileReader();
   reader.onload = function(e) {
-    if (isVideo) {
-      if (file.size > 5 * 1024 * 1024) { alert('Video must be under 5MB'); return; }
-      dmPendingMedia = { data: e.target.result, type: 'video' };
-      document.getElementById('dmMediaPreview').innerHTML = `<video src="${e.target.result}" style="height:56px;border-radius:8px"></video>`;
-      document.getElementById('dmMediaLabel').textContent = 'Video attached';
-      document.getElementById('dmMediaBar').classList.remove('hidden');
-    } else {
-      const img = new Image();
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        const max = 800;
-        let w = img.width, h = img.height;
-        if (w > max || h > max) {
-          if (w > h) { h = Math.round(h * max / w); w = max; }
-          else { w = Math.round(w * max / h); h = max; }
-        }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        dmPendingMedia = { data: dataUrl, type: 'image' };
-        document.getElementById('dmMediaPreview').innerHTML = `<img src="${dataUrl}" style="height:56px;border-radius:8px;object-fit:cover">`;
-        document.getElementById('dmMediaLabel').textContent = 'Photo attached';
-        document.getElementById('dmMediaBar').classList.remove('hidden');
-      };
-      img.src = e.target.result;
-    }
-  };
-  reader.readAsDataURL(file);
-  input.value = '';
+    if (isVideo) { if (file.size > 5 * 1024 * 1024) { alert('Video must be under 5MB'); return; } dmPendingMedia = { data: e.target.result, type: 'video' }; document.getElementById('dmMediaPreview').innerHTML = `<video src="${e.target.result}" style="height:56px;border-radius:8px"></video>`; document.getElementById('dmMediaLabel').textContent = 'Video attached'; document.getElementById('dmMediaBar').classList.remove('hidden'); }
+    else { const img = new Image(); img.onload = function() { const canvas = document.createElement('canvas'); const max = 800; let w = img.width, h = img.height; if (w > max || h > max) { if (w > h) { h = Math.round(h * max / w); w = max; } else { w = Math.round(w * max / h); h = max; } } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); const dataUrl = canvas.toDataURL('image/jpeg', 0.7); dmPendingMedia = { data: dataUrl, type: 'image' }; document.getElementById('dmMediaPreview').innerHTML = `<img src="${dataUrl}" style="height:56px;border-radius:8px;object-fit:cover">`; document.getElementById('dmMediaLabel').textContent = 'Photo attached'; document.getElementById('dmMediaBar').classList.remove('hidden'); }; img.src = e.target.result; }
+  }; reader.readAsDataURL(file); input.value = '';
 }
-
-function cancelDmMedia() {
-  dmPendingMedia = null;
-  document.getElementById('dmMediaBar').classList.add('hidden');
-  document.getElementById('dmMediaPreview').innerHTML = '';
-  document.getElementById('dmInput').placeholder = 'Type a message...';
-}
+function cancelDmMedia() { dmPendingMedia = null; document.getElementById('dmMediaBar').classList.add('hidden'); document.getElementById('dmMediaPreview').innerHTML = ''; document.getElementById('dmInput').placeholder = 'Type a message...'; }
 
 async function sendDm() {
-  if (!dmCurrentChat) return;
-  const input = document.getElementById('dmInput');
-  const msg = input.value.trim();
+  if (!dmCurrentChat) return; const input = document.getElementById('dmInput'); const msg = input.value.trim();
   if (!msg && !dmPendingMedia) return;
-
   const body = { receiver_id: dmCurrentChat.userId, message: msg };
   if (dmReplyTo) body.reply_to_id = dmReplyTo;
-  if (dmPendingMedia) {
-    body.media = dmPendingMedia.data;
-    body.media_type = dmPendingMedia.type;
-  }
-
-  input.value = '';
-  cancelDmReply();
-  cancelDmMedia();
-
-  try {
-    await api('/messages', { method: 'POST', body: JSON.stringify(body) });
-    await loadDmMessages();
-  } catch(e) { alert(e.message); }
+  if (dmPendingMedia) { body.media = dmPendingMedia.data; body.media_type = dmPendingMedia.type; }
+  input.value = ''; cancelDmReply(); cancelDmMedia();
+  try { await api('/messages', { method: 'POST', body: JSON.stringify(body) }); await loadDmMessages(); } catch(e) { alert(e.message); }
 }
 
-// Scroll event for scroll-to-bottom button
-document.addEventListener('scroll', (e) => {
-  if (e.target.id === 'dmMessages') updateScrollBtn();
-}, true);
+// VOICE RECORDING
+let voiceRecorder = null, voiceChunks = [];
+function startVoiceRecord() {
+  if (!navigator.mediaDevices) { showToast('Microphone not available'); return; }
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    voiceRecorder = new MediaRecorder(stream);
+    voiceChunks = [];
+    voiceRecorder.ondataavailable = e => voiceChunks.push(e.data);
+    voiceRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(voiceChunks, { type: 'audio/webm' });
+      const reader = new FileReader();
+      reader.onload = () => {
+        dmPendingMedia = { data: reader.result, type: 'audio' };
+        document.getElementById('dmMediaPreview').innerHTML = '<span style="font-size:0.85rem">Voice message ready</span>';
+        document.getElementById('dmMediaLabel').textContent = '';
+        document.getElementById('dmMediaBar').classList.remove('hidden');
+      };
+      reader.readAsDataURL(blob);
+    };
+    voiceRecorder.start();
+    document.getElementById('dmVoiceBtn').classList.add('recording');
+  }).catch(() => showToast('Microphone access denied'));
+}
+function stopVoiceRecord() {
+  if (voiceRecorder && voiceRecorder.state === 'recording') { voiceRecorder.stop(); document.getElementById('dmVoiceBtn').classList.remove('recording'); }
+}
+
+// STARRED MESSAGES
+async function openStarred() {
+  document.getElementById('starredPanel').classList.remove('hidden');
+  try {
+    const d = await api('/starred');
+    const stars = d.starred || [];
+    const list = document.getElementById('starredList');
+    if (!stars.length) { list.innerHTML = '<div class="empty">No starred messages</div>'; return; }
+    list.innerHTML = stars.map(s => `<div class="starred-item"><div class="starred-item-name">${esc(s.sender_name)}</div><div class="starred-item-text">${esc(s.message || 'Media')}</div><div class="starred-item-time">${new Date(s.created_at).toLocaleDateString()}</div><div class="starred-item-actions"><button class="btn btn-xs" onclick="api('/starred',{method:'POST',body:JSON.stringify({message_id:${s.id},action:'unstar'})}).then(()=>{showToast('Unstarred');openStarred()})">Unstar</button></div></div>`).join('');
+  } catch(e) { document.getElementById('starredList').innerHTML = '<div class="empty">Could not load</div>'; }
+}
+
+document.addEventListener('scroll', (e) => { if (e.target.id === 'dmMessages') updateScrollBtn(); }, true);
 
 // SERVICE WORKER
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
-}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 
 // GLOBAL SEARCH
 let gsearchTimer = null;
-function openGSearch() {
-  document.getElementById('gsearchOverlay').classList.remove('hidden');
-  document.getElementById('gsearchInput').value = '';
-  document.getElementById('gsearchInput').focus();
-  document.getElementById('gsearchResults').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:0.9rem">Type to search...</div>';
-}
-function closeGSearch() {
-  document.getElementById('gsearchOverlay').classList.add('hidden');
-}
+function openGSearch() { document.getElementById('gsearchOverlay').classList.remove('hidden'); document.getElementById('gsearchInput').value = ''; document.getElementById('gsearchInput').focus(); document.getElementById('gsearchResults').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:0.9rem">Type to search...</div>'; }
+function closeGSearch() { document.getElementById('gsearchOverlay').classList.add('hidden'); }
 function doGSearch(q) {
   clearTimeout(gsearchTimer);
-  if (q.length < 2) {
-    document.getElementById('gsearchResults').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:0.9rem">Type to search...</div>';
-    return;
-  }
+  if (q.length < 2) { document.getElementById('gsearchResults').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:0.9rem">Type to search...</div>'; return; }
   gsearchTimer = setTimeout(async () => {
-    try {
-      const d = await api('/search?q=' + encodeURIComponent(q));
-      const r = d.results || [];
-      if (!r.length) {
-        document.getElementById('gsearchResults').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:0.9rem">No results found</div>';
-        return;
-      }
-      const grouped = {};
-      r.forEach(item => {
-        if (!grouped[item.type]) grouped[item.type] = [];
-        grouped[item.type].push(item);
-      });
-      const icons = {
-        user: '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-        pickup: '<svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
-        message: '<svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>'
-      };
+    try { const d = await api('/search?q=' + encodeURIComponent(q)); const r = d.results || [];
+      if (!r.length) { document.getElementById('gsearchResults').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:0.9rem">No results found</div>'; return; }
+      const grouped = {}; r.forEach(item => { if (!grouped[item.type]) grouped[item.type] = []; grouped[item.type].push(item); });
+      const icons = { user: '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', pickup: '<svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>', message: '<svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>' };
       const labels = { user: 'Users', pickup: 'Pickups', message: 'Messages' };
       let html = '';
-      for (const type of ['user', 'pickup', 'message']) {
-        if (!grouped[type]) continue;
-        html += `<div class="gsearch-cat">${labels[type]}</div>`;
-        grouped[type].forEach(item => {
-          html += `<div class="gsearch-item" onclick="gsearchGo('${type}',${JSON.stringify(item.id)},'${item.extra || ''}')">
-            <div class="gsearch-icon">${icons[type]}</div>
-            <div><div class="gsearch-title">${esc(item.title)}</div><div class="gsearch-sub">${esc(item.sub)}</div></div>
-          </div>`;
-        });
-      }
+      for (const type of ['user', 'pickup', 'message']) { if (!grouped[type]) continue; html += `<div class="gsearch-cat">${labels[type]}</div>`; grouped[type].forEach(item => { html += `<div class="gsearch-item" onclick="gsearchGo('${type}',${JSON.stringify(item.id)},'${item.extra || ''}')"><div class="gsearch-icon">${icons[type]}</div><div><div class="gsearch-title">${esc(item.title)}</div><div class="gsearch-sub">${esc(item.sub)}</div></div></div>`; }); }
       document.getElementById('gsearchResults').innerHTML = html;
     } catch(e) { console.error(e); }
   }, 300);
 }
-function gsearchGo(type, id, extra) {
-  closeGSearch();
-  if (type === 'user') { showPage('users'); }
-  else if (type === 'pickup') { showPage(currentUser.role === 'driver' ? 'driverpickups' : 'pickups'); }
-  else if (type === 'message' && extra) { openDM(); openDmChat(parseInt(extra), '', ''); }
-}
+function gsearchGo(type, id, extra) { closeGSearch(); if (type === 'user') showPage('users'); else if (type === 'pickup') showPage(currentUser.role === 'driver' ? 'driverpickups' : 'pickups'); else if (type === 'message' && extra) { openDM(); openDmChat(parseInt(extra), '', ''); } }
 
 // PULL TO REFRESH
-let ptrStartY = 0;
-let ptrActive = false;
-document.addEventListener('touchstart', (e) => {
-  if (window.scrollY === 0 && !document.getElementById('dmOverlay')?.classList.contains('hidden') === false) {
-    ptrStartY = e.touches[0].clientY;
-    ptrActive = true;
-  }
-}, { passive: true });
-document.addEventListener('touchmove', (e) => {
-  if (!ptrActive) return;
-  const dy = e.touches[0].clientY - ptrStartY;
-  if (dy > 60 && window.scrollY === 0) {
-    document.getElementById('ptrIndicator').classList.add('active');
-  }
-}, { passive: true });
-document.addEventListener('touchend', () => {
-  if (!ptrActive) return;
-  ptrActive = false;
-  const ptr = document.getElementById('ptrIndicator');
-  if (ptr.classList.contains('active')) {
-    const page = location.hash.replace('#', '') || 'dashboard';
-    showPage(page);
-    setTimeout(() => ptr.classList.remove('active'), 800);
-  }
-});
+let ptrStartY = 0, ptrActive = false;
+document.addEventListener('touchstart', (e) => { if (window.scrollY === 0) { ptrStartY = e.touches[0].clientY; ptrActive = true; } }, { passive: true });
+document.addEventListener('touchmove', (e) => { if (!ptrActive) return; const dy = e.touches[0].clientY - ptrStartY; if (dy > 60 && window.scrollY === 0) document.getElementById('ptrIndicator').classList.add('active'); }, { passive: true });
+document.addEventListener('touchend', () => { if (!ptrActive) return; ptrActive = false; const ptr = document.getElementById('ptrIndicator'); if (ptr.classList.contains('active')) { const page = location.hash.replace('#', '') || 'dashboard'; showPage(page); setTimeout(() => ptr.classList.remove('active'), 800); } });
 
 // PROFILE AVATAR
 function handleAvatarUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
+  const file = input.files[0]; if (!file) return;
   const img = new Image();
-  img.onload = function() {
-    const canvas = document.createElement('canvas');
-    const size = Math.min(img.width, img.height, 200);
-    canvas.width = size; canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    const sx = (img.width - size) / 2, sy = (img.height - size) / 2;
-    ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-    currentUser.avatar = dataUrl;
-    renderAvatar();
-    api('/profile', { method: 'PUT', body: JSON.stringify({ name: currentUser.name, avatar: dataUrl }) }).catch(() => {});
-  };
-  img.src = URL.createObjectURL(file);
-  input.value = '';
+  img.onload = function() { const canvas = document.createElement('canvas'); const size = Math.min(img.width, img.height, 200); canvas.width = size; canvas.height = size; const ctx = canvas.getContext('2d'); const sx = (img.width - size) / 2, sy = (img.height - size) / 2; ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size); const dataUrl = canvas.toDataURL('image/jpeg', 0.7); currentUser.avatar = dataUrl; renderAvatar(); api('/profile', { method: 'PUT', body: JSON.stringify({ name: currentUser.name, avatar: dataUrl }) }).catch(() => {}); };
+  img.src = URL.createObjectURL(file); input.value = '';
 }
-function renderAvatar() {
-  const el = document.getElementById('profileAvatar');
-  if (!el) return;
-  if (currentUser.avatar) {
-    el.innerHTML = `<img src="${currentUser.avatar}"><div class="avatar-edit">EDIT</div><input type="file" id="avatarInput" accept="image/*" onchange="handleAvatarUpload(this)" hidden>`;
-  } else {
-    const initial = (currentUser.name || '?')[0].toUpperCase();
-    el.innerHTML = `<span id="avatarInitial">${initial}</span><div class="avatar-edit">EDIT</div><input type="file" id="avatarInput" accept="image/*" onchange="handleAvatarUpload(this)" hidden>`;
-  }
-}
+function renderAvatar() { const el = document.getElementById('profileAvatar'); if (!el) return; if (currentUser.avatar) el.innerHTML = `<img src="${currentUser.avatar}"><div class="avatar-edit">EDIT</div><input type="file" id="avatarInput" accept="image/*" onchange="handleAvatarUpload(this)" hidden>`; else { const initial = (currentUser.name || '?')[0].toUpperCase(); el.innerHTML = `<span id="avatarInitial">${initial}</span><div class="avatar-edit">EDIT</div><input type="file" id="avatarInput" accept="image/*" onchange="handleAvatarUpload(this)" hidden>`; } }
 
 // TYPING INDICATOR
-function dmTypingNotify() {
-  if (!dmCurrentChat) return;
-  clearTimeout(dmTypingTimer);
-  dmTypingTimer = setTimeout(() => {
-    api('/typing', { method: 'POST', body: JSON.stringify({ to: dmCurrentChat.userId }) }).catch(() => {});
-  }, 300);
-}
-async function checkDmTyping() {
-  if (!dmCurrentChat) return;
-  try {
-    const d = await api('/typing?from=' + dmCurrentChat.userId);
-    const el = document.getElementById('dmTyping');
-    if (d.typing) {
-      el.innerHTML = `${esc(dmCurrentChat.name)} is typing<span class="dm-typing-dots"><span></span><span></span><span></span></span>`;
-    } else {
-      el.innerHTML = '';
-    }
-  } catch(e) {}
-}
+function dmTypingNotify() { if (!dmCurrentChat) return; clearTimeout(dmTypingTimer); dmTypingTimer = setTimeout(() => { api('/typing', { method: 'POST', body: JSON.stringify({ to: dmCurrentChat.userId }) }).catch(() => {}); }, 300); }
+async function checkDmTyping() { if (!dmCurrentChat) return; try { const d = await api('/typing?from=' + dmCurrentChat.userId); const el = document.getElementById('dmTyping'); if (d.typing) el.innerHTML = `${esc(dmCurrentChat.name)} is typing<span class="dm-typing-dots"><span></span><span></span><span></span></span>`; else el.innerHTML = ''; } catch(e) {} }
 
 // ONLINE PRESENCE
 async function checkDmPresence() {
   if (!dmCurrentChat) return;
-  try {
-    api('/presence', { method: 'POST' }).catch(() => {});
-    const d = await api('/presence?user_id=' + dmCurrentChat.userId);
-    const dot = document.getElementById('dmOnlineDot');
-    if (dot) {
-      dot.className = d.online ? 'dm-online' : 'dm-offline';
-      const roleEl = document.getElementById('dmChatRole');
-      if (d.online) {
-        roleEl.textContent = 'online';
-        roleEl.style.color = '#34c759';
-      } else if (d.last_seen) {
-        const ago = Date.now() - new Date(d.last_seen + 'Z').getTime();
-        const mins = Math.floor(ago / 60000);
-        roleEl.textContent = mins < 60 ? `last seen ${mins}m ago` : mins < 1440 ? `last seen ${Math.floor(mins/60)}h ago` : 'offline';
-        roleEl.style.color = '';
-      }
-    }
-  } catch(e) {}
+  try { api('/presence', { method: 'POST' }).catch(() => {}); const d = await api('/presence?user_id=' + dmCurrentChat.userId); const dot = document.getElementById('dmOnlineDot'); if (dot) { dot.className = d.online ? 'dm-online' : 'dm-offline'; const roleEl = document.getElementById('dmChatRole'); if (d.online) { roleEl.textContent = 'online'; roleEl.style.color = '#34c759'; } else if (d.last_seen) { const ago = Date.now() - new Date(d.last_seen + 'Z').getTime(); const mins = Math.floor(ago / 60000); roleEl.textContent = mins < 60 ? `last seen ${mins}m ago` : mins < 1440 ? `last seen ${Math.floor(mins/60)}h ago` : 'offline'; roleEl.style.color = ''; } } } catch(e) {}
 }
 
 // REACTIONS
-async function toggleReaction(msgId, emoji) {
-  try {
-    await api('/reactions', { method: 'POST', body: JSON.stringify({ message_id: msgId, emoji }) });
-    await loadDmMessages(true);
-  } catch(e) {}
-}
+async function toggleReaction(msgId, emoji) { try { await api('/reactions', { method: 'POST', body: JSON.stringify({ message_id: msgId, emoji }) }); await loadDmMessages(true); } catch(e) {} }
 function showReactPicker(e, msgId) {
-  e.preventDefault();
-  const existing = document.querySelector('.dm-react-picker');
-  if (existing) existing.remove();
-  const el = document.getElementById('msg-' + msgId);
-  if (!el) return;
-  const picker = document.createElement('div');
-  picker.className = 'dm-react-picker';
-  ['👍','❤️','😂','😮','😢','🙏'].forEach(emoji => {
-    const btn = document.createElement('button');
-    btn.textContent = emoji;
-    btn.onclick = (ev) => { ev.stopPropagation(); picker.remove(); toggleReaction(msgId, emoji); };
-    picker.appendChild(btn);
-  });
-  el.style.position = 'relative';
-  el.appendChild(picker);
+  e.preventDefault(); const existing = document.querySelector('.dm-react-picker'); if (existing) existing.remove();
+  const el = document.getElementById('msg-' + msgId); if (!el) return;
+  const picker = document.createElement('div'); picker.className = 'dm-react-picker';
+  ['👍','❤️','😂','😮','😢','🙏'].forEach(emoji => { const btn = document.createElement('button'); btn.textContent = emoji; btn.onclick = (ev) => { ev.stopPropagation(); picker.remove(); toggleReaction(msgId, emoji); }; picker.appendChild(btn); });
+  el.style.position = 'relative'; el.appendChild(picker);
   setTimeout(() => { document.addEventListener('click', function rem() { picker.remove(); document.removeEventListener('click', rem); }); }, 10);
 }
 
 // EMOJI PICKER
 const EMOJI_LIST = ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😇','😍','🤩','😘','😗','😋','😛','😜','🤪','😝','🤑','🤗','🤭','😐','😑','😶','😏','😒','🙄','😬','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😤','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','✋','🤚','🖐️','🖖','👋','🤝','🙏','✍️','💪','🦾','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❤️‍🔥','💯','💢','💥','💫','💦','🔥','⭐','🌟','✨','🎉','🎊','🏆','🥇'];
-function toggleDmEmoji() {
-  const panel = document.getElementById('dmEmojiPanel');
-  if (panel.classList.contains('hidden')) {
-    if (!panel.children.length) {
-      panel.innerHTML = EMOJI_LIST.map(e => `<button onclick="insertDmEmoji('${e}')">${e}</button>`).join('');
-    }
-    panel.classList.remove('hidden');
-  } else {
-    panel.classList.add('hidden');
-  }
-}
-function insertDmEmoji(emoji) {
-  const input = document.getElementById('dmInput');
-  input.value += emoji;
-  input.focus();
-}
+function toggleDmEmoji() { const panel = document.getElementById('dmEmojiPanel'); if (panel.classList.contains('hidden')) { if (!panel.children.length) panel.innerHTML = EMOJI_LIST.map(e => `<button onclick="insertDmEmoji('${e}')">${e}</button>`).join(''); panel.classList.remove('hidden'); } else panel.classList.add('hidden'); }
+function insertDmEmoji(emoji) { const input = document.getElementById('dmInput'); input.value += emoji; input.focus(); }
 
 // PRESENCE HEARTBEAT
 setInterval(() => { if (currentUser) api('/presence', { method: 'POST' }).catch(() => {}); }, 30000);
 
-// TOAST NOTIFICATIONS
-function showToast(msg, duration = 2500) {
-  const existing = document.querySelector('.toast');
-  if (existing) existing.remove();
-  const el = document.createElement('div');
-  el.className = 'toast';
-  el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 200); }, duration);
-}
+// TOAST
+function showToast(msg, duration = 2500) { const existing = document.querySelector('.toast'); if (existing) existing.remove(); const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg; document.body.appendChild(el); setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 200); }, duration); }
 
-// CSV EXPORT
+// CSV EXPORT (my pickups page)
 function exportPickupsCSV() {
-  if (!allPickupsData.length) { alert('No pickups to export'); return; }
-  const headers = ['ID','User','Address','Street','City','State','Zip','Status','Notes','Admin Notes','Driver','Requested','Updated'];
-  const rows = allPickupsData.map(p => [
-    p.id, p.user_name||'', p.addr_label||'', p.street||'', p.city||'', p.state||'', p.zip||'',
-    p.status, (p.notes||'').replace(/"/g,'""'), (p.admin_notes||'').replace(/"/g,'""'),
-    p.driver_name||'', p.requested_at||'', p.updated_at||''
-  ]);
+  if (!allPickupsData.length) { showToast('No pickups to export'); return; }
+  const headers = ['ID','User','Address','Street','City','State','Zip','Status','Priority','Notes','Admin Notes','Driver','Requested','Updated'];
+  const rows = allPickupsData.map(p => [p.id, p.user_name||'', p.addr_label||'', p.street||'', p.city||'', p.state||'', p.zip||'', p.status, p.priority||'normal', (p.notes||'').replace(/"/g,'""'), (p.admin_notes||'').replace(/"/g,'""'), p.driver_name||'', p.requested_at||'', p.updated_at||'']);
   const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `pickups-${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `pickups-${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
 }
-
-// Add React to context menu
-const origShowDmCtx = showDmCtx;
-showDmCtx = function(e, msgId) {
-  origShowDmCtx(e, msgId);
-  const ctx = document.getElementById('dmCtx');
-  const reactBtn = document.createElement('button');
-  reactBtn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 14s1.5 2 4 2 4-2 4-2" fill="none" stroke="currentColor" stroke-width="2"/></svg>React';
-  reactBtn.onclick = () => { ctx.classList.add('hidden'); showReactPicker(e, msgId); };
-  ctx.insertBefore(reactBtn, ctx.firstChild);
-};
 
 init();
 </script>

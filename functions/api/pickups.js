@@ -44,7 +44,7 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   const { env, data } = context;
   const user = data.user;
-  const { address_id, notes, photo } = await context.request.json();
+  const { address_id, notes, photo, priority } = await context.request.json();
 
   if (!address_id) {
     return Response.json({ error: 'Address is required' }, { status: 400 });
@@ -55,8 +55,9 @@ export async function onRequestPost(context) {
     return Response.json({ error: 'Address not found' }, { status: 404 });
   }
 
-  await env.DB.prepare("INSERT INTO pickups (user_id, address_id, notes, photo) VALUES (?, ?, ?, ?)")
-    .bind(user.user_id, address_id, notes || '', photo || '').run();
+  const prio = ['urgent','normal','low'].includes(priority) ? priority : 'normal';
+  await env.DB.prepare("INSERT INTO pickups (user_id, address_id, notes, photo, priority) VALUES (?, ?, ?, ?, ?)")
+    .bind(user.user_id, address_id, notes || '', photo || '', prio).run();
 
   return Response.json({ success: true }, { status: 201 });
 }
@@ -67,7 +68,7 @@ export async function onRequestPut(context) {
   const isAdmin = user.role === 'superadmin' || user.role === 'admin';
   const isDriver = user.role === 'driver';
 
-  const { id, status, admin_notes, driver_id } = await context.request.json();
+  const { id, status, admin_notes, driver_id, priority } = await context.request.json();
   if (!id) return Response.json({ error: 'Missing pickup id' }, { status: 400 });
 
   if (!isAdmin && !isDriver) {
@@ -87,6 +88,7 @@ export async function onRequestPut(context) {
   if (status) { updates.push("status = ?"); values.push(status); }
   if (admin_notes !== undefined && isAdmin) { updates.push("admin_notes = ?"); values.push(admin_notes); }
   if (driver_id !== undefined && isAdmin) { updates.push("driver_id = ?"); values.push(driver_id || null); }
+  if (priority && ['urgent','normal','low'].includes(priority) && isAdmin) { updates.push("priority = ?"); values.push(priority); }
   updates.push("updated_at = datetime('now')");
 
   if (updates.length === 1) return Response.json({ error: 'Nothing to update' }, { status: 400 });
