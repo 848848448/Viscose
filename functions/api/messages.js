@@ -106,9 +106,24 @@ export async function onRequestPost(context) {
     return Response.json({ error: 'Drivers can only message admins' }, { status: 403 });
   }
 
-  await env.DB.prepare(
-    "INSERT INTO direct_messages (sender_id, receiver_id, message, reply_to_id, media, media_type) VALUES (?, ?, ?, ?, ?, ?)"
-  ).bind(user.user_id, receiver_id, message || '', reply_to_id || null, media || '', media_type || '').run();
+  const { results } = await env.DB.prepare(
+    "INSERT INTO direct_messages (sender_id, receiver_id, message, reply_to_id, media, media_type) VALUES (?, ?, ?, ?, ?, ?) RETURNING id"
+  ).bind(user.user_id, receiver_id, message || '', reply_to_id || null, media || '', media_type || '').all();
 
-  return Response.json({ success: true }, { status: 201 });
+  return Response.json({ success: true, id: results[0]?.id }, { status: 201 });
+}
+
+export async function onRequestDelete(context) {
+  const { env, data } = context;
+  const user = data.user;
+  const url = new URL(context.request.url);
+  const id = url.searchParams.get('id');
+  if (!id) return Response.json({ error: 'Missing id' }, { status: 400 });
+
+  const msg = await env.DB.prepare("SELECT sender_id FROM direct_messages WHERE id = ?").bind(id).first();
+  if (!msg) return Response.json({ error: 'Not found' }, { status: 404 });
+  if (msg.sender_id !== user.user_id) return Response.json({ error: 'Can only delete your own messages' }, { status: 403 });
+
+  await env.DB.prepare("DELETE FROM direct_messages WHERE id = ?").bind(id).run();
+  return Response.json({ success: true });
 }
