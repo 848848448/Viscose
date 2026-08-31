@@ -337,9 +337,15 @@
     .dm-date-sep{text-align:center;padding:8px 0;font-size:0.72rem;color:var(--text3);font-weight:500}
     .dm-date-sep span{background:var(--bg2);padding:5px 14px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:inline-block}
 
-    .dm-msg-wrap{display:flex;align-items:flex-start;max-width:85%;position:relative;touch-action:pan-y}
+    .dm-msg-wrap{display:flex;align-items:flex-start;max-width:85%;position:relative;touch-action:pan-y;transition:transform 0.15s ease-out}
+    .dm-msg-wrap.swiping{transition:none}
     .dm-msg-wrap.mine{align-self:flex-end;flex-direction:row-reverse}
     .dm-msg-wrap.other{align-self:flex-start}
+    .dm-swipe-icon{position:absolute;top:50%;transform:translateY(-50%);opacity:0;transition:opacity 0.15s;pointer-events:none;width:28px;height:28px;background:var(--accent,#25d366);border-radius:50%;display:flex;align-items:center;justify-content:center}
+    .dm-msg-wrap.mine .dm-swipe-icon{left:-36px}
+    .dm-msg-wrap.other .dm-swipe-icon{right:-36px}
+    .dm-swipe-icon svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2}
+    .dm-swipe-icon.visible{opacity:1}
 
     .dm-bubble{padding:6px 8px 4px;font-size:0.9rem;line-height:1.4;position:relative;word-wrap:break-word;min-width:80px;border-radius:8px;box-shadow:0 1px 1px rgba(0,0,0,0.1)}
     .dm-msg-wrap.mine .dm-bubble{background:#005c4b;color:#e9edef;border-radius:8px 2px 8px 8px}
@@ -1982,7 +1988,7 @@ async function loadDmMessages(silent) {
       }
 
       html += `<div class="dm-msg-wrap ${isMine ? 'mine' : 'other'}" id="msg-${m.id}"
-        ontouchstart="dmTouchStart(event,${m.id})" ontouchend="dmTouchEnd()" ontouchmove="dmTouchEnd()"
+        ontouchstart="dmTouchStart(event,${m.id})" ontouchend="dmTouchEnd()" ontouchmove="dmTouchMove(event)"
         oncontextmenu="event.preventDefault();showDmCtx(event,${m.id})">
         <div class="dm-bubble">
           ${replyHtml}${mediaHtml}
@@ -2032,15 +2038,69 @@ function updateScrollBtn() {
   }
 }
 
-// Long press for context menu
+// Swipe to reply + long press for context menu
+let dmSwipeState = null;
 function dmTouchStart(e, msgId) {
+  const touch = e.touches[0];
+  dmSwipeState = { msgId, startX: touch.clientX, startY: touch.clientY, swiping: false, triggered: false };
   dmLongPressTimer = setTimeout(() => {
-    const touch = e.touches[0];
-    showDmCtx({ clientX: touch.clientX, clientY: touch.clientY, preventDefault(){} }, msgId);
-    if (navigator.vibrate) navigator.vibrate(30);
+    if (!dmSwipeState?.swiping) {
+      showDmCtx({ clientX: touch.clientX, clientY: touch.clientY, preventDefault(){} }, msgId);
+      if (navigator.vibrate) navigator.vibrate(30);
+      dmSwipeState = null;
+    }
   }, 500);
 }
-function dmTouchEnd() { clearTimeout(dmLongPressTimer); }
+function dmTouchMove(e) {
+  if (!dmSwipeState) return;
+  const touch = e.touches[0];
+  const dx = touch.clientX - dmSwipeState.startX;
+  const dy = touch.clientY - dmSwipeState.startY;
+  if (!dmSwipeState.swiping && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+    dmSwipeState.swiping = true;
+    clearTimeout(dmLongPressTimer);
+  }
+  if (!dmSwipeState.swiping) return;
+  const el = document.getElementById('msg-' + dmSwipeState.msgId);
+  if (!el) return;
+  const msg = dmMessagesCache.find(m => m.id === dmSwipeState.msgId);
+  const isMine = msg && msg.sender_id === currentUser.id;
+  const dir = isMine ? -1 : 1;
+  const offset = dx * dir;
+  if (offset < 0) return;
+  const clamped = Math.min(offset, 80);
+  el.classList.add('swiping');
+  el.style.transform = `translateX(${clamped * dir}px)`;
+  let icon = el.querySelector('.dm-swipe-icon');
+  if (!icon) {
+    icon = document.createElement('div');
+    icon.className = 'dm-swipe-icon';
+    icon.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>';
+    el.appendChild(icon);
+  }
+  icon.classList.toggle('visible', clamped > 30);
+  if (clamped >= 60 && !dmSwipeState.triggered) {
+    dmSwipeState.triggered = true;
+    if (navigator.vibrate) navigator.vibrate(20);
+  }
+}
+function dmTouchEnd() {
+  clearTimeout(dmLongPressTimer);
+  if (dmSwipeState?.triggered) {
+    const msg = dmMessagesCache.find(m => m.id === dmSwipeState.msgId);
+    if (msg) setDmReply(msg.id, msg.sender_name, msg.message || '📷 Photo');
+  }
+  if (dmSwipeState) {
+    const el = document.getElementById('msg-' + dmSwipeState.msgId);
+    if (el) {
+      el.classList.remove('swiping');
+      el.style.transform = '';
+      const icon = el.querySelector('.dm-swipe-icon');
+      if (icon) icon.remove();
+    }
+  }
+  dmSwipeState = null;
+}
 
 function showDmCtx(e, msgId) {
   e.preventDefault();
