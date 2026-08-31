@@ -11,7 +11,7 @@ export async function onRequestGet(context) {
       FROM pickups p
       JOIN users u ON p.user_id = u.id
       JOIN addresses a ON p.address_id = a.id
-      ORDER BY CASE p.status WHEN 'pending' THEN 0 WHEN 'confirmed' THEN 1 ELSE 2 END, p.requested_at DESC`;
+      ORDER BY CASE p.status WHEN 'picked_up' THEN 0 WHEN 'in_process' THEN 1 WHEN 'ready' THEN 2 ELSE 3 END, p.requested_at DESC`;
     params = [];
   } else {
     query = `SELECT p.*, a.label as addr_label, a.street, a.city, a.state, a.zip, a.country
@@ -84,7 +84,7 @@ export async function onRequestPut(context) {
 
     if (env.RESEND_API_KEY) {
       try {
-        const statusLabels = { pending: 'Pending', confirmed: 'Confirmed', completed: 'Completed' };
+        const statusLabels = { picked_up: 'Picked Up', in_process: 'In Process', ready: 'Ready for Delivery', delivered: 'Delivered' };
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
