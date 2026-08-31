@@ -281,6 +281,105 @@
 
     .empty{text-align:center;padding:56px 20px;color:var(--text3);font-size:0.95rem;font-weight:500}
 
+    /* DM FAB */
+    .dm-fab{position:fixed;bottom:28px;right:28px;width:60px;height:60px;border-radius:50%;background:#25d366;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(37,211,102,0.4);display:flex;align-items:center;justify-content:center;z-index:500;transition:transform 0.2s,box-shadow 0.2s}
+    .dm-fab:hover{transform:scale(1.08);box-shadow:0 6px 24px rgba(37,211,102,0.5)}
+    .dm-fab:active{transform:scale(0.95)}
+    .dm-fab svg{width:28px;height:28px;fill:#fff}
+    .dm-fab .dm-badge{position:absolute;top:-2px;right:-2px;background:var(--red);color:#fff;font-size:0.65rem;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg)}
+
+    /* DM OVERLAY */
+    .dm-overlay{position:fixed;inset:0;background:var(--bg);z-index:600;display:flex;flex-direction:column}
+    .dm-top-bar{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--bg2);border-bottom:1px solid var(--line)}
+    .dm-back{background:none;border:none;cursor:pointer;color:var(--text);padding:6px;border-radius:8px;display:flex;align-items:center}
+    .dm-back:hover{background:var(--bg3)}
+    .dm-back svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2}
+    .dm-top-title{font-weight:700;font-size:1.1rem;flex:1}
+    .dm-top-sub{font-size:0.75rem;color:var(--text3);font-weight:500}
+
+    /* DM CONVERSATION LIST */
+    .dm-list{flex:1;overflow-y:auto}
+    .dm-conv{display:flex;align-items:center;gap:14px;padding:14px 18px;cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--line)}
+    .dm-conv:hover{background:var(--bg3)}
+    .dm-conv:active{background:var(--bg3)}
+    .dm-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:#fff;flex-shrink:0}
+    .dm-avatar.driver{background:#af52de}
+    .dm-avatar.admin{background:var(--blue)}
+    .dm-conv-body{flex:1;min-width:0}
+    .dm-conv-name{font-weight:600;font-size:0.95rem;display:flex;align-items:center;gap:6px}
+    .dm-conv-name .role-tag{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.04em;padding:2px 6px;border-radius:4px;font-weight:700}
+    .dm-conv-name .role-tag.driver{background:rgba(175,82,222,0.1);color:#af52de}
+    .dm-conv-name .role-tag.admin{background:rgba(0,122,255,0.1);color:var(--blue)}
+    .dm-conv-preview{color:var(--text2);font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+    .dm-conv-right{text-align:right;flex-shrink:0}
+    .dm-conv-time{font-size:0.72rem;color:var(--text3);white-space:nowrap}
+    .dm-conv-unread{background:#25d366;color:#fff;font-size:0.65rem;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;margin-top:4px}
+
+    /* DM CHAT VIEW */
+    .dm-chat{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .dm-chat-header{display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--bg2);border-bottom:1px solid var(--line)}
+    .dm-chat-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:#fff;flex-shrink:0}
+    .dm-chat-info{flex:1}
+    .dm-chat-name{font-weight:700;font-size:0.95rem}
+    .dm-chat-role{font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em}
+    .dm-chat-typing{font-size:0.75rem;color:#25d366;font-weight:500}
+    .dm-messages{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:3px}
+    .dm-messages::-webkit-scrollbar{width:4px}
+    .dm-messages::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+
+    .dm-msg{display:flex;flex-direction:column;max-width:80%}
+    .dm-msg.mine{align-self:flex-end;align-items:flex-end}
+    .dm-msg.other{align-self:flex-start;align-items:flex-start}
+    .dm-bubble{padding:8px 12px;font-size:0.9rem;line-height:1.45;position:relative;word-wrap:break-word}
+    .dm-msg.mine .dm-bubble{background:#005c4b;color:#fff;border-radius:10px 10px 2px 10px}
+    :root:not([data-theme="dark"]) .dm-msg.mine .dm-bubble,
+    :root[data-theme="light"] .dm-msg.mine .dm-bubble{background:#dcf8c6;color:#111}
+    @media(prefers-color-scheme:light){:root:not([data-theme="dark"]) .dm-msg.mine .dm-bubble{background:#dcf8c6;color:#111}}
+    .dm-msg.other .dm-bubble{background:var(--bg2);color:var(--text);border-radius:10px 10px 10px 2px;border:1px solid var(--line)}
+    .dm-reply-preview{font-size:0.78rem;padding:6px 10px;margin-bottom:4px;border-radius:6px;border-left:3px solid #25d366;opacity:0.85}
+    .dm-msg.mine .dm-reply-preview{background:rgba(255,255,255,0.1)}
+    :root:not([data-theme="dark"]) .dm-msg.mine .dm-reply-preview,
+    :root[data-theme="light"] .dm-msg.mine .dm-reply-preview{background:rgba(0,0,0,0.05)}
+    @media(prefers-color-scheme:light){:root:not([data-theme="dark"]) .dm-msg.mine .dm-reply-preview{background:rgba(0,0,0,0.05)}}
+    .dm-msg.other .dm-reply-preview{background:var(--bg3)}
+    .dm-reply-name{font-weight:700;font-size:0.72rem;color:#25d366}
+    .dm-reply-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+    .dm-media{max-width:280px;border-radius:8px;overflow:hidden;margin-bottom:4px}
+    .dm-media img,.dm-media video{width:100%;display:block;border-radius:8px;cursor:pointer}
+    .dm-time{font-size:0.65rem;margin-top:1px;display:flex;align-items:center;gap:4px;justify-content:flex-end}
+    .dm-msg.mine .dm-time{color:rgba(255,255,255,0.6)}
+    .dm-msg.other .dm-time{color:var(--text3)}
+    :root:not([data-theme="dark"]) .dm-msg.mine .dm-time,
+    :root[data-theme="light"] .dm-msg.mine .dm-time{color:rgba(0,0,0,0.45)}
+    @media(prefers-color-scheme:light){:root:not([data-theme="dark"]) .dm-msg.mine .dm-time{color:rgba(0,0,0,0.45)}}
+    .dm-read-check{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
+
+    .dm-reply-bar{display:flex;align-items:center;gap:8px;padding:8px 18px;background:var(--bg3);border-bottom:1px solid var(--line);font-size:0.85rem}
+    .dm-reply-bar .reply-info{flex:1;border-left:3px solid #25d366;padding-left:10px}
+    .dm-reply-bar .reply-name{font-weight:700;font-size:0.78rem;color:#25d366}
+    .dm-reply-bar .reply-msg{color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .dm-reply-bar button{background:none;border:none;cursor:pointer;color:var(--text3);font-size:1.2rem;padding:4px}
+
+    .dm-input-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-top:1px solid var(--line)}
+    .dm-attach-btn{background:none;border:none;cursor:pointer;color:var(--text3);padding:6px;border-radius:50%;display:flex;align-items:center}
+    .dm-attach-btn:hover{background:var(--bg3);color:var(--text)}
+    .dm-attach-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2}
+    .dm-input-bar input{flex:1;padding:10px 16px;border:none;border-radius:22px;background:var(--bg);color:var(--text);font-size:0.9rem;font-family:inherit;outline:none}
+    .dm-input-bar input::placeholder{color:var(--text3)}
+    .dm-send-btn{width:42px;height:42px;border-radius:50%;background:#25d366;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.15s}
+    .dm-send-btn:hover{transform:scale(1.08)}
+    .dm-send-btn:active{transform:scale(0.95)}
+    .dm-send-btn svg{width:20px;height:20px;fill:#fff}
+
+    .dm-swipe-reply{position:relative;transition:transform 0.15s}
+    .dm-empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:0.9rem}
+    .dm-empty svg{width:64px;height:64px;stroke:var(--line);fill:none;stroke-width:1.5;margin-bottom:12px;display:block;margin-inline:auto}
+
+    @media(max-width:768px){
+      .dm-fab{bottom:20px;right:20px;width:56px;height:56px}
+      .dm-fab svg{width:24px;height:24px}
+    }
+
     /* MOBILE */
     .mob-head{
       display:none;position:fixed;top:0;left:0;right:0;z-index:150;
@@ -570,6 +669,51 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- DM FAB -->
+  <button class="dm-fab hidden" id="dmFab" onclick="openDM()">
+    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+    <span class="dm-badge hidden" id="dmBadge">0</span>
+  </button>
+
+  <!-- DM OVERLAY -->
+  <div class="dm-overlay hidden" id="dmOverlay">
+    <div id="dmListView">
+      <div class="dm-top-bar">
+        <button class="dm-back" onclick="closeDM()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="dm-top-title">Messages</div>
+      </div>
+      <div class="dm-list" id="dmConvList"></div>
+    </div>
+    <div id="dmChatView" class="hidden" style="display:flex;flex-direction:column;height:100%">
+      <div class="dm-chat-header">
+        <button class="dm-back" onclick="dmBackToList()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="dm-chat-avatar" id="dmChatAvatar"></div>
+        <div class="dm-chat-info">
+          <div class="dm-chat-name" id="dmChatName"></div>
+          <div class="dm-chat-role" id="dmChatRole"></div>
+        </div>
+      </div>
+      <div class="dm-messages" id="dmMessages"></div>
+      <div class="dm-reply-bar hidden" id="dmReplyBar">
+        <div class="reply-info">
+          <div class="reply-name" id="dmReplyName"></div>
+          <div class="reply-msg" id="dmReplyMsg"></div>
+        </div>
+        <button onclick="cancelDmReply()">&times;</button>
+      </div>
+      <div class="dm-input-bar">
+        <button class="dm-attach-btn" onclick="document.getElementById('dmMediaInput').click()">
+          <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <input type="file" id="dmMediaInput" accept="image/*,video/*" style="display:none" onchange="handleDmMedia(this)">
+        <input type="text" placeholder="Type a message..." id="dmInput" onkeydown="if(event.key==='Enter')sendDm()">
+        <button class="dm-send-btn" onclick="sendDm()">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -873,6 +1017,8 @@ function showApp() {
     document.querySelector('[data-page="mypickups"]').classList.add('hidden');
   }
   if (currentUser.role !== 'superadmin') document.getElementById('roleField').classList.add('hidden');
+  showDmFab();
+  setInterval(pollDmUnread, 30000);
   const hash = location.hash.replace('#', '') || (isDriver ? 'driverpickups' : 'dashboard');
   showPage(hash.startsWith('reset=') ? (isDriver ? 'driverpickups' : 'dashboard') : hash);
 }
@@ -1580,6 +1726,258 @@ async function changePassword() {
 }
 
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// DIRECT MESSAGES
+let dmCurrentChat = null;
+let dmReplyTo = null;
+let dmPendingMedia = null;
+let dmPollInterval = null;
+let dmUnreadTotal = 0;
+
+function showDmFab() {
+  const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
+  const isDriver = currentUser.role === 'driver';
+  document.getElementById('dmFab').classList.toggle('hidden', !isAdmin && !isDriver);
+  if (isAdmin || isDriver) pollDmUnread();
+}
+
+async function pollDmUnread() {
+  try {
+    const d = await api('/messages');
+    dmUnreadTotal = (d.conversations || []).reduce((sum, c) => sum + (c.unread || 0), 0);
+    const badge = document.getElementById('dmBadge');
+    if (dmUnreadTotal > 0) {
+      badge.textContent = dmUnreadTotal > 99 ? '99+' : dmUnreadTotal;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  } catch(e) {}
+}
+
+function openDM() {
+  document.getElementById('dmOverlay').classList.remove('hidden');
+  document.getElementById('dmListView').classList.remove('hidden');
+  document.getElementById('dmChatView').classList.add('hidden');
+  loadDmConversations();
+  if (dmPollInterval) clearInterval(dmPollInterval);
+}
+
+function closeDM() {
+  document.getElementById('dmOverlay').classList.add('hidden');
+  dmCurrentChat = null;
+  dmReplyTo = null;
+  dmPendingMedia = null;
+  if (dmPollInterval) { clearInterval(dmPollInterval); dmPollInterval = null; }
+  pollDmUnread();
+}
+
+function dmBackToList() {
+  document.getElementById('dmListView').classList.remove('hidden');
+  document.getElementById('dmChatView').classList.add('hidden');
+  dmCurrentChat = null;
+  if (dmPollInterval) { clearInterval(dmPollInterval); dmPollInterval = null; }
+  loadDmConversations();
+}
+
+async function loadDmConversations() {
+  const list = document.getElementById('dmConvList');
+  try {
+    const d = await api('/messages');
+    const convs = d.conversations || [];
+    if (!convs.length) {
+      list.innerHTML = '<div class="dm-empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>No conversations yet</div>';
+      return;
+    }
+    list.innerHTML = convs.map(c => {
+      const initial = (c.name || '?')[0].toUpperCase();
+      const avatarClass = c.role === 'driver' ? 'driver' : 'admin';
+      const roleTag = c.role === 'driver' ? 'Driver' : (c.role === 'superadmin' ? 'Super Admin' : 'Admin');
+      const roleClass = c.role === 'driver' ? 'driver' : 'admin';
+      const timeStr = c.last_message_at ? formatDmTime(c.last_message_at) : '';
+      const preview = c.last_message ? (c.last_sender === currentUser.name ? 'You: ' : '') + c.last_message : 'Start a conversation';
+      return `<div class="dm-conv" onclick="openDmChat(${c.user_id}, '${esc(c.name)}', '${c.role}')">
+        <div class="dm-avatar ${avatarClass}">${initial}</div>
+        <div class="dm-conv-body">
+          <div class="dm-conv-name">${esc(c.name)} <span class="role-tag ${roleClass}">${roleTag}</span></div>
+          <div class="dm-conv-preview">${esc(preview)}</div>
+        </div>
+        <div class="dm-conv-right">
+          ${timeStr ? `<div class="dm-conv-time">${timeStr}</div>` : ''}
+          ${c.unread > 0 ? `<span class="dm-conv-unread">${c.unread}</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<div class="dm-empty">Could not load conversations</div>';
+  }
+}
+
+function formatDmTime(dateStr) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 86400000 && d.getDate() === now.getDate()) {
+    return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  }
+  if (diff < 604800000) {
+    return d.toLocaleDateString(undefined, { weekday: 'short' });
+  }
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+async function openDmChat(userId, name, role) {
+  dmCurrentChat = { userId, name, role };
+  dmReplyTo = null;
+  document.getElementById('dmReplyBar').classList.add('hidden');
+  document.getElementById('dmInput').value = '';
+
+  const initial = (name || '?')[0].toUpperCase();
+  const avatarClass = role === 'driver' ? 'driver' : 'admin';
+  document.getElementById('dmChatAvatar').className = 'dm-chat-avatar ' + avatarClass;
+  document.getElementById('dmChatAvatar').textContent = initial;
+  document.getElementById('dmChatName').textContent = name;
+  document.getElementById('dmChatRole').textContent = role === 'superadmin' ? 'Super Admin' : role.charAt(0).toUpperCase() + role.slice(1);
+
+  document.getElementById('dmListView').classList.add('hidden');
+  document.getElementById('dmChatView').classList.remove('hidden');
+
+  await loadDmMessages();
+  document.getElementById('dmInput').focus();
+
+  if (dmPollInterval) clearInterval(dmPollInterval);
+  dmPollInterval = setInterval(() => loadDmMessages(true), 4000);
+}
+
+async function loadDmMessages(silent) {
+  if (!dmCurrentChat) return;
+  const container = document.getElementById('dmMessages');
+  try {
+    const d = await api('/messages?with=' + dmCurrentChat.userId);
+    const msgs = d.messages || [];
+
+    let html = '';
+    let lastDate = '';
+    msgs.forEach(m => {
+      const dt = new Date(m.created_at);
+      const dateStr = dt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+      if (dateStr !== lastDate) {
+        html += `<div class="chat-date-sep"><span>${dateStr}</span></div>`;
+        lastDate = dateStr;
+      }
+      const isMine = m.sender_id === currentUser.id;
+      const timeStr = dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+      let replyHtml = '';
+      if (m.reply_to_id && m.reply_text) {
+        replyHtml = `<div class="dm-reply-preview">
+          <div class="dm-reply-name">${esc(m.reply_name || '')}</div>
+          <div class="dm-reply-text">${esc(m.reply_text)}</div>
+        </div>`;
+      }
+
+      let mediaHtml = '';
+      if (m.media) {
+        if (m.media_type === 'video') {
+          mediaHtml = `<div class="dm-media"><video src="${m.media}" controls playsinline></video></div>`;
+        } else {
+          mediaHtml = `<div class="dm-media"><img src="${m.media}" onclick="viewPhoto(this.src)"></div>`;
+        }
+      }
+
+      html += `<div class="dm-msg ${isMine ? 'mine' : 'other'}" onclick="setDmReply(${m.id}, '${esc(m.sender_name)}', '${esc((m.message||'').substring(0,60))}')">
+        <div class="dm-bubble">
+          ${replyHtml}${mediaHtml}
+          ${m.message ? esc(m.message) : ''}
+          <div class="dm-time">${timeStr}${isMine ? (m.read_at ? ' <svg class="dm-read-check" viewBox="0 0 24 24" style="color:#53bdeb"><polyline points="1 12 5 16"/><polyline points="6 12 10 16"/><polyline points="13 6 10 16"/></svg>' : ' <svg class="dm-read-check" viewBox="0 0 24 24"><polyline points="2 12 7 17 22 2"/></svg>') : ''}</div>
+        </div>
+      </div>`;
+    });
+
+    if (!msgs.length) {
+      html = `<div class="dm-empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>No messages yet.<br>Say hello!</div>`;
+    }
+
+    const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 60;
+    container.innerHTML = html;
+    if (wasAtBottom || !silent) container.scrollTop = container.scrollHeight;
+  } catch(e) {
+    if (!silent) container.innerHTML = '<div class="dm-empty">Could not load messages</div>';
+  }
+  pollDmUnread();
+}
+
+function setDmReply(msgId, senderName, msgText) {
+  dmReplyTo = msgId;
+  document.getElementById('dmReplyName').textContent = senderName;
+  document.getElementById('dmReplyMsg').textContent = msgText;
+  document.getElementById('dmReplyBar').classList.remove('hidden');
+  document.getElementById('dmInput').focus();
+}
+
+function cancelDmReply() {
+  dmReplyTo = null;
+  document.getElementById('dmReplyBar').classList.add('hidden');
+}
+
+function handleDmMedia(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const isVideo = file.type.startsWith('video/');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    if (isVideo) {
+      if (file.size > 5 * 1024 * 1024) { alert('Video must be under 5MB'); return; }
+      dmPendingMedia = { data: e.target.result, type: 'video' };
+      document.getElementById('dmInput').placeholder = '📎 Video attached. Add a caption...';
+    } else {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const max = 800;
+        let w = img.width, h = img.height;
+        if (w > max || h > max) {
+          if (w > h) { h = Math.round(h * max / w); w = max; }
+          else { w = Math.round(w * max / h); h = max; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        dmPendingMedia = { data: canvas.toDataURL('image/jpeg', 0.7), type: 'image' };
+        document.getElementById('dmInput').placeholder = '📎 Photo attached. Add a caption...';
+      };
+      img.src = e.target.result;
+    }
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+async function sendDm() {
+  if (!dmCurrentChat) return;
+  const input = document.getElementById('dmInput');
+  const msg = input.value.trim();
+  if (!msg && !dmPendingMedia) return;
+
+  const body = {
+    receiver_id: dmCurrentChat.userId,
+    message: msg
+  };
+  if (dmReplyTo) body.reply_to_id = dmReplyTo;
+  if (dmPendingMedia) {
+    body.media = dmPendingMedia.data;
+    body.media_type = dmPendingMedia.type;
+  }
+
+  input.value = '';
+  cancelDmReply();
+  dmPendingMedia = null;
+  input.placeholder = 'Type a message...';
+
+  try {
+    await api('/messages', { method: 'POST', body: JSON.stringify(body) });
+    await loadDmMessages();
+  } catch(e) { alert(e.message); }
+}
 
 init();
 </script>
