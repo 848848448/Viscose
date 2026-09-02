@@ -1616,17 +1616,22 @@ function buildRouteUrl(waypoints, myLoc) {
   const origin = myLoc ? (myLoc.lat + ',' + myLoc.lng) : waypoints[0];
   let url = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(origin) + '&destination=' + encodeURIComponent(dest);
   if (mid.length) url += '&waypoints=' + mid.map(w => encodeURIComponent(w)).join('|');
-  url += '&travelmode=driving';
+  url += '&travelmode=driving&dir_action=navigate';
   return url;
 }
 function openDriverRoute() {
   const active = driverPickupsData.filter(p => p.status === 'pending' || p.status === 'picked_up');
   if (!active.length) { alert('No active pickups for route.'); return; }
   const waypoints = active.map(p => [p.street, p.city, p.state, p.zip].filter(Boolean).join(', '));
-  if (navigator.geolocation) {
+  // Open synchronously in the click gesture (avoids popup blocking); use last known GPS
+  if (lastDriverLoc) {
+    window.open(buildRouteUrl(waypoints, lastDriverLoc), '_blank');
+  } else if (navigator.geolocation) {
+    // No location yet — open a blank tab now, fill it once we have coords
+    const win = window.open('', '_blank');
     navigator.geolocation.getCurrentPosition(
-      pos => window.open(buildRouteUrl(waypoints, { lat: pos.coords.latitude, lng: pos.coords.longitude }), '_blank'),
-      () => window.open(buildRouteUrl(waypoints, null), '_blank'),
+      pos => { lastDriverLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude }; if (win) win.location = buildRouteUrl(waypoints, lastDriverLoc); },
+      () => { if (win) win.location = buildRouteUrl(waypoints, null); },
       { enableHighAccuracy: true, timeout: 8000 }
     );
   } else {
@@ -1775,16 +1780,15 @@ async function refreshTracking() {
 }
 
 // DRIVER LOCATION SHARING
+let lastDriverLoc = null;
+function pushDriverLoc(pos) {
+  lastDriverLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  api('/location', { method: 'POST', body: JSON.stringify(lastDriverLoc) }).catch(() => {});
+}
 function startDriverLocationSharing() {
   if (!navigator.geolocation) return;
-  setInterval(() => {
-    navigator.geolocation.getCurrentPosition(pos => {
-      api('/location', { method: 'POST', body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }) }).catch(() => {});
-    }, () => {}, { enableHighAccuracy: true, timeout: 10000 });
-  }, 15000);
-  navigator.geolocation.getCurrentPosition(pos => {
-    api('/location', { method: 'POST', body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }) }).catch(() => {});
-  }, () => {}, { enableHighAccuracy: true });
+  // Continuous watch keeps lastDriverLoc fresh without repeated permission prompts
+  navigator.geolocation.watchPosition(pushDriverLoc, () => {}, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
 }
 
 // ACTIVITY LOG
