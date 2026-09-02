@@ -8,7 +8,7 @@ export async function onRequestGet(context) {
 
   let query, params;
   if ((isAdmin || isFactory) && !url.searchParams.get('mine')) {
-    query = `SELECT p.*, u.name as user_name, u.email as user_email,
+    query = `SELECT p.*, u.name as user_name, u.email as user_email, u.phone as user_phone,
       a.label as addr_label, a.street, a.city, a.state, a.zip, a.country,
       d.name as driver_name
       FROM pickups p
@@ -18,7 +18,7 @@ export async function onRequestGet(context) {
       ORDER BY CASE p.status WHEN 'picked_up' THEN 0 WHEN 'in_process' THEN 1 WHEN 'ready' THEN 2 ELSE 3 END, p.requested_at DESC`;
     params = [];
   } else if (isDriver) {
-    query = `SELECT p.*, u.name as user_name, u.email as user_email,
+    query = `SELECT p.*, u.name as user_name, u.email as user_email, u.phone as user_phone,
       a.label as addr_label, a.street, a.city, a.state, a.zip, a.country
       FROM pickups p
       JOIN users u ON p.user_id = u.id
@@ -45,7 +45,7 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   const { env, data } = context;
   const user = data.user;
-  const { address_id, notes, photo, priority } = await context.request.json();
+  const { address_id, notes, photo, priority, contact_phone } = await context.request.json();
 
   if (!address_id) {
     return Response.json({ error: 'Address is required' }, { status: 400 });
@@ -57,8 +57,11 @@ export async function onRequestPost(context) {
   }
 
   const prio = ['urgent','normal','low'].includes(priority) ? priority : 'normal';
-  await env.DB.prepare("INSERT INTO pickups (user_id, address_id, notes, photo, priority) VALUES (?, ?, ?, ?, ?)")
-    .bind(user.user_id, address_id, notes || '', photo || '', prio).run();
+  // Default the contact phone to the user's account phone if not overridden
+  let phone = (contact_phone || '').trim();
+  if (!phone) { const u = await env.DB.prepare("SELECT phone FROM users WHERE id = ?").bind(user.user_id).first(); phone = (u && u.phone) || ''; }
+  await env.DB.prepare("INSERT INTO pickups (user_id, address_id, notes, photo, priority, contact_phone) VALUES (?, ?, ?, ?, ?, ?)")
+    .bind(user.user_id, address_id, notes || '', photo || '', prio, phone).run();
 
   return Response.json({ success: true }, { status: 201 });
 }

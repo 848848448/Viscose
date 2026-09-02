@@ -9,8 +9,10 @@ export async function onRequestGet(context) {
   const offset = parseInt(url.searchParams.get('offset')) || 0;
 
   const logs = await env.DB.prepare(`
-    SELECT l.*, u.name as user_name, p.id as pickup_id,
-      a.label as addr_label, pu.name as pickup_user_name
+    SELECT l.*, u.name as user_name, u.role as user_role, p.id as pickup_id,
+      p.cancel_reason, p.notes, p.contact_phone,
+      a.label as addr_label, a.street, a.city, a.state, a.zip,
+      pu.name as pickup_user_name
     FROM pickup_log l
     JOIN users u ON l.changed_by = u.id
     JOIN pickups p ON l.pickup_id = p.id
