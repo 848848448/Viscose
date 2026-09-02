@@ -831,6 +831,12 @@
           <select id="historyDays" onchange="loadDriverHistory()"><option value="1">Today</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option></select>
         </div>
         <div class="tracking-map" id="historyMap"></div>
+        <div id="playbackControls" class="hidden" style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;background:var(--bg2);padding:10px 14px;border-radius:10px;border:1px solid var(--line)">
+          <button class="btn btn-sm btn-dark" id="playBtn" onclick="togglePlayback()" style="padding:6px 14px">▶ Play</button>
+          <input type="range" id="playScrub" min="0" max="100" value="0" oninput="scrubPlayback(this.value)" style="flex:1;min-width:140px">
+          <select id="playSpeed" onchange="playbackSpeed=parseInt(this.value)" style="padding:4px 8px"><option value="60">1 min/s</option><option value="300" selected>5 min/s</option><option value="900">15 min/s</option><option value="3600">1 hr/s</option></select>
+          <span id="playTime" style="font-size:0.82rem;color:var(--text2);font-variant-numeric:tabular-nums;min-width:150px"></span>
+        </div>
         <div id="driverHistoryContent"></div>
       </div>
 
@@ -1348,6 +1354,7 @@ function showPage(page) {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('mobOverlay').classList.remove('open');
   if (page !== 'tracking' && trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
+  if (page !== 'driverhistory') stopPlaybackTimer();
   if (page === 'dashboard') loadDashboard();
   if (page === 'addresses') loadMyAddresses();
   if (page === 'mypickups') loadMyPickups();
@@ -1834,6 +1841,7 @@ async function loadActivityLog() {
 
 // DRIVER HISTORY
 let historyMap = null, historyLayers = [];
+let playTrail = [], playStops = [], playMarker = null, playTimer = null, playbackSpeed = 300, playPos = 0;
 async function initDriverHistory() {
   try {
     const d = await api('/users');
@@ -1864,9 +1872,15 @@ async function loadDriverHistory() {
   if (!driverId) { content.innerHTML = '<div class="empty">Select a driver to see their full history.</div>'; return; }
   content.innerHTML = '<div class="empty">Loading…</div>';
   try {
+    stopPlayback();
     const d = await api('/driver-history?driver_id=' + driverId + '&days=' + days);
     // Draw trail + stops on map
     const trail = d.trail || [];
+    playTrail = trail.map(t => ({ lat: t.lat, lng: t.lng, t: Date.parse(t.recorded_at + 'Z') }));
+    playStops = d.stops || [];
+    const pc = document.getElementById('playbackControls');
+    if (playTrail.length > 1) { pc.classList.remove('hidden'); document.getElementById('playScrub').value = 0; playPos = 0; updatePlayTime(); }
+    else pc.classList.add('hidden');
     const bounds = [];
     if (historyMap && window.L) {
       if (trail.length > 1) {
@@ -1916,6 +1930,63 @@ async function loadDriverHistory() {
     content.innerHTML = html;
   } catch(e) { content.innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
+
+// DRIVER HISTORY PLAYBACK
+function playPositionAt(ms) {
+  // Find where the driver was at absolute time ms, interpolating between points
+  const t = playTrail;
+  if (ms <= t[0].t) return { lat: t[0].lat, lng: t[0].lng, moving: false };
+  if (ms >= t[t.length-1].t) return { lat: t[t.length-1].lat, lng: t[t.length-1].lng, moving: false };
+  for (let i = 1; i < t.length; i++) {
+    if (ms <= t[i].t) {
+      const a = t[i-1], b = t[i];
+      const f = (ms - a.t) / Math.max(1, (b.t - a.t));
+      const gap = b.t - a.t;
+      return { lat: a.lat + (b.lat - a.lat) * f, lng: a.lng + (b.lng - a.lng) * f, moving: gap < 90000 };
+    }
+  }
+  return { lat: t[t.length-1].lat, lng: t[t.length-1].lng, moving: false };
+}
+function renderPlayAt(ms) {
+  const pos = playPositionAt(ms);
+  if (historyMap && window.L) {
+    if (!playMarker) {
+      const icon = L.divIcon({ className: '', html: '<div class="driver-pin" style="background:#ff3b30">▶</div>', iconSize: [30,30], iconAnchor: [15,15] });
+      playMarker = L.marker([pos.lat, pos.lng], { icon, zIndexOffset: 1000 }).addTo(historyMap);
+      historyLayers.push(playMarker);
+    } else {
+      playMarker.setLatLng([pos.lat, pos.lng]);
+    }
+  }
+  const dt = new Date(ms);
+  document.getElementById('playTime').textContent = dt.toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }) + (pos.moving ? ' · 🚗 moving' : ' · ⏸ stopped');
+}
+function updatePlayTime() {
+  if (!playTrail.length) return;
+  const start = playTrail[0].t, end = playTrail[playTrail.length-1].t;
+  const ms = start + (end - start) * (playPos / 100);
+  renderPlayAt(ms);
+}
+function scrubPlayback(v) { playPos = parseFloat(v); updatePlayTime(); }
+function togglePlayback() {
+  if (playTimer) { stopPlaybackTimer(); return; }
+  if (playPos >= 100) playPos = 0;
+  document.getElementById('playBtn').textContent = '⏸ Pause';
+  const start = playTrail[0].t, end = playTrail[playTrail.length-1].t;
+  const span = end - start;
+  let last = Date.now();
+  playTimer = setInterval(() => {
+    const now = Date.now();
+    const realElapsed = (now - last) / 1000; last = now;
+    // playbackSpeed = simulated seconds per real second
+    playPos += (realElapsed * playbackSpeed * 1000 / span) * 100;
+    if (playPos >= 100) { playPos = 100; document.getElementById('playScrub').value = 100; updatePlayTime(); stopPlaybackTimer(); return; }
+    document.getElementById('playScrub').value = playPos;
+    updatePlayTime();
+  }, 100);
+}
+function stopPlaybackTimer() { if (playTimer) { clearInterval(playTimer); playTimer = null; } document.getElementById('playBtn').textContent = '▶ Play'; }
+function stopPlayback() { stopPlaybackTimer(); if (playMarker && historyMap) { historyMap.removeLayer(playMarker); } playMarker = null; playTrail = []; playPos = 0; }
 
 // NOTIFICATIONS
 function requestNotifPermission() { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); }
