@@ -1594,7 +1594,8 @@ function restorePickup(id) {
       try {
         await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, restore: true, scheduled_date: date }) });
         showToast('Restored — scheduled for ' + date);
-        loadAllPickups();
+        const pg = document.getElementById('page-activitylog');
+        if (pg && !pg.classList.contains('hidden')) loadActivityLog(); else loadAllPickups();
       } catch(e) { alert(e.message); }
     }
   );
@@ -2174,6 +2175,7 @@ async function loadActivityLog() {
           ${ph ? `<div class="feed-sub"><a href="tel:${esc(ph)}" style="color:var(--blue);text-decoration:none">📞 ${esc(ph)}</a></div>` : ''}
           ${isCancel && l.cancel_reason ? `<div class="feed-note">🚫 ${esc(l.cancel_reason)}</div>` : ''}
           ${l.notes ? `<div class="feed-note" style="background:var(--bg3);color:var(--text2)">📝 ${esc(l.notes)}</div>` : ''}
+          ${isCancel ? `<div style="margin-top:8px"><button class="btn btn-sm btn-dark" onclick="restorePickup(${l.pickup_id})" style="padding:6px 12px">↩️ Restore to system</button></div>` : ''}
           <div class="feed-time">${dt.toLocaleTimeString(undefined, {hour:'2-digit',minute:'2-digit'})} · ${dt.toLocaleDateString()}</div>
         </div>
       </div>`;
