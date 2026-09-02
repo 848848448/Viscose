@@ -1689,8 +1689,9 @@ function driverDeliverPhoto(id) { driverPhotoAction(id, 'delivered', 'delivery_p
 
 // ===== IN-APP DRIVER NAVIGATION =====
 let navMap = null, navDriverMarker = null, navPickupMarkers = {}, navLine = null;
-let navActiveId = null;       // pickup the driver is currently heading to (null = auto nearest)
+let navActiveId = null;       // pickup the driver is currently heading to (null = auto optimized)
 let navArrivedFor = {};       // pickup ids we've already auto-prompted for
+let navSkipped = [];          // pickup ids deferred to the end of the route
 const GEOFENCE_M = 120;       // meters
 
 function geoCacheGet() { try { return JSON.parse(localStorage.getItem('viscose_geocache') || '{}'); } catch(e) { return {}; } }
@@ -1734,41 +1735,78 @@ async function navRefreshTargets() {
   // Remove markers for pickups no longer active
   Object.keys(navPickupMarkers).forEach(id => { if (!pickups.find(p => p.id == id)) { navMap.removeLayer(navPickupMarkers[id]); delete navPickupMarkers[id]; } });
   const bounds = [];
-  pickups.forEach((p, i) => {
+  const order = navOptimizedOrder();
+  const orderIdx = {}; order.forEach((p, i) => { orderIdx[p.id] = i + 1; });
+  const targetId = (navPickTarget() || {}).id;
+  pickups.forEach((p) => {
     if (!p._geo) return;
     bounds.push([p._geo.lat, p._geo.lng]);
-    const isTarget = (navActiveId ? p.id === navActiveId : false);
-    const color = p.status === 'picked_up' ? '#ff9500' : (isTarget ? '#ff3b30' : '#007aff');
-    const label = p.status === 'picked_up' ? '📦' : (i + 1);
-    if (navPickupMarkers[p.id]) {
-      navPickupMarkers[p.id].setLatLng([p._geo.lat, p._geo.lng]);
-    } else {
-      const icon = L.divIcon({ className: '', html: `<div class="driver-pin" style="background:${color}">${label}</div>`, iconSize: [30,30], iconAnchor: [15,15] });
-      navPickupMarkers[p.id] = L.marker([p._geo.lat, p._geo.lng], { icon }).addTo(navMap)
-        .bindPopup(`${esc(p.user_name)}<br>${esc(pickupAddrStr(p))}<br><button onclick="navSetTarget(${p.id})" style="margin-top:4px">Go here</button>`);
-    }
+    const isTarget = p.id === targetId;
+    const color = isTarget ? '#ff3b30' : (p.status === 'picked_up' ? '#ff9500' : '#007aff');
+    const label = orderIdx[p.id] || '•';
+    // Rebuild marker each refresh so number/color stay in sync with the route
+    if (navPickupMarkers[p.id]) { navMap.removeLayer(navPickupMarkers[p.id]); }
+    const icon = L.divIcon({ className: '', html: `<div class="driver-pin" style="background:${color}">${label}</div>`, iconSize: [30,30], iconAnchor: [15,15] });
+    navPickupMarkers[p.id] = L.marker([p._geo.lat, p._geo.lng], { icon }).addTo(navMap)
+      .bindPopup(`${esc(p.user_name)}<br>${esc(pickupAddrStr(p))}<br><button onclick="navSetTarget(${p.id})" style="margin-top:4px">Go here now</button>`);
   });
   if (lastDriverLoc) bounds.push([lastDriverLoc.lat, lastDriverLoc.lng]);
   if (bounds.length && !navMap._fitted) { navMap.fitBounds(bounds, { padding: [40,40], maxZoom: 14 }); navMap._fitted = true; }
   navUpdateTargetPanel();
   navDrawLine();
 }
-function navPickTarget() {
-  const pickups = activePickups().filter(p => p._geo);
-  if (!pickups.length) return null;
-  if (navActiveId) { const t = pickups.find(p => p.id === navActiveId); if (t) return t; navActiveId = null; }
-  // auto: nearest to driver
-  if (!lastDriverLoc) return pickups[0];
-  return pickups.slice().sort((a, b) => distM(lastDriverLoc, a._geo) - distM(lastDriverLoc, b._geo))[0];
+// Greedy nearest-neighbor ordering from the driver's current position.
+// Skipped pickups are pushed to the end (still routed, just later).
+function navOptimizedOrder() {
+  const remaining = activePickups().filter(p => p._geo);
+  if (!remaining.length) return [];
+  const skipped = remaining.filter(p => navSkipped.includes(p.id));
+  let pool = remaining.filter(p => !navSkipped.includes(p.id));
+  const order = [];
+  let from = lastDriverLoc || (pool[0] && pool[0]._geo) || null;
+  while (pool.length) {
+    let bi = 0;
+    if (from) { let bd = Infinity; pool.forEach((p, i) => { const d = distM(from, p._geo); if (d < bd) { bd = d; bi = i; } }); }
+    const next = pool.splice(bi, 1)[0];
+    order.push(next);
+    from = next._geo;
+  }
+  // Append skipped ones, also nearest-neighbor among themselves
+  let spool = skipped.slice();
+  while (spool.length) {
+    let bi = 0; if (from) { let bd = Infinity; spool.forEach((p, i) => { const d = distM(from, p._geo); if (d < bd) { bd = d; bi = i; } }); }
+    const next = spool.splice(bi, 1)[0]; order.push(next); from = next._geo;
+  }
+  return order;
 }
-function navSetTarget(id) { navActiveId = id; navMap && navMap.closePopup(); navRefreshTargets(); const t = driverPickupsData.find(p => p.id === id); if (t && t._geo && navMap) navMap.panTo([t._geo.lat, t._geo.lng]); }
+function navPickTarget() {
+  const order = navOptimizedOrder();
+  if (!order.length) return null;
+  if (navActiveId) { const t = order.find(p => p.id === navActiveId); if (t) return t; navActiveId = null; }
+  return order[0];
+}
+function navSetTarget(id) { navActiveId = id; navSkipped = navSkipped.filter(x => x !== id); navMap && navMap.closePopup(); navRefreshTargets(); const t = driverPickupsData.find(p => p.id === id); if (t && t._geo && navMap) navMap.panTo([t._geo.lat, t._geo.lng]); }
+function navSkip(id) {
+  const t = driverPickupsData.find(p => p.id === id);
+  showChoiceDialog(
+    'Skip this stop?',
+    `${t ? esc(t.user_name) + ' — ' + esc(t.addr_label || 'Address') : 'This stop'}`,
+    [
+      { label: '↪️ Come back later', kind: 'dark', fn: () => { if (!navSkipped.includes(id)) navSkipped.push(id); navActiveId = null; navRefreshTargets(); } },
+      { label: '🔙 Go back now', kind: '', fn: () => { navSetTarget(id); } },
+      { label: 'Cancel', kind: 'ghost', fn: () => {} }
+    ]
+  );
+}
 function navDrawLine() {
   if (!navMap) return;
   if (navLine) { navMap.removeLayer(navLine); navLine = null; }
-  const t = navPickTarget();
-  if (t && t._geo && lastDriverLoc) {
-    navLine = L.polyline([[lastDriverLoc.lat, lastDriverLoc.lng], [t._geo.lat, t._geo.lng]], { color: '#ff3b30', weight: 3, dashArray: '6 8' }).addTo(navMap);
-  }
+  const order = navOptimizedOrder();
+  if (!order.length) return;
+  const pts = [];
+  if (lastDriverLoc) pts.push([lastDriverLoc.lat, lastDriverLoc.lng]);
+  order.forEach(p => pts.push([p._geo.lat, p._geo.lng]));
+  if (pts.length > 1) navLine = L.polyline(pts, { color: '#007aff', weight: 4, opacity: 0.6 }).addTo(navMap);
 }
 function navUpdateTargetPanel() {
   const el = document.getElementById('navTarget'); if (!el) return;
@@ -1779,8 +1817,19 @@ function navUpdateTargetPanel() {
   const action = t.status === 'picked_up'
     ? `<button class="btn btn-sm btn-dark" onclick="driverDeliverPhoto(${t.id})" style="padding:8px 12px">📷 Deliver</button>`
     : `<button class="btn btn-sm btn-dark" onclick="driverPickupPhoto(${t.id})" style="padding:8px 12px">📷 Pick Up</button>`;
+  const total = navOptimizedOrder().length;
   el.classList.remove('hidden');
-  el.innerHTML = `<div style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Next stop ${distStr ? '· ' + distStr : ''}</div><div style="font-weight:600">${esc(t.user_name)} — ${esc(t.addr_label || 'Address')}</div><div style="font-size:0.85rem;color:var(--text2);margin:4px 0 8px">${esc(pickupAddrStr(t))}</div><div style="display:flex;gap:8px;flex-wrap:wrap">${action}<button class="btn btn-sm" onclick="openDriverRoute()" style="padding:8px 12px">🗺️ Open in Maps</button></div>`;
+  el.innerHTML = `<div style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Next stop ${distStr ? '· ' + distStr : ''} ${total > 1 ? '· ' + total + ' stops left' : ''}</div><div style="font-weight:600">${esc(t.user_name)} — ${esc(t.addr_label || 'Address')}</div><div style="font-size:0.85rem;color:var(--text2);margin:4px 0 8px">${esc(pickupAddrStr(t))}</div><div style="display:flex;gap:8px;flex-wrap:wrap">${action}<button class="btn btn-sm" onclick="openDriverRoute()" style="padding:8px 12px">🗺️ Maps</button>${total > 1 ? `<button class="btn btn-sm" onclick="navSkip(${t.id})" style="padding:8px 12px">⏭️ Skip</button>` : ''}</div>`;
+}
+// Simple in-app choice dialog
+function showChoiceDialog(title, body, options) {
+  let ov = document.getElementById('choiceDialog');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'choiceDialog'; ov.className = 'overlay'; document.body.appendChild(ov); }
+  ov.classList.remove('hidden');
+  ov.onclick = (e) => { if (e.target === ov) ov.classList.add('hidden'); };
+  const btns = options.map((o, i) => `<button class="btn ${o.kind === 'dark' ? 'btn-dark' : o.kind === 'ghost' ? '' : 'btn'}" data-i="${i}" style="width:100%;margin-top:8px;justify-content:center">${o.label}</button>`).join('');
+  ov.innerHTML = `<div class="modal" style="max-width:360px"><h3>${title}</h3><div style="color:var(--text2);margin:6px 0 12px">${body}</div>${btns}</div>`;
+  ov.querySelectorAll('button[data-i]').forEach(b => b.onclick = () => { ov.classList.add('hidden'); options[parseInt(b.dataset.i)].fn(); });
 }
 // Called from pushDriverLoc whenever the driver moves — auto-prompt on arrival
 function navGeofenceCheck() {
