@@ -1313,7 +1313,9 @@ function showApp() {
   requestNotifPermission();
   showDmFab();
   setInterval(pollDmUnread, 10000);
-  if (isDriver) startDriverLocationSharing();
+  if (isDriver) { startDriverLocationSharing(); startDriverPolling(); }
+  if (isFactory) startFactoryPolling();
+  if (isAdmin) startAdminPolling();
   const defaultPage = isDriver ? 'driverpickups' : isFactory ? 'factory' : 'dashboard';
   const hash = location.hash.replace('#', '') || defaultPage;
   showPage(hash.startsWith('reset=') ? defaultPage : hash);
@@ -1532,7 +1534,9 @@ let pickupFilter = 'all';
 let dateFilter = 'all';
 let selectedPickups = new Set();
 
-async function loadAllPickups() { try { const d = await api('/pickups'); allPickupsData = d.pickups; selectedPickups.clear(); updateBulkUI(); renderPickups(); } catch(e) { console.error(e); } }
+let adminPickupsSig = '', adminPollTimer = null;
+async function loadAllPickups() { try { const d = await api('/pickups'); allPickupsData = d.pickups; adminPickupsSig = JSON.stringify(d.pickups.map(p => [p.id, p.status])); selectedPickups.clear(); updateBulkUI(); renderPickups(); } catch(e) { console.error(e); } }
+function startAdminPolling() { if (adminPollTimer) return; adminPollTimer = setInterval(async () => { const pg = document.getElementById('page-pickups'); if (!pg || pg.classList.contains('hidden') || selectedPickups.size) return; try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups.map(p => [p.id, p.status])); if (sig !== adminPickupsSig) { allPickupsData = d.pickups; adminPickupsSig = sig; renderPickups(); } } catch(e) {} }, 15000); }
 function filterPickups(f) { pickupFilter = f; document.querySelectorAll('#page-pickups .filter-tabs:first-child .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderPickups(); }
 function filterDate(f) { dateFilter = f; document.querySelectorAll('#dateFilters .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('date' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderPickups(); }
 function getFilteredPickups() {
@@ -1562,7 +1566,10 @@ function renderPickups() {
 // DRIVER PICKUPS
 let driverPickupsData = [];
 let driverFilter = 'all';
-async function loadDriverPickups() { try { const d = await api('/pickups'); driverPickupsData = d.pickups; renderDriverPickups(); } catch(e) { console.error(e); } }
+let driverPollTimer = null;
+async function loadDriverPickups() { try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups.map(p => [p.id, p.status])); if (sig !== driverPickupsSig) { driverPickupsData = d.pickups; driverPickupsSig = sig; renderDriverPickups(); } } catch(e) { console.error(e); } }
+let driverPickupsSig = '';
+function startDriverPolling() { if (driverPollTimer) return; driverPollTimer = setInterval(() => { if (document.getElementById('page-driverpickups') && !document.getElementById('page-driverpickups').classList.contains('hidden')) loadDriverPickups(); }, 12000); }
 function filterDriverPickups(f) { driverFilter = f; document.querySelectorAll('#page-driverpickups .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('dFilter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderDriverPickups(); }
 function renderDriverPickups() {
   const filtered = driverFilter === 'all' ? driverPickupsData : driverPickupsData.filter(p => p.status === driverFilter);
@@ -1602,22 +1609,35 @@ function driverPhotoAction(id, status, photoField) {
 }
 function driverPickupPhoto(id) { driverPhotoAction(id, 'picked_up', 'pickup_photo'); }
 function driverDeliverPhoto(id) { driverPhotoAction(id, 'delivered', 'delivery_photo'); }
+function buildRouteUrl(waypoints, myLoc) {
+  const dest = waypoints[waypoints.length - 1];
+  const mid = myLoc ? waypoints.slice(0, -1) : waypoints.slice(1, -1);
+  const origin = myLoc ? (myLoc.lat + ',' + myLoc.lng) : waypoints[0];
+  let url = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(origin) + '&destination=' + encodeURIComponent(dest);
+  if (mid.length) url += '&waypoints=' + mid.map(w => encodeURIComponent(w)).join('|');
+  url += '&travelmode=driving';
+  return url;
+}
 function openDriverRoute() {
   const active = driverPickupsData.filter(p => p.status === 'pending' || p.status === 'picked_up');
   if (!active.length) { alert('No active pickups for route.'); return; }
   const waypoints = active.map(p => [p.street, p.city, p.state, p.zip].filter(Boolean).join(', '));
-  const origin = waypoints[0];
-  const dest = waypoints[waypoints.length - 1];
-  const mid = waypoints.slice(1, -1);
-  let url = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(origin) + '&destination=' + encodeURIComponent(dest);
-  if (mid.length) url += '&waypoints=' + mid.map(w => encodeURIComponent(w)).join('|');
-  url += '&travelmode=driving';
-  window.open(url, '_blank');
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => window.open(buildRouteUrl(waypoints, { lat: pos.coords.latitude, lng: pos.coords.longitude }), '_blank'),
+      () => window.open(buildRouteUrl(waypoints, null), '_blank'),
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  } else {
+    window.open(buildRouteUrl(waypoints, null), '_blank');
+  }
 }
 
 // FACTORY
 let factoryData = [], factoryFilter = 'all';
-async function loadFactoryPickups() { try { const d = await api('/pickups'); factoryData = d.pickups; renderFactoryPickups(); } catch(e) { console.error(e); } }
+let factorySig = '', factoryPollTimer = null;
+async function loadFactoryPickups() { try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups.map(p => [p.id, p.status])); if (sig !== factorySig) { factoryData = d.pickups; factorySig = sig; renderFactoryPickups(); } } catch(e) { console.error(e); } }
+function startFactoryPolling() { if (factoryPollTimer) return; factoryPollTimer = setInterval(() => { if (document.getElementById('page-factory') && !document.getElementById('page-factory').classList.contains('hidden')) loadFactoryPickups(); }, 12000); }
 function filterFactory(f) { factoryFilter = f; document.querySelectorAll('#page-factory .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('fFilter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderFactoryPickups(); }
 function renderFactoryPickups() {
   const show = factoryFilter === 'all' ? factoryData.filter(p => ['picked_up','in_process','ready'].includes(p.status)) : factoryData.filter(p => p.status === factoryFilter);
