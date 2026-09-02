@@ -797,6 +797,9 @@
           </div>
         </div>
         <div id="locStatus" style="margin:0 0 14px;padding:10px 14px;border-radius:10px;font-size:0.88rem;display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap"></div>
+        <div id="syncBadge" class="hidden" style="margin:0 0 12px;padding:8px 14px;border-radius:10px;font-size:0.85rem;background:rgba(255,149,0,0.12);color:var(--orange);font-weight:600"></div>
+        <div id="navTarget" class="hidden" style="margin:0 0 12px;padding:12px 14px;border-radius:12px;background:var(--bg2);border:1px solid var(--line)"></div>
+        <div class="tracking-map" id="driverNavMap" style="height:340px"></div>
         <div id="driverPickupList"></div>
       </div>
 
@@ -1193,6 +1196,49 @@ async function api(path, opts = {}) {
   return data;
 }
 
+// OFFLINE QUEUE — pickup actions taken with no service are stored and synced when back online
+function queueGet() { try { return JSON.parse(localStorage.getItem('viscose_queue') || '[]'); } catch(e) { return []; } }
+function queueSet(q) { try { localStorage.setItem('viscose_queue', JSON.stringify(q)); } catch(e) {} }
+function queuePush(path, opts) { const q = queueGet(); q.push({ path, opts, at: Date.now() }); queueSet(q); updateSyncBadge(); }
+async function apiQueued(path, opts) {
+  try {
+    const r = await api(path, opts);
+    return r;
+  } catch(e) {
+    // Only queue genuine network failures (offline), not auth/validation errors
+    if (!navigator.onLine || e.message === 'Failed to fetch' || /network/i.test(e.message)) {
+      queuePush(path, opts);
+      return { queued: true };
+    }
+    throw e;
+  }
+}
+let queueFlushing = false;
+async function queueFlush() {
+  if (queueFlushing || !navigator.onLine) return;
+  let q = queueGet();
+  if (!q.length) { updateSyncBadge(); return; }
+  queueFlushing = true;
+  const remaining = [];
+  for (const item of q) {
+    try { await api(item.path, item.opts); }
+    catch(e) { if (!navigator.onLine || e.message === 'Failed to fetch') { remaining.push(item); } /* drop hard failures */ }
+  }
+  queueSet(remaining);
+  queueFlushing = false;
+  updateSyncBadge();
+  if (typeof loadDriverPickups === 'function') loadDriverPickups();
+}
+function updateSyncBadge() {
+  const el = document.getElementById('syncBadge'); if (!el) return;
+  const n = queueGet().length;
+  if (n > 0) { el.classList.remove('hidden'); el.textContent = navigator.onLine ? `⏳ Syncing ${n}…` : `📴 ${n} waiting to sync`; }
+  else el.classList.add('hidden');
+}
+window.addEventListener('online', () => { updateSyncBadge(); queueFlush(); });
+window.addEventListener('offline', updateSyncBadge);
+setInterval(queueFlush, 20000);
+
 function togglePass(id, btn) {
   const input = document.getElementById(id);
   const show = input.type === 'password';
@@ -1362,7 +1408,7 @@ function showPage(page) {
   if (page === 'pickups') loadAllPickups();
   if (page === 'admins') loadAdmins();
   if (page === 'alladdresses') loadUserOptions();
-  if (page === 'driverpickups') loadDriverPickups();
+  if (page === 'driverpickups') { loadDriverPickups(); initDriverNav(); }
   if (page === 'factory') loadFactoryPickups();
   if (page === 'settings') loadSettings();
   if (page === 'tracking') loadTracking();
@@ -1592,7 +1638,7 @@ function renderPickups() {
 let driverPickupsData = [];
 let driverFilter = 'all';
 let driverPollTimer = null;
-async function loadDriverPickups() { try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups.map(p => [p.id, p.status])); if (sig !== driverPickupsSig) { driverPickupsData = d.pickups; driverPickupsSig = sig; renderDriverPickups(); } } catch(e) { console.error(e); } }
+async function loadDriverPickups() { try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups.map(p => [p.id, p.status])); if (sig !== driverPickupsSig) { const oldGeo = {}; driverPickupsData.forEach(p => { if (p._geo) oldGeo[p.id] = p._geo; }); driverPickupsData = d.pickups; driverPickupsData.forEach(p => { if (oldGeo[p.id]) p._geo = oldGeo[p.id]; }); driverPickupsSig = sig; renderDriverPickups(); if (typeof navRefreshTargets === 'function') navRefreshTargets(); } } catch(e) { console.error(e); } }
 let driverPickupsSig = '';
 function startDriverPolling() { if (driverPollTimer) return; driverPollTimer = setInterval(() => { if (document.getElementById('page-driverpickups') && !document.getElementById('page-driverpickups').classList.contains('hidden')) loadDriverPickups(); }, 12000); }
 function filterDriverPickups(f) { driverFilter = f; document.querySelectorAll('#page-driverpickups .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('dFilter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderDriverPickups(); }
@@ -1625,8 +1671,14 @@ function driverPhotoAction(id, status, photoField) {
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
           const photo = canvas.toDataURL('image/jpeg', 0.7);
           const body = { id, status }; body[photoField] = photo;
-          await api('/pickups', { method: 'PUT', body: JSON.stringify(body) });
-          loadDriverPickups();
+          const r = await apiQueued('/pickups', { method: 'PUT', body: JSON.stringify(body) });
+          // Optimistically update local state so it reflects even while offline
+          const local = driverPickupsData.find(p => p.id === id);
+          if (local) { local.status = status; local[photoField] = photo; }
+          renderDriverPickups();
+          if (r && r.queued) showToast('Saved offline — will sync when back online');
+          else loadDriverPickups();
+          if (typeof navGeofenceCheck === 'function') navRefreshTargets();
         }; img.src = reader.result;
       } catch(e) { alert(e.message); }
     }; reader.readAsDataURL(file);
@@ -1634,6 +1686,121 @@ function driverPhotoAction(id, status, photoField) {
 }
 function driverPickupPhoto(id) { driverPhotoAction(id, 'picked_up', 'pickup_photo'); }
 function driverDeliverPhoto(id) { driverPhotoAction(id, 'delivered', 'delivery_photo'); }
+
+// ===== IN-APP DRIVER NAVIGATION =====
+let navMap = null, navDriverMarker = null, navPickupMarkers = {}, navLine = null;
+let navActiveId = null;       // pickup the driver is currently heading to (null = auto nearest)
+let navArrivedFor = {};       // pickup ids we've already auto-prompted for
+const GEOFENCE_M = 120;       // meters
+
+function geoCacheGet() { try { return JSON.parse(localStorage.getItem('viscose_geocache') || '{}'); } catch(e) { return {}; } }
+function geoCacheSet(c) { try { localStorage.setItem('viscose_geocache', JSON.stringify(c)); } catch(e) {} }
+async function geocode(addr) {
+  if (!addr) return null;
+  const cache = geoCacheGet();
+  if (cache[addr]) return cache[addr];
+  if (!navigator.onLine) return null;
+  try {
+    const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(addr), { headers: { 'Accept': 'application/json' } });
+    const j = await res.json();
+    if (j && j[0]) { const loc = { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) }; cache[addr] = loc; geoCacheSet(cache); return loc; }
+  } catch(e) {}
+  return null;
+}
+function distM(a, b) {
+  const R = 6371000, toR = x => x * Math.PI / 180;
+  const dLat = toR(b.lat - a.lat), dLng = toR(b.lng - a.lng);
+  const s = Math.sin(dLat/2)**2 + Math.cos(toR(a.lat)) * Math.cos(toR(b.lat)) * Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+function activePickups() { return driverPickupsData.filter(p => p.status === 'pending' || p.status === 'picked_up'); }
+function pickupAddrStr(p) { return [p.street, p.city, p.state, p.zip].filter(Boolean).join(', '); }
+
+async function initDriverNav() {
+  if (!navMap && window.L && document.getElementById('driverNavMap')) {
+    navMap = L.map('driverNavMap').setView([41.47, -74.02], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(navMap);
+  }
+  setTimeout(() => { if (navMap) navMap.invalidateSize(); }, 200);
+  await navRefreshTargets();
+}
+async function navRefreshTargets() {
+  if (!navMap) return;
+  const pickups = activePickups();
+  // Geocode any addresses we don't have yet (sequentially to respect Nominatim)
+  for (const p of pickups) {
+    if (!p._geo) { p._geo = await geocode(pickupAddrStr(p)); }
+  }
+  // Remove markers for pickups no longer active
+  Object.keys(navPickupMarkers).forEach(id => { if (!pickups.find(p => p.id == id)) { navMap.removeLayer(navPickupMarkers[id]); delete navPickupMarkers[id]; } });
+  const bounds = [];
+  pickups.forEach((p, i) => {
+    if (!p._geo) return;
+    bounds.push([p._geo.lat, p._geo.lng]);
+    const isTarget = (navActiveId ? p.id === navActiveId : false);
+    const color = p.status === 'picked_up' ? '#ff9500' : (isTarget ? '#ff3b30' : '#007aff');
+    const label = p.status === 'picked_up' ? '📦' : (i + 1);
+    if (navPickupMarkers[p.id]) {
+      navPickupMarkers[p.id].setLatLng([p._geo.lat, p._geo.lng]);
+    } else {
+      const icon = L.divIcon({ className: '', html: `<div class="driver-pin" style="background:${color}">${label}</div>`, iconSize: [30,30], iconAnchor: [15,15] });
+      navPickupMarkers[p.id] = L.marker([p._geo.lat, p._geo.lng], { icon }).addTo(navMap)
+        .bindPopup(`${esc(p.user_name)}<br>${esc(pickupAddrStr(p))}<br><button onclick="navSetTarget(${p.id})" style="margin-top:4px">Go here</button>`);
+    }
+  });
+  if (lastDriverLoc) bounds.push([lastDriverLoc.lat, lastDriverLoc.lng]);
+  if (bounds.length && !navMap._fitted) { navMap.fitBounds(bounds, { padding: [40,40], maxZoom: 14 }); navMap._fitted = true; }
+  navUpdateTargetPanel();
+  navDrawLine();
+}
+function navPickTarget() {
+  const pickups = activePickups().filter(p => p._geo);
+  if (!pickups.length) return null;
+  if (navActiveId) { const t = pickups.find(p => p.id === navActiveId); if (t) return t; navActiveId = null; }
+  // auto: nearest to driver
+  if (!lastDriverLoc) return pickups[0];
+  return pickups.slice().sort((a, b) => distM(lastDriverLoc, a._geo) - distM(lastDriverLoc, b._geo))[0];
+}
+function navSetTarget(id) { navActiveId = id; navMap && navMap.closePopup(); navRefreshTargets(); const t = driverPickupsData.find(p => p.id === id); if (t && t._geo && navMap) navMap.panTo([t._geo.lat, t._geo.lng]); }
+function navDrawLine() {
+  if (!navMap) return;
+  if (navLine) { navMap.removeLayer(navLine); navLine = null; }
+  const t = navPickTarget();
+  if (t && t._geo && lastDriverLoc) {
+    navLine = L.polyline([[lastDriverLoc.lat, lastDriverLoc.lng], [t._geo.lat, t._geo.lng]], { color: '#ff3b30', weight: 3, dashArray: '6 8' }).addTo(navMap);
+  }
+}
+function navUpdateTargetPanel() {
+  const el = document.getElementById('navTarget'); if (!el) return;
+  const t = navPickTarget();
+  if (!t) { el.classList.add('hidden'); return; }
+  const dist = (lastDriverLoc && t._geo) ? distM(lastDriverLoc, t._geo) : null;
+  const distStr = dist == null ? '' : (dist < 1000 ? Math.round(dist) + ' m away' : (dist/1000).toFixed(1) + ' km away');
+  const action = t.status === 'picked_up'
+    ? `<button class="btn btn-sm btn-dark" onclick="driverDeliverPhoto(${t.id})" style="padding:8px 12px">📷 Deliver</button>`
+    : `<button class="btn btn-sm btn-dark" onclick="driverPickupPhoto(${t.id})" style="padding:8px 12px">📷 Pick Up</button>`;
+  el.classList.remove('hidden');
+  el.innerHTML = `<div style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Next stop ${distStr ? '· ' + distStr : ''}</div><div style="font-weight:600">${esc(t.user_name)} — ${esc(t.addr_label || 'Address')}</div><div style="font-size:0.85rem;color:var(--text2);margin:4px 0 8px">${esc(pickupAddrStr(t))}</div><div style="display:flex;gap:8px;flex-wrap:wrap">${action}<button class="btn btn-sm" onclick="openDriverRoute()" style="padding:8px 12px">🗺️ Open in Maps</button></div>`;
+}
+// Called from pushDriverLoc whenever the driver moves — auto-prompt on arrival
+function navGeofenceCheck() {
+  if (!lastDriverLoc) return;
+  navUpdateTargetPanel(); navDrawLine();
+  if (navDriverMarker && navMap) navDriverMarker.setLatLng([lastDriverLoc.lat, lastDriverLoc.lng]);
+  else if (navMap && window.L) { const icon = L.divIcon({ className: '', html: '<div class="driver-pin" style="background:#34c759">●</div>', iconSize: [26,26], iconAnchor: [13,13] }); navDriverMarker = L.marker([lastDriverLoc.lat, lastDriverLoc.lng], { icon, zIndexOffset: 1000 }).addTo(navMap); }
+  const t = navPickTarget();
+  if (t && t._geo && !navArrivedFor[t.id]) {
+    if (distM(lastDriverLoc, t._geo) <= GEOFENCE_M) {
+      navArrivedFor[t.id] = true;
+      const page = document.getElementById('page-driverpickups');
+      const onDriverPage = page && !page.classList.contains('hidden');
+      if (onDriverPage) {
+        showNotif('Arrived at stop', `You've arrived at ${t.user_name}. Take the ${t.status === 'picked_up' ? 'delivery' : 'pickup'} photo.`);
+        if (t.status === 'picked_up') driverDeliverPhoto(t.id); else driverPickupPhoto(t.id);
+      }
+    }
+  }
+}
 function buildRouteUrl(waypoints, myLoc) {
   const dest = waypoints[waypoints.length - 1];
   // Origin = driver's live location when known, else the first address
@@ -1807,6 +1974,7 @@ function pushDriverLoc(pos) {
   lastDriverLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
   setLocStatus('ok', '📍 Location active — you are being tracked live', false);
   api('/location', { method: 'POST', body: JSON.stringify(lastDriverLoc) }).catch(() => {});
+  if (typeof navGeofenceCheck === 'function') navGeofenceCheck();
 }
 function locError(e) {
   if (e && e.code === 1) setLocStatus('err', '⚠️ Location blocked. Allow location for this site in your browser settings, then tap Enable.', true);
