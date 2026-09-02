@@ -1009,13 +1009,6 @@
     <div class="field"><label>Address</label>
       <select id="pickupAddress"><option value="">Select address...</option></select>
     </div>
-    <div class="field"><label>Priority</label>
-      <select id="pickupPriority">
-        <option value="normal">Normal</option>
-        <option value="urgent">Urgent</option>
-        <option value="low">Low</option>
-      </select>
-    </div>
     <div class="field"><label>Notes (optional)</label><textarea id="pickupNotes" placeholder="Any special instructions..."></textarea></div>
     <div class="photo-upload">
       <div id="photoLabel" style="display:flex;gap:10px;flex-wrap:wrap">
@@ -1488,7 +1481,6 @@ async function openPickupModal() {
       return `<option value="${a.id}">${esc(a.label || 'Address')} — ${esc(full)}</option>`;
     }).join('');
     document.getElementById('pickupNotes').value = '';
-    document.getElementById('pickupPriority').value = 'normal';
     document.getElementById('pickupModalAlert').innerHTML = '';
     removePhoto();
     document.getElementById('pickupModal').classList.remove('hidden');
@@ -1498,7 +1490,7 @@ async function openPickupModal() {
 async function submitPickup() {
   const address_id = document.getElementById('pickupAddress').value;
   if (!address_id) { document.getElementById('pickupModalAlert').innerHTML = '<div class="alert alert-error">Select an address.</div>'; return; }
-  try { await api('/pickups', { method: 'POST', body: JSON.stringify({ address_id: parseInt(address_id), notes: document.getElementById('pickupNotes').value, photo: pendingPhoto || '', priority: document.getElementById('pickupPriority').value }) }); closeModal('pickupModal'); loadMyPickups(); } catch(e) { document.getElementById('pickupModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
+  try { await api('/pickups', { method: 'POST', body: JSON.stringify({ address_id: parseInt(address_id), notes: document.getElementById('pickupNotes').value, photo: pendingPhoto || '' }) }); closeModal('pickupModal'); loadMyPickups(); } catch(e) { document.getElementById('pickupModalAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
 
 async function cancelPickup(id) { if (!confirm('Cancel this pickup request?')) return; try { await api('/pickups?id=' + id, { method: 'DELETE' }); loadMyPickups(); } catch(e) { alert(e.message); } }
