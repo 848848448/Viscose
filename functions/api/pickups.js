@@ -23,7 +23,7 @@ export async function onRequestGet(context) {
       FROM pickups p
       JOIN users u ON p.user_id = u.id
       JOIN addresses a ON p.address_id = a.id
-      WHERE p.driver_id = ? OR (p.driver_id IS NULL AND p.status = 'pending')
+      WHERE p.driver_id = ? OR (p.driver_id IS NULL AND p.status = 'pending' AND (p.scheduled_date IS NULL OR p.scheduled_date = '' OR p.scheduled_date <= date('now')))
       ORDER BY CASE p.status WHEN 'pending' THEN 0 WHEN 'picked_up' THEN 1 WHEN 'in_process' THEN 2 WHEN 'ready' THEN 3 ELSE 4 END, p.requested_at DESC`;
     params = [user.user_id];
   } else {
@@ -73,11 +73,22 @@ export async function onRequestPut(context) {
   const isDriver = user.role === 'driver';
   const isFactory = user.role === 'factory';
 
-  const { id, status, admin_notes, driver_id, priority, delivery_photo, pickup_photo, cancel_reason } = await context.request.json();
+  const { id, status, admin_notes, driver_id, priority, delivery_photo, pickup_photo, cancel_reason, restore, scheduled_date } = await context.request.json();
   if (!id) return Response.json({ error: 'Missing pickup id' }, { status: 400 });
 
   if (!isAdmin && !isDriver && !isFactory) {
     return Response.json({ error: 'Not authorized' }, { status: 403 });
+  }
+
+  // Restore a cancelled pickup back into the system, scheduled for a chosen date (admins only)
+  if (restore) {
+    if (!isAdmin) return Response.json({ error: 'Admins only' }, { status: 403 });
+    if (!scheduled_date) return Response.json({ error: 'A date is required to restore' }, { status: 400 });
+    await env.DB.prepare(
+      "UPDATE pickups SET status = 'pending', driver_id = NULL, cancel_reason = '', scheduled_date = ?, updated_at = datetime('now') WHERE id = ?"
+    ).bind(scheduled_date, id).run();
+    try { await env.DB.prepare("INSERT INTO pickup_log (pickup_id, changed_by, old_status, new_status) VALUES (?, ?, ?, ?)").bind(id, user.user_id, 'cancelled', 'pending').run(); } catch(e) {}
+    return Response.json({ success: true });
   }
 
   if (isFactory && status && !['in_process', 'ready'].includes(status)) {

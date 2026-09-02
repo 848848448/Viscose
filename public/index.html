@@ -1543,7 +1543,7 @@ async function loadMyPickups() {
       const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
       const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
       const priorityHtml = p.priority && p.priority !== 'normal' ? `<span class="pickup-priority priority-${p.priority}">${p.priority}</span>` : '';
-      return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-addr">${esc(p.addr_label || 'Address')} ${priorityHtml}</span><span class="status status-${p.status}">${p.status}</span></div><div class="pickup-detail"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:500">${esc(addr)}</a></div><div class="pickup-detail" style="color:var(--text2)">👤 ${esc(p.user_name || '')}${(p.contact_phone || p.user_phone) ? ` · <a href="tel:${esc(p.contact_phone || p.user_phone)}" style="color:var(--blue);text-decoration:none">📞 ${esc(p.contact_phone || p.user_phone)}</a>` : ''}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">📷 Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">📷 Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}${p.cancel_reason ? `<div class="pickup-note" style="background:rgba(255,59,48,0.08);color:#ff3b30"><strong>🚫 Cancelled by driver:</strong> ${esc(p.cancel_reason)}</div>` : ''}<div class="pickup-actions"><span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>${p.status === 'picked_up' ? `<button class="btn btn-red btn-xs" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}<button class="btn btn-xs" onclick="printReceipt(${p.id})">Print</button></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
+      return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-addr">${esc(p.addr_label || 'Address')} ${priorityHtml}</span><span class="status status-${p.status}">${p.status}</span></div><div class="pickup-detail"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:500">${esc(addr)}</a></div><div class="pickup-detail" style="color:var(--text2)">👤 ${esc(p.user_name || '')}${(p.contact_phone || p.user_phone) ? ` · <a href="tel:${esc(p.contact_phone || p.user_phone)}" style="color:var(--blue);text-decoration:none">📞 ${esc(p.contact_phone || p.user_phone)}</a>` : ''}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">📷 Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">📷 Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}${p.cancel_reason ? `<div class="pickup-note" style="background:rgba(255,59,48,0.08);color:#ff3b30"><strong>🚫 Cancelled by driver:</strong> ${esc(p.cancel_reason)}</div>` : ''}${p.scheduled_date && p.status === 'pending' ? `<div class="pickup-note" style="background:rgba(0,122,255,0.08);color:var(--blue)"><strong>📅 Scheduled for:</strong> ${esc(p.scheduled_date)}</div>` : ''}<div class="pickup-actions"><span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>${p.status === 'cancelled' ? `<button class="btn btn-xs btn-dark" onclick="restorePickup(${p.id})">↩️ Restore</button>` : ''}${p.status === 'picked_up' ? `<button class="btn btn-red btn-xs" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}<button class="btn btn-xs" onclick="printReceipt(${p.id})">Print</button></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
     }).join('');
   } catch(e) { console.error(e); }
 }
@@ -1572,6 +1572,35 @@ async function submitPickup() {
 }
 
 async function cancelPickup(id) { if (!confirm('Cancel this pickup request?')) return; try { await api('/pickups?id=' + id, { method: 'DELETE' }); loadMyPickups(); } catch(e) { alert(e.message); } }
+function restorePickup(id) {
+  const today = new Date();
+  const tomorrow = new Date(today.getTime() + 86400000);
+  const iso = d => d.toISOString().slice(0, 10);
+  showDateDialog(
+    'Restore to system',
+    'Pick the day this pickup should go back into the round. It becomes available to drivers on that date.',
+    iso(tomorrow),
+    async (date) => {
+      try {
+        await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, restore: true, scheduled_date: date }) });
+        showToast('Restored — scheduled for ' + date);
+        loadAllPickups();
+      } catch(e) { alert(e.message); }
+    }
+  );
+}
+// Dialog with a required date; confirm disabled until a date is chosen
+function showDateDialog(title, body, defaultDate, onConfirm) {
+  let ov = document.getElementById('dateDialog');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'dateDialog'; ov.className = 'overlay'; document.body.appendChild(ov); }
+  ov.classList.remove('hidden');
+  ov.onclick = (e) => { if (e.target === ov) ov.classList.add('hidden'); };
+  const todayIso = new Date().toISOString().slice(0, 10);
+  ov.innerHTML = `<div class="modal" style="max-width:360px"><h3>${title}</h3><div style="color:var(--text2);margin:6px 0 12px;font-size:0.9rem">${body}</div><input type="date" id="dateDialogInput" min="${todayIso}" value="${defaultDate || ''}" style="width:100%;padding:10px"><button class="btn btn-dark" id="dateDialogConfirm" style="width:100%;margin-top:12px;justify-content:center">Restore</button><button class="btn" id="dateDialogCancel" style="width:100%;margin-top:8px;justify-content:center">Cancel</button></div>`;
+  const inp = ov.querySelector('#dateDialogInput');
+  ov.querySelector('#dateDialogConfirm').onclick = () => { if (!inp.value) { inp.focus(); return; } ov.classList.add('hidden'); onConfirm(inp.value); };
+  ov.querySelector('#dateDialogCancel').onclick = () => ov.classList.add('hidden');
+}
 
 // PRINT RECEIPT
 function printReceipt(id) {
