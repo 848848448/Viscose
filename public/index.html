@@ -1583,7 +1583,7 @@ function renderDriverPickups() {
     let actionBtn = '';
     if (p.status === 'pending') actionBtn = `<button class="btn btn-sm btn-dark" onclick="driverPickupPhoto(${p.id})" style="padding:8px 12px">📷 Pick Up</button>`;
     else if (p.status === 'picked_up') actionBtn = `<button class="btn btn-sm btn-dark" onclick="driverDeliverPhoto(${p.id})" style="padding:8px 12px">📷 Deliver</button>`;
-    return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-user">${esc(p.user_name)}</span><span class="status status-${p.status}">${p.status === 'pending' ? 'NEW' : p.status.replace('_',' ')}</span></div><div class="pickup-addr">${esc(p.addr_label || 'Address')}</div><div class="pickup-detail">${esc(addr)}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">📷 Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">📷 Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}<div class="pickup-actions"><a href="${navUrl}" target="_blank" rel="noopener" class="map-link nav-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Navigate</a><a href="${mapUrl}" target="_blank" rel="noopener" class="map-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Map</a>${actionBtn}<span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
+    return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-user">${esc(p.user_name)}</span><span class="status status-${p.status}">${p.status === 'pending' ? 'NEW' : p.status.replace('_',' ')}</span></div><div class="pickup-addr">${esc(p.addr_label || 'Address')}</div><div class="pickup-detail">${esc(addr)}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">📷 Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">📷 Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}<div class="pickup-actions"><button onclick="openDriverRoute()" class="map-link nav-link" style="border:none;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Navigate All</button><a href="${mapUrl}" target="_blank" rel="noopener" class="map-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Map</a>${actionBtn}<span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
   }).join('');
 }
 async function driverUpdateStatus(id, status) { if (!status) return; try { await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status }) }); loadDriverPickups(); } catch(e) { alert(e.message); } }
@@ -1612,31 +1612,22 @@ function driverPickupPhoto(id) { driverPhotoAction(id, 'picked_up', 'pickup_phot
 function driverDeliverPhoto(id) { driverPhotoAction(id, 'delivered', 'delivery_photo'); }
 function buildRouteUrl(waypoints, myLoc) {
   const dest = waypoints[waypoints.length - 1];
-  const mid = myLoc ? waypoints.slice(0, -1) : waypoints.slice(1, -1);
+  // Origin = driver's live location when known, else the first address
   const origin = myLoc ? (myLoc.lat + ',' + myLoc.lng) : waypoints[0];
+  const mid = myLoc ? waypoints.slice(0, -1) : waypoints.slice(1, -1);
   let url = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(origin) + '&destination=' + encodeURIComponent(dest);
   if (mid.length) url += '&waypoints=' + mid.map(w => encodeURIComponent(w)).join('|');
-  url += '&travelmode=driving&dir_action=navigate';
+  url += '&travelmode=driving';
   return url;
 }
 function openDriverRoute() {
-  const active = driverPickupsData.filter(p => p.status === 'pending' || p.status === 'picked_up');
-  if (!active.length) { alert('No active pickups for route.'); return; }
-  const waypoints = active.map(p => [p.street, p.city, p.state, p.zip].filter(Boolean).join(', '));
-  // Open synchronously in the click gesture (avoids popup blocking); use last known GPS
-  if (lastDriverLoc) {
-    window.open(buildRouteUrl(waypoints, lastDriverLoc), '_blank');
-  } else if (navigator.geolocation) {
-    // No location yet — open a blank tab now, fill it once we have coords
-    const win = window.open('', '_blank');
-    navigator.geolocation.getCurrentPosition(
-      pos => { lastDriverLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude }; if (win) win.location = buildRouteUrl(waypoints, lastDriverLoc); },
-      () => { if (win) win.location = buildRouteUrl(waypoints, null); },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
-  } else {
-    window.open(buildRouteUrl(waypoints, null), '_blank');
-  }
+  // Combine every NEW pickup (not yet picked up) into one route
+  const active = driverPickupsData.filter(p => p.status === 'pending');
+  if (!active.length) { alert('No new pickups to route.'); return; }
+  const waypoints = active.map(p => [p.street, p.city, p.state, p.zip].filter(Boolean).join(', ')).filter(Boolean);
+  if (!waypoints.length) { alert('No addresses available.'); return; }
+  // Open the maps window directly and synchronously so it is never blank
+  window.open(buildRouteUrl(waypoints, lastDriverLoc), '_blank');
 }
 
 // FACTORY
