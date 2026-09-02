@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viscose</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1d1d1f">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -530,7 +532,9 @@
     .log-time{font-size:0.72rem;color:var(--text3);margin-top:2px}
 
     /* Live tracking map */
-    .tracking-map{width:100%;height:300px;background:var(--bg3);border-radius:var(--radius-lg);border:1px solid var(--line);overflow:hidden;position:relative;margin-bottom:16px}
+    .tracking-map{width:100%;height:420px;background:var(--bg3);border-radius:var(--radius-lg);border:1px solid var(--line);overflow:hidden;position:relative;margin-bottom:16px}
+    .tracking-map .leaflet-container{width:100%;height:100%;border-radius:var(--radius-lg)}
+    .driver-pin{background:var(--blue);color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
     .tracking-placeholder{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;color:var(--text3);font-size:0.9rem}
     .driver-marker{position:absolute;width:32px;height:32px;background:var(--blue);border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);z-index:2}
     .driver-marker svg{width:16px;height:16px;fill:#fff}
@@ -809,12 +813,8 @@
       <!-- LIVE TRACKING -->
       <div id="page-tracking" class="hidden">
         <div class="page-head"><h2>Live Driver Tracking</h2></div>
-        <div class="tracking-map" id="trackingMap">
-          <div class="tracking-placeholder" id="trackingPlaceholder">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-            <span>Loading driver locations...</span>
-          </div>
-        </div>
+        <div class="tracking-map" id="trackingMap"></div>
+        <div class="section-title" id="trackingPlaceholder" style="margin-bottom:8px">Loading driver locations...</div>
         <div class="section-title">Active Drivers</div>
         <div id="trackingDriverList"></div>
       </div>
@@ -1331,6 +1331,7 @@ function showPage(page) {
   document.querySelector('[data-page="' + page + '"]')?.classList.add('active');
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('mobOverlay').classList.remove('open');
+  if (page !== 'tracking' && trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
   if (page === 'dashboard') loadDashboard();
   if (page === 'addresses') loadMyAddresses();
   if (page === 'mypickups') loadMyPickups();
@@ -1717,11 +1718,17 @@ async function changePassword() {
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
 // LIVE TRACKING
-let trackingInterval = null;
+let trackingInterval = null, trackingMap = null, driverMarkers = {}, trackingFit = false;
 async function loadTracking() {
   if (trackingInterval) clearInterval(trackingInterval);
+  trackingFit = false;
+  if (!trackingMap && window.L) {
+    trackingMap = L.map('trackingMap').setView([41.47, -74.02], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(trackingMap);
+  }
+  setTimeout(() => { if (trackingMap) trackingMap.invalidateSize(); }, 200);
   await refreshTracking();
-  trackingInterval = setInterval(refreshTracking, 5000);
+  trackingInterval = setInterval(refreshTracking, 4000);
 }
 async function refreshTracking() {
   try {
@@ -1730,8 +1737,10 @@ async function refreshTracking() {
     const driverList = document.getElementById('trackingDriverList');
     const entries = Object.entries(locs);
     if (!entries.length) {
-      document.getElementById('trackingPlaceholder').innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg><span>No active drivers right now</span>';
+      document.getElementById('trackingPlaceholder').textContent = 'No active drivers right now';
       driverList.innerHTML = '<div class="empty">No drivers sharing location</div>';
+      Object.values(driverMarkers).forEach(m => trackingMap && trackingMap.removeLayer(m));
+      driverMarkers = {};
       return;
     }
     const users = await api('/users');
@@ -1739,14 +1748,29 @@ async function refreshTracking() {
     (users.users || []).forEach(u => { userMap[u.id] = u; });
 
     let driverHtml = '';
+    const bounds = [];
+    const activeIds = new Set();
     entries.forEach(([id, loc]) => {
       const u = userMap[id] || { name: 'Driver #' + id };
+      const initial = (u.name || '?')[0].toUpperCase();
+      activeIds.add(id);
+      bounds.push([loc.lat, loc.lng]);
+      if (trackingMap && window.L) {
+        if (driverMarkers[id]) {
+          driverMarkers[id].setLatLng([loc.lat, loc.lng]);
+        } else {
+          const icon = L.divIcon({ className: '', html: `<div class="driver-pin">${initial}</div>`, iconSize: [34, 34], iconAnchor: [17, 17] });
+          driverMarkers[id] = L.marker([loc.lat, loc.lng], { icon }).addTo(trackingMap).bindPopup(esc(u.name));
+        }
+      }
       const mapsUrl = `https://www.google.com/maps?q=${loc.lat},${loc.lng}`;
       const ago = Math.round((Date.now() - loc.updated) / 1000);
       driverHtml += `<div class="pickup-card" style="margin-bottom:10px"><div class="pickup-header"><span class="pickup-user">${esc(u.name)}</span><span style="font-size:0.78rem;color:var(--text3)">${ago < 60 ? ago + 's ago' : Math.round(ago/60) + 'm ago'}</span></div><div class="pickup-detail">Lat: ${loc.lat.toFixed(5)}, Lng: ${loc.lng.toFixed(5)}</div><div class="pickup-actions"><a href="${mapsUrl}" target="_blank" rel="noopener" class="map-link nav-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Open in Maps</a></div></div>`;
     });
+    Object.keys(driverMarkers).forEach(id => { if (!activeIds.has(id)) { trackingMap && trackingMap.removeLayer(driverMarkers[id]); delete driverMarkers[id]; } });
     driverList.innerHTML = driverHtml;
-    document.getElementById('trackingPlaceholder').innerHTML = `<span style="font-size:1.2rem;font-weight:700">${entries.length} active driver${entries.length > 1 ? 's' : ''}</span><span>Open Google Maps to see live locations</span>`;
+    document.getElementById('trackingPlaceholder').textContent = `${entries.length} active driver${entries.length > 1 ? 's' : ''} — live on map`;
+    if (trackingMap && bounds.length && !trackingFit) { trackingMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 }); trackingFit = true; }
   } catch(e) { console.error(e); }
 }
 
