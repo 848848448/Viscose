@@ -664,6 +664,9 @@
         <a href="#tracking" data-page="tracking" id="navTracking" class="hidden">
           <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
           Live Tracking</a>
+        <a href="#driverhistory" data-page="driverhistory" id="navDriverHistory" class="hidden">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Driver History</a>
         <a href="#activitylog" data-page="activitylog" id="navActivityLog" class="hidden">
           <svg class="icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Activity Log</a>
@@ -818,6 +821,17 @@
         <div class="section-title" id="trackingPlaceholder" style="margin-bottom:8px">Loading driver locations...</div>
         <div class="section-title">Active Drivers</div>
         <div id="trackingDriverList"></div>
+      </div>
+
+      <!-- DRIVER HISTORY -->
+      <div id="page-driverhistory" class="hidden">
+        <div class="page-head"><h2>Driver History</h2></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+          <select id="historyDriverSelect" onchange="loadDriverHistory()" style="flex:1;min-width:180px"><option value="">Select a driver…</option></select>
+          <select id="historyDays" onchange="loadDriverHistory()"><option value="1">Today</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option></select>
+        </div>
+        <div class="tracking-map" id="historyMap"></div>
+        <div id="driverHistoryContent"></div>
       </div>
 
       <!-- ACTIVITY LOG -->
@@ -1304,6 +1318,7 @@ function showApp() {
   document.getElementById('navFactory').classList.toggle('hidden', !isFactory);
   document.getElementById('navAdmins').classList.toggle('hidden', !isAdmin);
   document.getElementById('navTracking').classList.toggle('hidden', !isAdmin);
+  document.getElementById('navDriverHistory').classList.toggle('hidden', !isAdmin);
   document.getElementById('navActivityLog').classList.toggle('hidden', !isAdmin);
   if (isDriver || isFactory) {
     document.querySelector('[data-page="addresses"]').classList.add('hidden');
@@ -1323,7 +1338,7 @@ function showApp() {
 }
 
 function showPage(page) {
-  const valid = ['dashboard','addresses','mypickups','users','pickups','alladdresses','admins','settings','driverpickups','factory','tracking','activitylog'];
+  const valid = ['dashboard','addresses','mypickups','users','pickups','alladdresses','admins','settings','driverpickups','factory','tracking','driverhistory','activitylog'];
   if (!valid.includes(page)) page = currentUser?.role === 'driver' ? 'driverpickups' : currentUser?.role === 'factory' ? 'factory' : 'dashboard';
   location.hash = page;
   document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
@@ -1344,6 +1359,7 @@ function showPage(page) {
   if (page === 'factory') loadFactoryPickups();
   if (page === 'settings') loadSettings();
   if (page === 'tracking') loadTracking();
+  if (page === 'driverhistory') initDriverHistory();
   if (page === 'activitylog') loadActivityLog();
 }
 
@@ -1814,6 +1830,91 @@ async function loadActivityLog() {
       return `<div class="log-item"><div class="log-dot"></div><div class="log-content"><strong>${esc(l.user_name)}</strong> changed pickup for <strong>${esc(l.pickup_user_name)}</strong> (${esc(l.addr_label)}) from <span class="status status-${l.old_status}">${l.old_status || 'new'}</span> to <span class="status status-${l.new_status}">${l.new_status}</span><div class="log-time">${dt.toLocaleDateString()} ${dt.toLocaleTimeString(undefined, {hour:'2-digit',minute:'2-digit'})}</div></div></div>`;
     }).join('');
   } catch(e) { console.error(e); }
+}
+
+// DRIVER HISTORY
+let historyMap = null, historyLayers = [];
+async function initDriverHistory() {
+  try {
+    const d = await api('/users');
+    const drivers = (d.users || []).filter(u => u.role === 'driver');
+    const sel = document.getElementById('historyDriverSelect');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Select a driver…</option>' + drivers.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+    if (cur) sel.value = cur;
+  } catch(e) {}
+  if (!historyMap && window.L) {
+    historyMap = L.map('historyMap').setView([41.47, -74.02], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(historyMap);
+  }
+  setTimeout(() => { if (historyMap) historyMap.invalidateSize(); }, 200);
+  if (document.getElementById('historyDriverSelect').value) loadDriverHistory();
+}
+function fmtDur(ms) {
+  const m = Math.round(ms / 60000);
+  if (m < 1) return 'less than a minute';
+  if (m < 60) return m + ' min';
+  const h = Math.floor(m / 60); return h + 'h ' + (m % 60) + 'm';
+}
+async function loadDriverHistory() {
+  const driverId = document.getElementById('historyDriverSelect').value;
+  const days = document.getElementById('historyDays').value;
+  const content = document.getElementById('driverHistoryContent');
+  historyLayers.forEach(l => historyMap && historyMap.removeLayer(l)); historyLayers = [];
+  if (!driverId) { content.innerHTML = '<div class="empty">Select a driver to see their full history.</div>'; return; }
+  content.innerHTML = '<div class="empty">Loading…</div>';
+  try {
+    const d = await api('/driver-history?driver_id=' + driverId + '&days=' + days);
+    // Draw trail + stops on map
+    const trail = d.trail || [];
+    const bounds = [];
+    if (historyMap && window.L) {
+      if (trail.length > 1) {
+        const line = L.polyline(trail.map(t => [t.lat, t.lng]), { color: '#007aff', weight: 4, opacity: 0.7 }).addTo(historyMap);
+        historyLayers.push(line);
+      }
+      (d.stops || []).forEach((s, i) => {
+        const dur = Date.parse(s.last + 'Z') - Date.parse(s.first + 'Z');
+        const icon = L.divIcon({ className: '', html: `<div class="driver-pin" style="background:${dur > 120000 ? '#ff9500' : '#007aff'}">${i+1}</div>`, iconSize: [30,30], iconAnchor: [15,15] });
+        const m = L.marker([s.lat, s.lng], { icon }).addTo(historyMap).bindPopup(`Stop #${i+1}<br>Arrived: ${new Date(s.first+'Z').toLocaleString()}<br>Stayed: ${fmtDur(dur)}`);
+        historyLayers.push(m); bounds.push([s.lat, s.lng]);
+      });
+      trail.forEach(t => bounds.push([t.lat, t.lng]));
+      if (bounds.length) historyMap.fitBounds(bounds, { padding: [40,40], maxZoom: 15 });
+    }
+
+    // Build a merged, sorted timeline of events
+    const events = [];
+    (d.logs || []).forEach(l => {
+      const addr = [l.street, l.city, l.state, l.zip].filter(Boolean).join(', ');
+      const labels = { picked_up: 'Picked up', in_process: 'In process', ready: 'Ready', delivered: 'Delivered' };
+      events.push({ t: Date.parse(l.created_at + 'Z'), type: 'status', text: `<strong>${labels[l.new_status] || l.new_status}</strong> — ${esc(l.pickup_user_name)} (${esc(l.addr_label || addr)})`, addr });
+    });
+    (d.stops || []).forEach((s, i) => {
+      const dur = Date.parse(s.last + 'Z') - Date.parse(s.first + 'Z');
+      events.push({ t: Date.parse(s.first + 'Z'), type: 'stop', text: `<strong>Stop #${i+1}</strong> — stayed ${fmtDur(dur)} <a href="https://www.google.com/maps?q=${s.lat},${s.lng}" target="_blank" rel="noopener" style="color:var(--blue)">view</a>`, dur });
+    });
+    events.sort((a, b) => b.t - a.t);
+
+    let html = '';
+    // Assigned pickups summary with photos and current state
+    if ((d.pickups || []).length) {
+      html += '<div class="section-title">Assigned Pickups</div>';
+      html += d.pickups.map(p => {
+        const addr = [p.street, p.city, p.state, p.zip].filter(Boolean).join(', ');
+        const been = (p.status === 'delivered' || p.status === 'picked_up' || p.pickup_photo) ? '✅ Visited' : '⏳ Not yet';
+        return `<div class="pickup-card" style="margin-bottom:10px"><div class="pickup-header"><span class="pickup-user">${esc(p.user_name)}</span><span class="status status-${p.status}">${p.status.replace('_',' ')}</span></div><div class="pickup-detail">${esc(p.addr_label || 'Address')} — ${esc(addr)}</div><div style="font-size:0.82rem;color:var(--text2);margin:4px 0">${been} · Last update ${new Date(p.updated_at+'Z').toLocaleString()}</div>${p.pickup_photo ? `<div class="pickup-photo" style="display:inline-block;width:80px;margin-right:6px"><div style="font-size:10px;color:var(--orange)">Pickup</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo" style="display:inline-block;width:80px"><div style="font-size:10px;color:var(--green)">Delivery</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}</div>`;
+      }).join('');
+    }
+    html += '<div class="section-title">Timeline</div>';
+    if (!events.length) html += '<div class="empty">No tracked activity for this period.</div>';
+    else html += events.map(e => {
+      const dt = new Date(e.t);
+      const dot = e.type === 'stop' ? 'var(--orange)' : 'var(--blue)';
+      return `<div class="log-item"><div class="log-dot" style="background:${dot}"></div><div class="log-content">${e.text}<div class="log-time">${dt.toLocaleDateString()} ${dt.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}</div></div></div>`;
+    }).join('');
+    content.innerHTML = html;
+  } catch(e) { content.innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
 
 // NOTIFICATIONS

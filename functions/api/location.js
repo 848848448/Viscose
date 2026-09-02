@@ -9,6 +9,18 @@ export async function onRequestPost(context) {
      VALUES (?, ?, ?, ?, datetime('now'))
      ON CONFLICT(user_id) DO UPDATE SET lat = excluded.lat, lng = excluded.lng, pickup_id = excluded.pickup_id, updated_at = datetime('now')`
   ).bind(user.user_id, lat, lng, pickup_id || null).run();
+
+  // Append to history, throttled to ~1 point per 30s per driver to keep the trail readable
+  try {
+    const last = await env.DB.prepare(
+      `SELECT recorded_at FROM driver_location_history WHERE user_id = ? ORDER BY recorded_at DESC LIMIT 1`
+    ).bind(user.user_id).first();
+    if (!last || Date.parse(last.recorded_at + 'Z') < Date.now() - 30000) {
+      await env.DB.prepare(
+        `INSERT INTO driver_location_history (user_id, lat, lng, pickup_id, recorded_at) VALUES (?, ?, ?, ?, datetime('now'))`
+      ).bind(user.user_id, lat, lng, pickup_id || null).run();
+    }
+  } catch (e) { /* history table may not exist yet */ }
   return Response.json({ ok: true });
 }
 
