@@ -1907,7 +1907,7 @@ function navUpdateTargetPanel() {
   const action = t.status === 'picked_up'
     ? `<button class="btn btn-sm btn-dark" onclick="driverDeliverPhoto(${t.id})" style="padding:8px 12px">📷 Deliver</button>`
     : `<button class="btn btn-sm btn-dark" onclick="driverPickupPhoto(${t.id})" style="padding:8px 12px">📷 Pick Up</button>`;
-  const total = navOptimizedOrder().length;
+  const total = Math.max(navOptimizedOrder().length, activePickups().length);
   el.classList.remove('hidden');
   const tph = t.contact_phone || t.user_phone || '';
   el.innerHTML = `<div style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Next stop ${distStr ? '· ' + distStr : ''} ${total > 1 ? '· ' + total + ' stops left' : ''}</div><div style="font-weight:600">${esc(t.user_name)} — ${esc(t.addr_label || 'Address')}</div><div style="font-size:0.85rem;color:var(--text2);margin:4px 0 4px">${esc(pickupAddrStr(t))}</div>${tph ? `<a href="tel:${esc(tph)}" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--green);color:#fff;text-decoration:none;font-weight:700;padding:11px;border-radius:10px;margin-bottom:10px;font-size:1rem">📞 Call ${esc(tph)}</a>` : '<div style="font-size:0.8rem;color:var(--text3);margin-bottom:8px">No phone on file for this stop</div>'}<div style="display:flex;gap:8px;flex-wrap:wrap">${action}<button class="btn btn-sm" onclick="openDriverRoute()" style="padding:8px 12px">🗺️ Maps</button>${total > 1 ? `<button class="btn btn-sm" onclick="navSkip(${t.id})" style="padding:8px 12px">⏭️ Skip</button>` : ''}</div>`;
