@@ -160,6 +160,7 @@
     .pickup-user .email{color:var(--text3);font-weight:400;font-size:0.8rem;margin-left:6px}
     .status{display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
     .status-pending{background:rgba(0,122,255,0.1);color:var(--blue);font-weight:700}
+    .status-cancelled{background:rgba(255,59,48,0.1);color:#ff3b30}
     .status-picked_up{background:rgba(255,149,0,0.1);color:var(--orange)}
     .status-in_process{background:rgba(0,122,255,0.1);color:var(--blue)}
     .status-ready{background:rgba(175,82,222,0.1);color:#af52de}
@@ -1532,7 +1533,7 @@ async function loadMyPickups() {
       const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
       const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
       const priorityHtml = p.priority && p.priority !== 'normal' ? `<span class="pickup-priority priority-${p.priority}">${p.priority}</span>` : '';
-      return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-addr">${esc(p.addr_label || 'Address')} ${priorityHtml}</span><span class="status status-${p.status}">${p.status}</span></div><div class="pickup-detail"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:500">${esc(addr)}</a></div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">📷 Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">📷 Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}<div class="pickup-actions"><span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>${p.status === 'picked_up' ? `<button class="btn btn-red btn-xs" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}<button class="btn btn-xs" onclick="printReceipt(${p.id})">Print</button></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
+      return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-addr">${esc(p.addr_label || 'Address')} ${priorityHtml}</span><span class="status status-${p.status}">${p.status}</span></div><div class="pickup-detail"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:500">${esc(addr)}</a></div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">📷 Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">📷 Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}${p.cancel_reason ? `<div class="pickup-note" style="background:rgba(255,59,48,0.08);color:#ff3b30"><strong>🚫 Cancelled by driver:</strong> ${esc(p.cancel_reason)}</div>` : ''}<div class="pickup-actions"><span class="pickup-meta">${new Date(p.requested_at).toLocaleDateString()}</span>${p.status === 'picked_up' ? `<button class="btn btn-red btn-xs" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}<button class="btn btn-xs" onclick="printReceipt(${p.id})">Print</button></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
     }).join('');
   } catch(e) { console.error(e); }
 }
@@ -1793,10 +1794,43 @@ function navSkip(id) {
     `${t ? esc(t.user_name) + ' — ' + esc(t.addr_label || 'Address') : 'This stop'}`,
     [
       { label: '↪️ Come back later', kind: 'dark', fn: () => { if (!navSkipped.includes(id)) navSkipped.push(id); navActiveId = null; navRefreshTargets(); } },
-      { label: '🔙 Go back now', kind: '', fn: () => { navSetTarget(id); } },
+      { label: '🚫 Cancel location', kind: '', fn: () => navCancelLocation(id) },
       { label: 'Cancel', kind: 'ghost', fn: () => {} }
     ]
   );
+}
+function navCancelLocation(id) {
+  const t = driverPickupsData.find(p => p.id === id);
+  showNoteDialog(
+    'Cancel this location',
+    `${t ? esc(t.user_name) + ' — ' + esc(t.addr_label || 'Address') : 'This stop'}<br>Please write why you are cancelling this stop. This is required.`,
+    'Cancel location',
+    async (note) => {
+      try {
+        const r = await apiQueued('/pickups', { method: 'PUT', body: JSON.stringify({ id, status: 'cancelled', cancel_reason: note }) });
+        const local = driverPickupsData.find(p => p.id === id);
+        if (local) { local.status = 'cancelled'; local.cancel_reason = note; }
+        navActiveId = null; navSkipped = navSkipped.filter(x => x !== id); delete navArrivedFor[id];
+        renderDriverPickups(); navRefreshTargets();
+        if (r && r.queued) showToast('Saved offline — will sync when back online');
+        else { showToast('Location cancelled'); loadDriverPickups(); }
+      } catch(e) { alert(e.message); }
+    }
+  );
+}
+// Dialog with a required note; confirm stays disabled until text is entered
+function showNoteDialog(title, body, confirmLabel, onConfirm) {
+  let ov = document.getElementById('noteDialog');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'noteDialog'; ov.className = 'overlay'; document.body.appendChild(ov); }
+  ov.classList.remove('hidden');
+  ov.onclick = (e) => { if (e.target === ov) ov.classList.add('hidden'); };
+  ov.innerHTML = `<div class="modal" style="max-width:380px"><h3>${title}</h3><div style="color:var(--text2);margin:6px 0 10px;font-size:0.9rem">${body}</div><textarea id="noteDialogText" placeholder="Write your note…" style="width:100%;min-height:80px"></textarea><button class="btn btn-dark" id="noteDialogConfirm" disabled style="width:100%;margin-top:10px;justify-content:center;opacity:0.5">${confirmLabel}</button><button class="btn" id="noteDialogCancel" style="width:100%;margin-top:8px;justify-content:center">Cancel</button></div>`;
+  const txt = ov.querySelector('#noteDialogText');
+  const conf = ov.querySelector('#noteDialogConfirm');
+  txt.oninput = () => { const has = txt.value.trim().length > 0; conf.disabled = !has; conf.style.opacity = has ? '1' : '0.5'; };
+  conf.onclick = () => { if (!txt.value.trim()) return; ov.classList.add('hidden'); onConfirm(txt.value.trim()); };
+  ov.querySelector('#noteDialogCancel').onclick = () => ov.classList.add('hidden');
+  setTimeout(() => txt.focus(), 100);
 }
 function navDrawLine() {
   if (!navMap) return;

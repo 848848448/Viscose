@@ -70,7 +70,7 @@ export async function onRequestPut(context) {
   const isDriver = user.role === 'driver';
   const isFactory = user.role === 'factory';
 
-  const { id, status, admin_notes, driver_id, priority, delivery_photo, pickup_photo } = await context.request.json();
+  const { id, status, admin_notes, driver_id, priority, delivery_photo, pickup_photo, cancel_reason } = await context.request.json();
   if (!id) return Response.json({ error: 'Missing pickup id' }, { status: 400 });
 
   if (!isAdmin && !isDriver && !isFactory) {
@@ -79,6 +79,11 @@ export async function onRequestPut(context) {
 
   if (isFactory && status && !['in_process', 'ready'].includes(status)) {
     return Response.json({ error: 'Factory can only set in_process or ready' }, { status: 403 });
+  }
+
+  // Cancelling a stop requires a reason note
+  if (status === 'cancelled' && (!cancel_reason || !cancel_reason.trim())) {
+    return Response.json({ error: 'A note is required to cancel this stop' }, { status: 400 });
   }
 
   const pickup = await env.DB.prepare("SELECT p.*, u.email as user_email, u.name as user_name, a.label as addr_label FROM pickups p JOIN users u ON p.user_id = u.id JOIN addresses a ON p.address_id = a.id WHERE p.id = ?").bind(id).first();
@@ -99,6 +104,7 @@ export async function onRequestPut(context) {
   if (driver_id !== undefined && isAdmin) { updates.push("driver_id = ?"); values.push(driver_id || null); }
   if (priority && ['urgent','normal','low'].includes(priority) && isAdmin) { updates.push("priority = ?"); values.push(priority); }
   if (delivery_photo) { updates.push("delivery_photo = ?"); values.push(delivery_photo); }
+  if (status === 'cancelled' && cancel_reason) { updates.push("cancel_reason = ?"); values.push(cancel_reason.trim()); }
   if (pickup_photo) { updates.push("pickup_photo = ?"); values.push(pickup_photo); }
   updates.push("updated_at = datetime('now')");
 
