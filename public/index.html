@@ -1045,13 +1045,6 @@
     <div class="field" id="driverAssignField"><label>Assign Driver</label>
       <select id="updatePickupDriver"><option value="">No driver</option></select>
     </div>
-    <div class="field"><label>Priority</label>
-      <select id="updatePickupPriority">
-        <option value="normal">Normal</option>
-        <option value="urgent">Urgent</option>
-        <option value="low">Low</option>
-      </select>
-    </div>
     <div class="field"><label>Admin Notes</label><textarea id="updatePickupNotes" placeholder="Notes for this pickup..."></textarea></div>
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('pickupUpdateModal')">Cancel</button>
@@ -1666,7 +1659,6 @@ async function openPickupUpdate(id, status, notes, driverId, priority) {
   document.getElementById('updatePickupId').value = id;
   document.getElementById('updatePickupStatus').value = status;
   document.getElementById('updatePickupNotes').value = notes;
-  document.getElementById('updatePickupPriority').value = priority || 'normal';
   try { const d = await api('/users'); const drivers = d.users.filter(u => u.role === 'driver'); document.getElementById('updatePickupDriver').innerHTML = '<option value="">No driver</option>' + drivers.map(u => `<option value="${u.id}" ${u.id == driverId ? 'selected' : ''}>${esc(u.name)}</option>`).join(''); } catch(e) {}
   document.getElementById('pickupUpdateModal').classList.remove('hidden');
 }
@@ -1674,7 +1666,7 @@ async function openPickupUpdate(id, status, notes, driverId, priority) {
 async function updatePickup() {
   const id = parseInt(document.getElementById('updatePickupId').value);
   const driverVal = document.getElementById('updatePickupDriver').value;
-  try { await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status: document.getElementById('updatePickupStatus').value, admin_notes: document.getElementById('updatePickupNotes').value, driver_id: driverVal ? parseInt(driverVal) : null, priority: document.getElementById('updatePickupPriority').value }) }); closeModal('pickupUpdateModal'); loadAllPickups(); } catch(e) { alert(e.message); }
+  try { await api('/pickups', { method: 'PUT', body: JSON.stringify({ id, status: document.getElementById('updatePickupStatus').value, admin_notes: document.getElementById('updatePickupNotes').value, driver_id: driverVal ? parseInt(driverVal) : null }) }); closeModal('pickupUpdateModal'); loadAllPickups(); } catch(e) { alert(e.message); }
 }
 
 // SETTINGS
