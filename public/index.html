@@ -793,6 +793,7 @@
             <button class="filter-tab" onclick="filterDriverPickups('delivered')" id="dFilterDelivered">Delivered</button>
           </div>
         </div>
+        <div id="locStatus" style="margin:0 0 14px;padding:10px 14px;border-radius:10px;font-size:0.88rem;display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap"></div>
         <div id="driverPickupList"></div>
       </div>
 
@@ -1771,15 +1772,34 @@ async function refreshTracking() {
 }
 
 // DRIVER LOCATION SHARING
-let lastDriverLoc = null;
+let lastDriverLoc = null, locWatchId = null;
+function setLocStatus(kind, text, showBtn) {
+  const el = document.getElementById('locStatus'); if (!el) return;
+  const colors = { ok: ['rgba(52,199,89,0.12)', 'var(--green)'], warn: ['rgba(255,149,0,0.12)', 'var(--orange)'], err: ['rgba(255,59,48,0.12)', '#ff3b30'] };
+  const [bg, fg] = colors[kind] || colors.warn;
+  el.style.background = bg; el.style.color = fg;
+  el.innerHTML = `<span>${text}</span>${showBtn ? '<button class="btn btn-sm" onclick="enableDriverLocation()" style="padding:6px 12px">📍 Enable Location</button>' : ''}`;
+}
 function pushDriverLoc(pos) {
   lastDriverLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  setLocStatus('ok', '📍 Location active — you are being tracked live', false);
   api('/location', { method: 'POST', body: JSON.stringify(lastDriverLoc) }).catch(() => {});
 }
+function locError(e) {
+  if (e && e.code === 1) setLocStatus('err', '⚠️ Location blocked. Allow location for this site in your browser settings, then tap Enable.', true);
+  else setLocStatus('warn', '⚠️ Could not get your location. Tap to try again.', true);
+}
+function enableDriverLocation() {
+  if (!navigator.geolocation) { setLocStatus('err', '⚠️ This device does not support location.', false); return; }
+  setLocStatus('warn', '⏳ Getting your location…', false);
+  navigator.geolocation.getCurrentPosition(pushDriverLoc, locError, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+  if (locWatchId === null) {
+    locWatchId = navigator.geolocation.watchPosition(pushDriverLoc, locError, { enableHighAccuracy: true, maximumAge: 8000, timeout: 25000 });
+  }
+}
 function startDriverLocationSharing() {
-  if (!navigator.geolocation) return;
-  // Continuous watch keeps lastDriverLoc fresh without repeated permission prompts
-  navigator.geolocation.watchPosition(pushDriverLoc, () => {}, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
+  setLocStatus('warn', '⏳ Enabling location…', true);
+  enableDriverLocation();
 }
 
 // ACTIVITY LOG
