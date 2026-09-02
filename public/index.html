@@ -902,6 +902,16 @@
           </div>
           <div class="field"><label>Name</label><input id="settingsName" placeholder="Your name"></div>
           <div class="field"><label>Email</label><input id="settingsEmail" type="email" disabled style="opacity:0.5"></div>
+          <div class="field"><label>Phone</label><input id="settingsPhone" type="tel" placeholder="Phone number"></div>
+          <div class="field"><label>Billing Address</label><input id="settingsBillingAddress" placeholder="Street address"></div>
+          <div style="display:flex;gap:8px">
+            <div class="field" style="flex:1"><label>City</label><input id="settingsCity" placeholder="City"></div>
+            <div class="field" style="flex:1"><label>State</label><input id="settingsState" placeholder="State"></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <div class="field" style="flex:1"><label>Zip</label><input id="settingsZip" placeholder="Zip"></div>
+            <div class="field" style="flex:1"><label>Country</label><input id="settingsCountry" placeholder="Country"></div>
+          </div>
           <button class="btn btn-dark" onclick="saveProfile()">Save Profile</button>
         </div>
         <div class="settings-section">
@@ -2013,6 +2023,12 @@ async function loadSettings() {
     const d = await api('/profile');
     document.getElementById('settingsName').value = d.user.name;
     document.getElementById('settingsEmail').value = d.user.email;
+    document.getElementById('settingsPhone').value = d.user.phone || '';
+    document.getElementById('settingsBillingAddress').value = d.user.billing_address || '';
+    document.getElementById('settingsCity').value = d.user.billing_city || '';
+    document.getElementById('settingsState').value = d.user.billing_state || '';
+    document.getElementById('settingsZip').value = d.user.billing_zip || '';
+    document.getElementById('settingsCountry').value = d.user.billing_country || '';
     document.getElementById('settingsRole').textContent = d.user.role;
     document.getElementById('settingsCreated').textContent = new Date(d.user.created_at).toLocaleDateString();
     document.getElementById('settingsAlert').innerHTML = '';
@@ -2025,7 +2041,7 @@ async function loadSettings() {
     document.querySelectorAll('.lang-btn').forEach(b => { if ((currentLang === 'en' && b.textContent === 'English') || (currentLang === 'yi' && b.textContent === 'יידיש') || (currentLang === 'he' && b.textContent === 'עברית')) b.classList.add('active'); });
   } catch(e) { console.error(e); }
 }
-async function saveProfile() { try { await api('/profile', { method: 'PUT', body: JSON.stringify({ name: document.getElementById('settingsName').value }) }); currentUser.name = document.getElementById('settingsName').value; document.getElementById('sidebarName').textContent = currentUser.name; showToast('Profile saved'); } catch(e) { showToast('Save failed'); } }
+async function saveProfile() { try { const name = document.getElementById('settingsName').value; const phone = document.getElementById('settingsPhone').value; await api('/profile', { method: 'PUT', body: JSON.stringify({ name, phone, billing_address: document.getElementById('settingsBillingAddress').value, billing_city: document.getElementById('settingsCity').value, billing_state: document.getElementById('settingsState').value, billing_zip: document.getElementById('settingsZip').value, billing_country: document.getElementById('settingsCountry').value }) }); currentUser.name = name; currentUser.phone = phone; document.getElementById('sidebarName').textContent = name; showToast('Profile saved'); } catch(e) { showToast('Save failed'); } }
 async function changePassword() {
   const newP = document.getElementById('newPass').value;
   if (newP !== document.getElementById('confirmPass').value) { document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-error">New passwords do not match.</div>'; return; }

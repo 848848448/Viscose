@@ -7,20 +7,34 @@ async function hashPassword(password) {
 
 export async function onRequestGet(context) {
   const { env, data } = context;
-  const user = await env.DB.prepare("SELECT id, email, name, role, avatar, created_at FROM users WHERE id = ?")
-    .bind(data.user.user_id).first();
+  let user;
+  try {
+    user = await env.DB.prepare("SELECT id, email, name, role, avatar, created_at, phone, billing_address, billing_city, billing_state, billing_zip, billing_country FROM users WHERE id = ?")
+      .bind(data.user.user_id).first();
+  } catch (e) {
+    user = await env.DB.prepare("SELECT id, email, name, role, avatar, created_at FROM users WHERE id = ?")
+      .bind(data.user.user_id).first();
+  }
   return Response.json({ user });
 }
 
 export async function onRequestPut(context) {
   const { env, data } = context;
-  const { name, avatar } = await context.request.json();
+  const body = await context.request.json();
+  const { name, avatar, phone, billing_address, billing_city, billing_state, billing_zip, billing_country } = body;
   if (!name) return Response.json({ error: 'Name is required' }, { status: 400 });
-  if (avatar !== undefined) {
-    await env.DB.prepare("UPDATE users SET name = ?, avatar = ? WHERE id = ?").bind(name, avatar || '', data.user.user_id).run();
-  } else {
-    await env.DB.prepare("UPDATE users SET name = ? WHERE id = ?").bind(name, data.user.user_id).run();
-  }
+
+  const updates = ["name = ?"];
+  const values = [name];
+  if (avatar !== undefined) { updates.push("avatar = ?"); values.push(avatar || ''); }
+  if (phone !== undefined) { updates.push("phone = ?"); values.push(phone || ''); }
+  if (billing_address !== undefined) { updates.push("billing_address = ?"); values.push(billing_address || ''); }
+  if (billing_city !== undefined) { updates.push("billing_city = ?"); values.push(billing_city || ''); }
+  if (billing_state !== undefined) { updates.push("billing_state = ?"); values.push(billing_state || ''); }
+  if (billing_zip !== undefined) { updates.push("billing_zip = ?"); values.push(billing_zip || ''); }
+  if (billing_country !== undefined) { updates.push("billing_country = ?"); values.push(billing_country || ''); }
+  values.push(data.user.user_id);
+  await env.DB.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run();
   return Response.json({ success: true });
 }
 
