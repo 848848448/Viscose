@@ -1,4 +1,4 @@
-import { verifyPassword, tooManyAttempts, recordFailure, clearFailures } from '../../lib/auth.js';
+import { verifyPassword, tooManyAttempts, recordFailure, clearFailures, isLocked, noteFailure, noteSuccess } from '../../lib/auth.js';
 
 function generateToken() {
   const arr = new Uint8Array(32);
@@ -22,17 +22,18 @@ export async function onRequestPost(context) {
   const ip = context.request.headers.get('CF-Connecting-IP') || '';
   const keys = ['e:' + mail, 'i:' + ip];
   for (const k of keys) {
-    if (await tooManyAttempts(k)) return json({ error: 'Too many attempts. Try again in 15 minutes.' }, 429);
+    if ((await tooManyAttempts(k)) || (await isLocked(env, k))) return json({ error: 'Too many attempts. Try again in 15 minutes.' }, 429);
   }
 
   const row = await env.DB.prepare("SELECT id, email, name, role, password_hash FROM users WHERE email = ?").bind(mail).first();
   const res = row ? await verifyPassword(password, row.password_hash) : { ok: false };
 
   if (!res.ok) {
-    for (const k of keys) await recordFailure(k);
+    for (const k of keys) { await recordFailure(k); await noteFailure(env, k); }
     return json({ error: 'Invalid credentials' }, 401);
   }
   await clearFailures('e:' + mail);
+  await noteSuccess(env, 'e:' + mail);
 
   if (res.upgrade) {
     await env.DB.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(res.upgrade, row.id).run();
