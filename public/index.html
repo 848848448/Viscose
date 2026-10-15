@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="viscose-ux-v3">
+<html lang="en" data-build="viscose-ux-v4">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1052,7 +1052,7 @@
         <div class="dm-input-wrap">
           <input type="text" placeholder="Type a message..." id="dmInput" onkeydown="if(event.key==='Enter')sendDm()" oninput="dmTypingNotify()">
         </div>
-        <button class="dm-voice-btn" id="dmVoiceBtn" onmousedown="startVoiceRecord()" onmouseup="stopVoiceRecord()" ontouchstart="startVoiceRecord()" ontouchend="stopVoiceRecord()">
+        <button class="dm-voice-btn" id="dmVoiceBtn" onmousedown="startVoiceRecord()" onmouseup="stopVoiceRecord()" ontouchstart="startVoiceRecord()" ontouchend="stopVoiceRecord()" onmouseleave="stopVoiceRecord()" ontouchcancel="stopVoiceRecord()">
           <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
         </button>
         <button class="dm-send-btn" onclick="sendDm()">
@@ -1265,7 +1265,7 @@ async function api(path, opts = {}) {
 // OFFLINE QUEUE — pickup actions taken with no service are stored and synced when back online
 function queueKey() { return currentUser?.id ? 'viscose_queue_' + currentUser.id : null; }
 function queueGet() { try { const key = queueKey(); return key ? JSON.parse(localStorage.getItem(key) || '[]') : []; } catch(e) { return []; } }
-function queueSet(q) { try { const key = queueKey(); if (key) localStorage.setItem(key, JSON.stringify(q)); } catch(e) {} }
+function queueSet(q) { const key = queueKey(); if (!key) throw new Error('Sign in before saving an offline update.'); try { localStorage.setItem(key, JSON.stringify(q)); } catch(e) { throw new Error('Device storage is full. This update was not saved. Free some space and try again.'); } }
 function queuePush(path, opts) { const q = queueGet(); q.push({ path, opts, at: Date.now() }); queueSet(q); updateSyncBadge(); }
 async function apiQueued(path, opts) {
   try {
@@ -1407,7 +1407,7 @@ function showResetForm(resetToken) {
 async function sendResetEmail() {
   const email = document.getElementById('forgotEmail').value;
   if (!email) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">Enter your email.</div>'; return; }
-  try { await fetch(API + '/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+  try { const res = await fetch(API + '/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) }); if (!res.ok) throw new Error('Could not request a reset. Please try again.');
     document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-ok">If that email exists, a reset link has been sent.</div>';
   } catch(e) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
@@ -1657,7 +1657,7 @@ async function loadMyPickups() {
       const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
       const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
       const priorityHtml = p.priority && p.priority !== 'normal' ? `<span class="pickup-priority priority-${p.priority}">${p.priority}</span>` : '';
-      return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-addr">${esc(p.addr_label || 'Address')} ${priorityHtml}</span><span class="status status-${p.status}">${statusLabel(p.status)}</span></div><div class="pickup-detail"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:500">${esc(addr)}</a></div><div class="pickup-detail" style="color:var(--text2);display:flex;align-items:center;gap:5px">${ic('user',14)} ${esc(p.user_name || '')}${(p.contact_phone || p.user_phone) ? ` · <a href="tel:${esc(p.contact_phone || p.user_phone)}" style="color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px">${ic('phone',13)} ${esc(p.contact_phone || p.user_phone)}</a>` : ''}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}${p.cancel_reason ? `<div class="pickup-note" style="background:rgba(255,59,48,0.08);color:#ff3b30"><strong>${ic('ban',13)} Cancelled by driver:</strong> ${esc(p.cancel_reason)}</div>` : ''}${p.scheduled_date && p.status === 'pending' ? `<div class="pickup-note" style="background:rgba(0,122,255,0.08);color:var(--blue)"><strong>${ic('calendar',13)} Scheduled for:</strong> ${esc(p.scheduled_date)}</div>` : ''}<div class="pickup-actions"><span class="pickup-meta">${fmtDateTime(p.requested_at)}</span>${p.status === 'cancelled' ? `<button class="btn btn-xs btn-dark" onclick="restorePickup(${p.id})">${ic('undo',13)} Restore</button>` : ''}${p.status === 'picked_up' ? `<button class="btn btn-red btn-xs" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}<button class="btn btn-xs" onclick="printReceipt(${p.id})">Print</button></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
+      return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-addr">${esc(p.addr_label || 'Address')} ${priorityHtml}</span><span class="status status-${p.status}">${statusLabel(p.status)}</span></div><div class="pickup-detail"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:500">${esc(addr)}</a></div><div class="pickup-detail" style="color:var(--text2);display:flex;align-items:center;gap:5px">${ic('user',14)} ${esc(p.user_name || '')}${(p.contact_phone || p.user_phone) ? ` · <a href="tel:${esc(p.contact_phone || p.user_phone)}" style="color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px">${ic('phone',13)} ${esc(p.contact_phone || p.user_phone)}</a>` : ''}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}${p.cancel_reason ? `<div class="pickup-note" style="background:rgba(255,59,48,0.08);color:#ff3b30"><strong>${ic('ban',13)} Cancelled by driver:</strong> ${esc(p.cancel_reason)}</div>` : ''}${p.scheduled_date && p.status === 'pending' ? `<div class="pickup-note" style="background:rgba(0,122,255,0.08);color:var(--blue)"><strong>${ic('calendar',13)} Scheduled for:</strong> ${esc(p.scheduled_date)}</div>` : ''}<div class="pickup-actions"><span class="pickup-meta">${fmtDateTime(p.requested_at)}</span>${p.status === 'cancelled' && ['admin','superadmin'].includes(currentUser.role) ? `<button class="btn btn-xs btn-dark" onclick="restorePickup(${p.id})">${ic('undo',13)} Restore</button>` : ''}${p.status === 'picked_up' ? `<button class="btn btn-red btn-xs" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}<button class="btn btn-xs" onclick="printReceipt(${p.id})">Print</button></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
     }).join('');
   } catch(e) { console.error(e); }
 }
@@ -2013,7 +2013,7 @@ function navUpdateTargetPanel() {
   if (!t) { el.classList.add('hidden'); return; }
   const dist = (lastDriverLoc && t._geo) ? distM(lastDriverLoc, t._geo) : null;
   const distStr = dist == null ? '' : (dist < 1000 ? Math.round(dist) + ' m away' : (dist/1000).toFixed(1) + ' km away');
-  const action = t.status === 'picked_up'
+  const action = ['picked_up','ready'].includes(t.status)
     ? `<button class="btn btn-sm btn-dark" onclick="driverDeliverPhoto(${t.id})" style="padding:8px 12px;display:inline-flex;align-items:center;gap:6px">${ic('camera')} Deliver</button>`
     : `<button class="btn btn-sm btn-dark" onclick="driverPickupPhoto(${t.id})" style="padding:8px 12px;display:inline-flex;align-items:center;gap:6px">${ic('camera')} Pick Up</button>`;
   const total = Math.max(navOptimizedOrder().length, activePickups().length);
@@ -2044,8 +2044,8 @@ function navGeofenceCheck() {
       const page = document.getElementById('page-driverpickups');
       const onDriverPage = page && !page.classList.contains('hidden');
       if (onDriverPage) {
-        showNotif('Arrived at stop', `You've arrived at ${t.user_name}. Take the ${t.status === 'picked_up' ? 'delivery' : 'pickup'} photo.`);
-        if (t.status === 'picked_up') driverDeliverPhoto(t.id); else driverPickupPhoto(t.id);
+        showNotif('Arrived at stop', `You've arrived at ${t.user_name}. Take the ${['picked_up','ready'].includes(t.status) ? 'delivery' : 'pickup'} photo.`);
+        if (['picked_up','ready'].includes(t.status)) driverDeliverPhoto(t.id); else driverPickupPhoto(t.id);
       }
     }
   }
@@ -2062,8 +2062,8 @@ function buildRouteUrl(waypoints, myLoc) {
 }
 function openDriverRoute() {
   // Combine every NEW pickup (not yet picked up) into one route
-  const active = driverPickupsData.filter(p => p.status === 'pending');
-  if (!active.length) { alert('No new pickups to route.'); return; }
+  const active = activePickups();
+  if (!active.length) { alert('No active pickups or deliveries to route.'); return; }
   const waypoints = active.map(p => [p.street, p.city, p.state, p.zip].filter(Boolean).join(', ')).filter(Boolean);
   if (!waypoints.length) { alert('No addresses available.'); return; }
   // Open the maps window directly and synchronously so it is never blank
@@ -2691,16 +2691,19 @@ async function sendDm() {
 }
 
 // VOICE RECORDING
-let voiceRecorder = null, voiceChunks = [];
+let voiceRecorder = null, voiceChunks = [], voiceHeld = false;
 function startVoiceRecord() {
-  if (!navigator.mediaDevices) { showToast('Microphone not available'); return; }
+  if (!navigator.mediaDevices || !window.MediaRecorder) { showToast('Voice recording is not supported in this browser.'); return; }
+  if (voiceHeld || voiceRecorder?.state === 'recording') return;
+  voiceHeld = true;
   navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    if (!voiceHeld) { stream.getTracks().forEach(t => t.stop()); return; }
     voiceRecorder = new MediaRecorder(stream);
     voiceChunks = [];
     voiceRecorder.ondataavailable = e => voiceChunks.push(e.data);
     voiceRecorder.onstop = () => {
       stream.getTracks().forEach(t => t.stop());
-      const blob = new Blob(voiceChunks, { type: 'audio/webm' });
+      const blob = new Blob(voiceChunks, { type: voiceRecorder.mimeType || 'audio/webm' });
       const reader = new FileReader();
       reader.onload = () => {
         dmPendingMedia = { data: reader.result, type: 'audio' };
@@ -2712,9 +2715,10 @@ function startVoiceRecord() {
     };
     voiceRecorder.start();
     document.getElementById('dmVoiceBtn').classList.add('recording');
-  }).catch(() => showToast('Microphone access denied'));
+  }).catch(() => { voiceHeld = false; showToast('Microphone access denied or unavailable'); });
 }
 function stopVoiceRecord() {
+  voiceHeld = false;
   if (voiceRecorder && voiceRecorder.state === 'recording') { voiceRecorder.stop(); document.getElementById('dmVoiceBtn').classList.remove('recording'); }
 }
 
@@ -2808,4 +2812,4 @@ function exportPickupsCSV() { exportCSV(); }
 init();
 </script>
 </body>
-  </html>
+</html>
