@@ -47,7 +47,7 @@ export async function onRequestPost(context) {
   const chk = row ? await verifyPassword(current_password, row.password_hash) : { ok: false };
 
   if (!chk.ok) {
-    return Response.json({ error: 'Current password is incorrect' }, { status: 401 });
+    return Response.json({ error: 'Current password is incorrect' }, { status: 400 });
   }
 
   const newHash = await hashPassword(new_password);
