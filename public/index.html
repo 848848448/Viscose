@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-build="viscose-ux-v3">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -582,6 +582,48 @@
     .dash-stats{grid-template-columns:repeat(2,1fr)}
     .search-bar{max-width:100%}
     .toolbar{flex-direction:column;align-items:stretch}
+
+    /* Operations layout v3: responsive workspace, accessible controls */
+    :root{--radius-lg:18px;--text3:#737780}
+    :root[data-theme="dark"]{--bg:#0d1118;--bg2:#171d27;--bg3:#202938;--line:#303b4c;--text3:#a0aabb}
+    @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1118;--bg2:#171d27;--bg3:#202938;--line:#303b4c;--text3:#a0aabb}}
+    .main{min-width:0;padding-bottom:100px}
+    .page-head h2{font-size:1.65rem;letter-spacing:-.04em}
+    .page-head{padding-bottom:18px;border-bottom:1px solid var(--line)}
+    .side-logo:after{content:'PICKUP OPERATIONS';display:block;font-size:10px;letter-spacing:.16em;color:var(--text3);margin-top:6px}
+    .side-nav a{min-height:44px}.side-nav a.active{box-shadow:inset 3px 0 var(--blue)}
+    .stat-card{text-align:left;padding:20px;border-top:3px solid var(--blue)}
+    .stat-num{font-size:2rem;font-variant-numeric:tabular-nums}
+    .pickup-card{padding:20px}.pickup-header>div,.pickup-user{min-width:0}
+    .pickup-user .email{display:block;margin-left:0;overflow-wrap:anywhere;margin-top:3px}
+    .pickup-addr,.pickup-detail,.pickup-note,.addr-body,.feed-line{overflow-wrap:anywhere}
+    .status{white-space:nowrap}.status-pending{background:rgba(0,122,255,.12);color:var(--blue)}
+    .empty{border:1px dashed var(--line);border-radius:16px;padding:40px 20px;background:var(--bg2)}
+    button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+    .btn:disabled{opacity:.55;cursor:wait;transform:none}
+    .connection-notice{padding:10px 14px;margin-bottom:18px;border:1px solid var(--orange);border-radius:12px;color:var(--text);background:var(--bg2);font-size:.86rem}
+    .results-summary{font-size:.82rem;color:var(--text2);margin:0 0 14px}
+    .dashboard-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+    .mob-head{background:var(--bg2)!important}
+    .modal{max-height:90dvh;overflow-y:auto}.overlay{overscroll-behavior:contain}
+    @media(min-width:960px){
+      .side{display:flex;width:248px;box-shadow:none;padding:30px 14px 20px;z-index:160}
+      .main{margin-left:248px;padding:36px 32px 100px;max-width:calc(100% - 248px)}
+      .mob-head{display:none}.mob-overlay.open{display:none}body.menu-open{overflow:auto}
+      .page-head{flex-direction:row;align-items:center;justify-content:space-between}
+      .dash-stats{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+      .toolbar{flex-direction:row;align-items:center}.filter-tabs{width:auto}
+      .toolbar .search-bar{max-width:360px;flex:1}.addr-grid{grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
+      #dashPickups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}#dashPickups .pickup-card{margin:0}
+      .settings-section{max-width:720px}.pickup-meta{width:auto;margin-left:auto}
+    }
+    @media(max-width:959px){
+      .main{padding-top:82px}.mob-head{padding-top:max(12px,env(safe-area-inset-top))}
+      .filter-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:5px}.filter-tab{flex-shrink:0;min-height:42px}
+      .pickup-card{padding:16px}.pickup-actions .btn,.map-link{min-height:42px}
+      input,select,textarea{font-size:16px!important}.page-head .btn{min-height:44px}
+    }
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
   </style>
 </head>
 <body>
@@ -697,12 +739,13 @@
       </div>
     </aside>
     <main class="main">
+      <div id="connectionNotice" class="connection-notice hidden" role="status" aria-live="polite"></div>
 
       <!-- DASHBOARD -->
       <div class="ptr-indicator" id="ptrIndicator"><div class="ptr-spinner"></div></div>
       <div id="page-dashboard">
         <div class="page-head"><h2 data-i18n="dashboard">Dashboard</h2></div>
-        <div class="dash-stats" id="dashStats"></div>
+        <div class="dashboard-actions"><button class="btn btn-blue" onclick="openPickupModal()">+ Request Pickup</button><button class="btn" onclick="showPage(currentUser.role === 'user' ? 'mypickups' : 'pickups')">View Pickups</button></div><div class="dash-stats" id="dashStats"></div>
         <div class="section-title">This Week</div>
         <div id="dashChart" style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px;box-shadow:var(--card-shadow);overflow-x:auto"></div>
         <div class="section-title">Recent Pickups</div>
@@ -731,14 +774,13 @@
       <div id="page-pickups" class="hidden">
         <div class="page-head">
           <h2 data-i18n="pickup_requests">Pickup Requests</h2>
-          <button class="btn btn-sm" onclick="exportPickupsCSV()" style="gap:6px">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export CSV
-          </button>
+
         </div>
         <div class="toolbar">
-          <div class="filter-tabs">
+          <div class="filter-tabs" id="pickupStatusFilters">
             <button class="filter-tab active" onclick="filterPickups('all')" id="filterAll">All</button>
+            <button class="filter-tab" onclick="filterPickups('pending')" id="filterPending">New</button>
+            <button class="filter-tab" onclick="filterPickups('cancelled')" id="filterCancelled">Cancelled</button>
             <button class="filter-tab" onclick="filterPickups('picked_up')" id="filterPicked_up">Picked Up</button>
             <button class="filter-tab" onclick="filterPickups('in_process')" id="filterIn_process">In Process</button>
             <button class="filter-tab" onclick="filterPickups('ready')" id="filterReady">Ready</button>
@@ -764,7 +806,7 @@
             Route Selected</button>
           <button class="btn btn-sm btn-blue" id="bulkBtn" onclick="openBulkModal()" style="display:none">Bulk Update (<span id="bulkCount">0</span>)</button>
         </div>
-        <div id="allPickupList"></div>
+        <div id="pickupResults" class="results-summary" aria-live="polite"></div><div id="allPickupList"></div>
       </div>
 
       <!-- USERS -->
@@ -1081,6 +1123,8 @@
     <input type="hidden" id="updatePickupId">
     <div class="field"><label>Status</label>
       <select id="updatePickupStatus">
+        <option value="pending">New</option>
+        <option value="cancelled" disabled>Cancelled (use Restore to reopen)</option>
         <option value="picked_up">Picked Up</option>
         <option value="in_process">In Process</option>
         <option value="ready">Ready for Delivery</option>
@@ -1187,6 +1231,7 @@
 <script>
 let token = localStorage.getItem('viscose_token');
 let currentUser = null;
+let dmUnreadTimer = null;
 let pendingPhoto = null;
 const API = '/api';
 
@@ -1212,14 +1257,15 @@ async function api(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = 'Bearer ' + token;
   const res = await fetch(API + path, { ...opts, headers });
-  const data = await res.json();
+  let data; try { data = await res.json(); } catch(e) { throw new Error('The server could not respond. Please try again.'); }
   if (!res.ok) throw new Error(data.error || 'Request failed');
   return data;
 }
 
 // OFFLINE QUEUE — pickup actions taken with no service are stored and synced when back online
-function queueGet() { try { return JSON.parse(localStorage.getItem('viscose_queue') || '[]'); } catch(e) { return []; } }
-function queueSet(q) { try { localStorage.setItem('viscose_queue', JSON.stringify(q)); } catch(e) {} }
+function queueKey() { return currentUser?.id ? 'viscose_queue_' + currentUser.id : null; }
+function queueGet() { try { const key = queueKey(); return key ? JSON.parse(localStorage.getItem(key) || '[]') : []; } catch(e) { return []; } }
+function queueSet(q) { try { const key = queueKey(); if (key) localStorage.setItem(key, JSON.stringify(q)); } catch(e) {} }
 function queuePush(path, opts) { const q = queueGet(); q.push({ path, opts, at: Date.now() }); queueSet(q); updateSyncBadge(); }
 async function apiQueued(path, opts) {
   try {
@@ -1236,20 +1282,32 @@ async function apiQueued(path, opts) {
 }
 let queueFlushing = false;
 async function queueFlush() {
-  if (queueFlushing || !navigator.onLine) return;
-  let q = queueGet();
+  if (queueFlushing || !navigator.onLine || !currentUser || !token) return;
+  const key = queueKey(), owner = currentUser.id;
+  const q = queueGet();
   if (!q.length) { updateSyncBadge(); return; }
   queueFlushing = true;
-  const remaining = [];
-  for (const item of q) {
-    try { await api(item.path, item.opts); }
-    catch(e) { if (!navigator.onLine || e.message === 'Failed to fetch') { remaining.push(item); } /* drop hard failures */ }
-  }
-  queueSet(remaining);
-  queueFlushing = false;
-  updateSyncBadge();
-  if (typeof loadDriverPickups === 'function') loadDriverPickups();
+  try {
+    for (const item of q) {
+      if (currentUser?.id !== owner || !token) break;
+      try { await api(item.path, item.opts); }
+      catch(e) { showToast('An offline update could not sync. It is still saved.'); break; }
+      const latest = JSON.parse(localStorage.getItem(key) || '[]');
+      const index = latest.findIndex(x => x.at === item.at && x.path === item.path && JSON.stringify(x.opts) === JSON.stringify(item.opts));
+      if (index >= 0) latest.splice(index, 1);
+      localStorage.setItem(key, JSON.stringify(latest));
+    }
+  } finally { queueFlushing = false; updateSyncBadge(); }
+  if (currentUser?.role === 'driver') loadDriverPickups();
 }
+function updateConnectionNotice() {
+  const el = document.getElementById('connectionNotice');
+  let legacy = false; try { legacy = JSON.parse(localStorage.getItem('viscose_queue') || '[]').length > 0; } catch(e) {}
+  el.textContent = !navigator.onLine ? 'You are offline. New data is unavailable. Driver updates are saved on this device until they can sync.' : legacy ? 'Older offline updates are saved on this device but need review before syncing. They will not be sent under another account.' : '';
+  el.classList.toggle('hidden', !el.textContent);
+}
+window.addEventListener('online', updateConnectionNotice);
+window.addEventListener('offline', updateConnectionNotice);
 function updateSyncBadge() {
   const el = document.getElementById('syncBadge'); if (!el) return;
   const n = queueGet().length;
@@ -1329,7 +1387,7 @@ async function doLogin() {
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('setupPass').addEventListener('keydown', e => { if (e.key === 'Enter') doSetup(); });
 
-function logout() { if (token) { fetch(API + '/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + token } }).catch(() => {}); } token = null; currentUser = null; localStorage.removeItem('viscose_token'); location.hash = ''; showScreen('loginScreen'); }
+function logout() { if (token) { fetch(API + '/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + token } }).catch(() => {}); } token = null; currentUser = null; localStorage.removeItem('viscose_token'); location.hash = ''; location.reload(); }
 
 // FORGOT PASSWORD
 function showForgotPassword() {
@@ -1362,7 +1420,7 @@ async function submitPasswordReset() {
     const res = await fetch(API + '/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: window._resetToken, new_password: np }) });
     const data = await res.json(); if (!res.ok) throw new Error(data.error || 'Reset failed');
     document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-ok">Password reset successful! Redirecting...</div>';
-    setTimeout(() => { location.hash = ''; showScreen('loginScreen'); }, 2000);
+    setTimeout(() => { location.hash = ''; location.reload(); }, 2000);
   } catch(e) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
 
@@ -1394,15 +1452,12 @@ function showApp() {
   document.getElementById('navTracking').classList.toggle('hidden', !isAdmin);
   document.getElementById('navDriverHistory').classList.toggle('hidden', !isAdmin);
   document.getElementById('navActivityLog').classList.toggle('hidden', !isAdmin);
-  if (isDriver || isFactory) {
-    document.querySelector('[data-page="addresses"]').classList.add('hidden');
-    document.querySelector('[data-page="mypickups"]').classList.add('hidden');
-    document.querySelector('[data-page="dashboard"]').classList.add('hidden');
-  }
-  if (!isAdmin) document.getElementById('roleField').classList.add('hidden');
+  ['addresses','mypickups','dashboard'].forEach(page => document.querySelector('[data-page="' + page + '"]').classList.toggle('hidden', isDriver || isFactory));
+  document.getElementById('roleField').classList.toggle('hidden', !isAdmin);
+  updateConnectionNotice();
   requestNotifPermission();
   showDmFab();
-  setInterval(pollDmUnread, 10000);
+  if (!dmUnreadTimer) dmUnreadTimer = setInterval(() => { if (currentUser && !document.hidden) pollDmUnread(); }, 10000);
   if (isDriver) { startDriverLocationSharing(); startDriverPolling(); }
   if (isFactory) startFactoryPolling();
   if (isAdmin) startAdminPolling();
@@ -1414,7 +1469,9 @@ function showApp() {
 function showPage(page) {
   const valid = ['dashboard','addresses','mypickups','users','pickups','alladdresses','admins','settings','driverpickups','factory','tracking','driverhistory','activitylog'];
   if (!valid.includes(page)) page = currentUser?.role === 'driver' ? 'driverpickups' : currentUser?.role === 'factory' ? 'factory' : 'dashboard';
-  location.hash = page;
+  const nav = document.querySelector('[data-page="' + page + '"]');
+  if (!nav || nav.classList.contains('hidden')) page = currentUser?.role === 'driver' ? 'driverpickups' : currentUser?.role === 'factory' ? 'factory' : 'dashboard';
+  if (location.hash !== '#' + page) history.pushState(null, '', '#' + page);
   document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
   document.getElementById('page-' + page).classList.remove('hidden');
   document.querySelectorAll('.side-nav a').forEach(a => a.classList.remove('active'));
@@ -1443,6 +1500,7 @@ window.addEventListener('hashchange', () => {
   if (currentUser) showPage(location.hash.replace('#', '') || 'dashboard');
 });
 
+function statusLabel(status) { return ({pending:'New',picked_up:'Picked Up',in_process:'In Process',ready:'Ready',delivered:'Delivered',cancelled:'Cancelled'})[status] || esc(status); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 // Modern line icons (Material/Feather style). Usage: ic('camera') or ic('phone', 18)
 const ICON_PATHS = {
@@ -1508,12 +1566,12 @@ async function loadDashboard() {
     pickups.forEach(p => { const d = parseTS(p.requested_at); if (d >= weekStart) weekData[d.getDay()]++; });
     const maxVal = Math.max(...weekData, 1);
     document.getElementById('dashChart').innerHTML = `<div style="display:flex;align-items:flex-end;gap:8px;height:100px;padding:0 4px">${weekData.map((v, i) => `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:0.7rem;font-weight:600;color:var(--text2)">${v || ''}</span><div style="width:100%;background:${i === today.getDay() ? 'var(--blue)' : 'var(--bg3)'};border-radius:4px 4px 0 0;height:${Math.max(v / maxVal * 70, 4)}px;transition:height 0.3s"></div><span style="font-size:0.65rem;color:var(--text3);font-weight:600">${days[i]}</span></div>`).join('')}</div>`;
-    const recent = pickups.slice(0, 5);
+    const recent = [...pickups].sort((a,b) => parseTS(b.requested_at) - parseTS(a.requested_at)).slice(0, 5);
     const c = document.getElementById('dashPickups');
     if (!recent.length) { c.innerHTML = '<div class="empty">No pickup requests yet.</div>'; return; }
     c.innerHTML = recent.map(p => {
       const addr = [p.street, p.city, p.state, p.zip].filter(Boolean).join(', ');
-      return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-addr">${esc(p.addr_label || p.user_name || 'Pickup')}</span><span class="status status-${p.status}">${p.status}</span></div><div class="pickup-detail">${esc(addr)}</div><div style="font-size:0.78rem;color:var(--text3);margin-top:6px">${fmtDateTime(p.requested_at)}</div></div>`;
+      return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-addr">${esc(p.addr_label || p.user_name || 'Pickup')}</span><span class="status status-${p.status}">${statusLabel(p.status)}</span></div><div class="pickup-detail">${esc(addr)}</div><div style="font-size:0.78rem;color:var(--text3);margin-top:6px">${fmtDateTime(p.requested_at)}</div></div>`;
     }).join('');
   } catch(e) { console.error(e); }
 }
@@ -1599,7 +1657,7 @@ async function loadMyPickups() {
       const addr = [p.street, p.city, p.state, p.zip, p.country].filter(Boolean).join(', ');
       const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
       const priorityHtml = p.priority && p.priority !== 'normal' ? `<span class="pickup-priority priority-${p.priority}">${p.priority}</span>` : '';
-      return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-addr">${esc(p.addr_label || 'Address')} ${priorityHtml}</span><span class="status status-${p.status}">${p.status}</span></div><div class="pickup-detail"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:500">${esc(addr)}</a></div><div class="pickup-detail" style="color:var(--text2);display:flex;align-items:center;gap:5px">${ic('user',14)} ${esc(p.user_name || '')}${(p.contact_phone || p.user_phone) ? ` · <a href="tel:${esc(p.contact_phone || p.user_phone)}" style="color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px">${ic('phone',13)} ${esc(p.contact_phone || p.user_phone)}</a>` : ''}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}${p.cancel_reason ? `<div class="pickup-note" style="background:rgba(255,59,48,0.08);color:#ff3b30"><strong>${ic('ban',13)} Cancelled by driver:</strong> ${esc(p.cancel_reason)}</div>` : ''}${p.scheduled_date && p.status === 'pending' ? `<div class="pickup-note" style="background:rgba(0,122,255,0.08);color:var(--blue)"><strong>${ic('calendar',13)} Scheduled for:</strong> ${esc(p.scheduled_date)}</div>` : ''}<div class="pickup-actions"><span class="pickup-meta">${fmtDateTime(p.requested_at)}</span>${p.status === 'cancelled' ? `<button class="btn btn-xs btn-dark" onclick="restorePickup(${p.id})">${ic('undo',13)} Restore</button>` : ''}${p.status === 'picked_up' ? `<button class="btn btn-red btn-xs" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}<button class="btn btn-xs" onclick="printReceipt(${p.id})">Print</button></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
+      return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-addr">${esc(p.addr_label || 'Address')} ${priorityHtml}</span><span class="status status-${p.status}">${statusLabel(p.status)}</span></div><div class="pickup-detail"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:500">${esc(addr)}</a></div><div class="pickup-detail" style="color:var(--text2);display:flex;align-items:center;gap:5px">${ic('user',14)} ${esc(p.user_name || '')}${(p.contact_phone || p.user_phone) ? ` · <a href="tel:${esc(p.contact_phone || p.user_phone)}" style="color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px">${ic('phone',13)} ${esc(p.contact_phone || p.user_phone)}</a>` : ''}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}${p.cancel_reason ? `<div class="pickup-note" style="background:rgba(255,59,48,0.08);color:#ff3b30"><strong>${ic('ban',13)} Cancelled by driver:</strong> ${esc(p.cancel_reason)}</div>` : ''}${p.scheduled_date && p.status === 'pending' ? `<div class="pickup-note" style="background:rgba(0,122,255,0.08);color:var(--blue)"><strong>${ic('calendar',13)} Scheduled for:</strong> ${esc(p.scheduled_date)}</div>` : ''}<div class="pickup-actions"><span class="pickup-meta">${fmtDateTime(p.requested_at)}</span>${p.status === 'cancelled' ? `<button class="btn btn-xs btn-dark" onclick="restorePickup(${p.id})">${ic('undo',13)} Restore</button>` : ''}${p.status === 'picked_up' ? `<button class="btn btn-red btn-xs" onclick="cancelPickup(${p.id})">Cancel</button>` : ''}<button class="btn btn-xs" onclick="printReceipt(${p.id})">Print</button></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
     }).join('');
   } catch(e) { console.error(e); }
 }
@@ -1660,11 +1718,12 @@ function showDateDialog(title, body, defaultDate, onConfirm) {
 }
 
 // PRINT RECEIPT
-function printReceipt(id) {
+async function printReceipt(id) {
   const pickups = allPickupsData.length ? allPickupsData : [];
   let p;
   try { p = pickups.find(x => x.id === id); } catch(e) {}
-  if (!p) { showToast('Loading...'); return; }
+  if (!p) { try { const d = await api('/pickups?mine=1'); p = d.pickups.find(x => x.id === id); } catch(e) { showToast(e.message); return; } }
+  if (!p) { showToast('Pickup not found.'); return; }
   const addr = [p.street, p.city, p.state, p.zip].filter(Boolean).join(', ');
   const area = document.getElementById('printArea');
   area.classList.remove('hidden');
@@ -1704,10 +1763,10 @@ let dateFilter = 'all';
 let selectedPickups = new Set();
 
 let adminPickupsSig = '', adminPollTimer = null;
-async function loadAllPickups() { try { const d = await api('/pickups'); allPickupsData = d.pickups; adminPickupsSig = JSON.stringify(d.pickups.map(p => [p.id, p.status])); selectedPickups.clear(); updateBulkUI(); renderPickups(); } catch(e) { console.error(e); } }
-function startAdminPolling() { if (adminPollTimer) return; adminPollTimer = setInterval(async () => { const pg = document.getElementById('page-pickups'); if (!pg || pg.classList.contains('hidden') || selectedPickups.size) return; try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups.map(p => [p.id, p.status])); if (sig !== adminPickupsSig) { allPickupsData = d.pickups; adminPickupsSig = sig; renderPickups(); } } catch(e) {} }, 15000); }
-function filterPickups(f) { pickupFilter = f; document.querySelectorAll('#page-pickups .filter-tabs:first-child .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderPickups(); }
-function filterDate(f) { dateFilter = f; document.querySelectorAll('#dateFilters .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('date' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderPickups(); }
+async function loadAllPickups() { try { const d = await api('/pickups'); allPickupsData = d.pickups; adminPickupsSig = JSON.stringify(d.pickups); selectedPickups.clear(); updateBulkUI(); renderPickups(); } catch(e) { console.error(e); } }
+function startAdminPolling() { if (adminPollTimer) return; adminPollTimer = setInterval(async () => { const pg = document.getElementById('page-pickups'); if (!pg || pg.classList.contains('hidden') || selectedPickups.size) return; try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups); if (sig !== adminPickupsSig) { allPickupsData = d.pickups; adminPickupsSig = sig; renderPickups(); } } catch(e) {} }, 15000); }
+function filterPickups(f) { pickupsShown = 50; pickupFilter = f; document.querySelectorAll('#pickupStatusFilters .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderPickups(); }
+function filterDate(f) { pickupsShown = 50; dateFilter = f; document.querySelectorAll('#dateFilters .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('date' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderPickups(); }
 function getFilteredPickups() {
   let filtered = pickupFilter === 'all' ? allPickupsData : allPickupsData.filter(p => p.status === pickupFilter);
   if (dateFilter !== 'all') { const now = new Date(); const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()); filtered = filtered.filter(p => { const d = parseTS(p.requested_at); if (dateFilter === 'today') return d >= startOfDay; if (dateFilter === 'week') { const w = new Date(startOfDay); w.setDate(w.getDate() - w.getDay()); return d >= w; } if (dateFilter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); return true; }); }
@@ -1720,6 +1779,7 @@ function updateBulkUI() { const n = selectedPickups.size; document.getElementByI
 
 function renderPickups() {
   const filtered = getFilteredPickups();
+  document.getElementById('pickupResults').textContent = filtered.length + ' of ' + allPickupsData.length + ' pickups';
   const c = document.getElementById('allPickupList');
   if (!filtered.length) { c.innerHTML = '<div class="empty">No pickup requests.</div>'; return; }
   const more = filtered.length > pickupsShown ? `<div style="text-align:center;margin:12px"><button class="btn btn-xs" onclick="pickupsShown += 50; renderPickups()">Show more (${filtered.length - pickupsShown} left)</button></div>` : '';
@@ -1729,7 +1789,7 @@ function renderPickups() {
     const navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr);
     const checked = selectedPickups.has(p.id) ? 'checked' : '';
     const priorityHtml = p.priority && p.priority !== 'normal' ? `<span class="pickup-priority priority-${p.priority}">${p.priority}</span>` : '';
-    return `<div class="pickup-card ${checked ? 'selected' : ''}" data-pickup-id="${p.id}"><div class="pickup-header"><div style="display:flex;align-items:center;gap:10px"><input type="checkbox" class="pickup-check" ${checked} onchange="togglePickupSelect(${p.id})"><span class="pickup-user">${esc(p.user_name)}<span class="email">${esc(p.user_email)}</span></span></div><div style="display:flex;gap:6px;align-items:center">${priorityHtml}<span class="status status-${p.status}">${p.status}</span></div></div><div class="pickup-addr">${esc(p.addr_label || 'Address')}</div><div class="pickup-detail">${esc(addr)}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}${p.driver_name ? `<div style="font-size:0.82rem;color:var(--text2);margin-top:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> ${esc(p.driver_name)}</div>` : ''}<div class="pickup-actions"><a href="${mapUrl}" target="_blank" rel="noopener" class="map-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Map</a><a href="${navUrl}" target="_blank" rel="noopener" class="map-link nav-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Navigate</a><button class="btn btn-sm" onclick="openPickupUpdate(${p.id},'${p.status}',${esc(JSON.stringify((p.admin_notes || '') ?? ''))},${p.driver_id||'null'},'${p.priority||'normal'}')">Update</button><button class="btn btn-xs" onclick="printReceipt(${p.id})">Print</button><span class="pickup-meta">${fmtDateTime(p.requested_at)}</span></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
+    return `<div class="pickup-card ${checked ? 'selected' : ''}" data-pickup-id="${p.id}"><div class="pickup-header"><div style="display:flex;align-items:center;gap:10px"><input type="checkbox" class="pickup-check" ${checked} onchange="togglePickupSelect(${p.id})"><span class="pickup-user">${esc(p.user_name)}<span class="email">${esc(p.user_email)}</span></span></div><div style="display:flex;gap:6px;align-items:center">${priorityHtml}<span class="status status-${p.status}">${statusLabel(p.status)}</span></div></div><div class="pickup-addr">${esc(p.addr_label || 'Address')}</div><div class="pickup-detail">${esc(addr)}</div>${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}${p.admin_notes ? `<div class="pickup-note admin"><strong>Admin:</strong> ${esc(p.admin_notes)}</div>` : ''}${p.driver_name ? `<div style="font-size:0.82rem;color:var(--text2);margin-top:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> ${esc(p.driver_name)}</div>` : ''}<div class="pickup-actions"><a href="${mapUrl}" target="_blank" rel="noopener" class="map-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Map</a><a href="${navUrl}" target="_blank" rel="noopener" class="map-link nav-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Navigate</a><button class="btn btn-sm" onclick="openPickupUpdate(${p.id},'${p.status}',${esc(JSON.stringify((p.admin_notes || '') ?? ''))},${p.driver_id||'null'},'${p.priority||'normal'}')">Update</button><button class="btn btn-xs" onclick="printReceipt(${p.id})">Print</button><span class="pickup-meta">${fmtDateTime(p.requested_at)}</span></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
   }).join('') + more;
 }
 
@@ -1737,7 +1797,7 @@ function renderPickups() {
 let driverPickupsData = [];
 let driverFilter = 'all';
 let driverPollTimer = null;
-async function loadDriverPickups() { try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups.map(p => [p.id, p.status])); if (sig !== driverPickupsSig) { const oldGeo = {}; driverPickupsData.forEach(p => { if (p._geo) oldGeo[p.id] = p._geo; }); driverPickupsData = d.pickups; driverPickupsData.forEach(p => { if (oldGeo[p.id]) p._geo = oldGeo[p.id]; }); driverPickupsSig = sig; renderDriverPickups(); if (typeof navRefreshTargets === 'function') navRefreshTargets(); } } catch(e) { console.error(e); } }
+async function loadDriverPickups() { try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups); if (sig !== driverPickupsSig) { const oldGeo = {}; driverPickupsData.forEach(p => { if (p._geo) oldGeo[p.id] = p._geo; }); driverPickupsData = d.pickups; driverPickupsData.forEach(p => { if (oldGeo[p.id]) p._geo = oldGeo[p.id]; }); driverPickupsSig = sig; renderDriverPickups(); if (typeof navRefreshTargets === 'function') navRefreshTargets(); } } catch(e) { console.error(e); } }
 let driverPickupsSig = '';
 function startDriverPolling() { if (driverPollTimer) return; driverPollTimer = setInterval(() => { if (document.getElementById('page-driverpickups') && !document.getElementById('page-driverpickups').classList.contains('hidden')) loadDriverPickups(); }, 12000); }
 function filterDriverPickups(f) { driverFilter = f; document.querySelectorAll('#page-driverpickups .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('dFilter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderDriverPickups(); }
@@ -1751,7 +1811,7 @@ function renderDriverPickups() {
     const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
     let actionBtn = '';
     if (p.status === 'pending') actionBtn = `<button class="btn btn-sm btn-dark" onclick="driverPickupPhoto(${p.id})" style="padding:8px 12px;display:inline-flex;align-items:center;gap:6px">${ic('camera')} Pick Up</button>`;
-    else if (p.status === 'picked_up') actionBtn = `<button class="btn btn-sm btn-dark" onclick="driverDeliverPhoto(${p.id})" style="padding:8px 12px;display:inline-flex;align-items:center;gap:6px">${ic('camera')} Deliver</button>`;
+    else if (['picked_up','ready'].includes(p.status)) actionBtn = `<button class="btn btn-sm btn-dark" onclick="driverDeliverPhoto(${p.id})" style="padding:8px 12px;display:inline-flex;align-items:center;gap:6px">${ic('camera')} Deliver</button>`;
     const ph = p.contact_phone || p.user_phone || '';
     return `<div class="pickup-card"><div class="pickup-header"><span class="pickup-user">${esc(p.user_name)}</span><span class="status status-${p.status}">${p.status === 'pending' ? 'NEW' : p.status.replace('_',' ')}</span></div><div class="pickup-addr">${esc(p.addr_label || 'Address')}</div><div class="pickup-detail">${esc(addr)}</div>${ph ? `<div class="pickup-detail"><a href="tel:${esc(ph)}" style="color:var(--blue);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:5px">${ic('phone',14)} ${esc(ph)}</a></div>` : ''}${p.photo ? `<div class="pickup-photo"><img src="${p.photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.pickup_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">Pickup Photo</div><img src="${p.pickup_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.delivery_photo ? `<div class="pickup-photo"><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">Delivery Photo</div><img src="${p.delivery_photo}" onclick="viewPhoto(this.src)"></div>` : ''}${p.notes ? `<div class="pickup-note"><strong>Notes:</strong> ${esc(p.notes)}</div>` : ''}<div class="pickup-actions"><button onclick="openDriverRoute()" class="map-link nav-link" style="border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px">${ic('navigate',14)}Navigate All</button><a href="${mapUrl}" target="_blank" rel="noopener" class="map-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Map</a>${actionBtn}<span class="pickup-meta">${fmtDateTime(p.requested_at)}</span></div><div class="comments-section"><button class="comments-toggle" onclick="toggleComments(${p.id}, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages</button><div id="comments-${p.id}" class="hidden"></div></div></div>`;
   }).join('');
@@ -1814,7 +1874,7 @@ function distM(a, b) {
   const s = Math.sin(dLat/2)**2 + Math.cos(toR(a.lat)) * Math.cos(toR(b.lat)) * Math.sin(dLng/2)**2;
   return 2 * R * Math.asin(Math.sqrt(s));
 }
-function activePickups() { return driverPickupsData.filter(p => p.status === 'pending' || p.status === 'picked_up'); }
+function activePickups() { return driverPickupsData.filter(p => ['pending','picked_up','ready'].includes(p.status)); }
 function pickupAddrStr(p) { return [p.street, p.city, p.state, p.zip].filter(Boolean).join(', '); }
 
 async function initDriverNav() {
@@ -1822,6 +1882,7 @@ async function initDriverNav() {
     navMap = L.map('driverNavMap').setView([41.47, -74.02], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(navMap);
   }
+  document.getElementById('driverNavMap').classList.toggle('hidden', !window.L);
   setTimeout(() => { if (navMap) navMap.invalidateSize(); }, 200);
   await navRefreshTargets();
 }
@@ -2012,7 +2073,7 @@ function openDriverRoute() {
 // FACTORY
 let factoryData = [], factoryFilter = 'all';
 let factorySig = '', factoryPollTimer = null;
-async function loadFactoryPickups() { try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups.map(p => [p.id, p.status])); if (sig !== factorySig) { factoryData = d.pickups; factorySig = sig; renderFactoryPickups(); } } catch(e) { console.error(e); } }
+async function loadFactoryPickups() { try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups); if (sig !== factorySig) { factoryData = d.pickups; factorySig = sig; renderFactoryPickups(); } } catch(e) { console.error(e); } }
 function startFactoryPolling() { if (factoryPollTimer) return; factoryPollTimer = setInterval(() => { if (document.getElementById('page-factory') && !document.getElementById('page-factory').classList.contains('hidden')) loadFactoryPickups(); }, 12000); }
 function filterFactory(f) { factoryFilter = f; document.querySelectorAll('#page-factory .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('fFilter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderFactoryPickups(); }
 function renderFactoryPickups() {
@@ -2033,7 +2094,7 @@ async function factoryUpdate(id, status) { try { await api('/pickups', { method:
 function exportCSV() {
   const data = getFilteredPickups(); if (!data.length) { alert('No data to export.'); return; }
   const headers = ['Name','Email','Address Label','Street','City','State','Zip','Country','Status','Priority','Notes','Admin Notes','Date'];
-  const rows = data.map(p => [p.user_name, p.user_email, p.addr_label, p.street, p.city, p.state, p.zip, p.country, p.status, p.priority||'normal', p.notes || '', p.admin_notes || '', fmtDateTime(p.requested_at)].map(v => '"' + String(v).replace(/"/g, '""') + '"'));
+  const rows = data.map(p => [p.user_name, p.user_email, p.addr_label, p.street, p.city, p.state, p.zip, p.country, p.status, p.priority||'normal', p.notes || '', p.admin_notes || '', fmtDateTime(p.requested_at)].map(v => '"' + String(v ?? '').replace(/^[=+@\t\r-]/, m => "'" + m).replace(/"/g, '""') + '"'));
   const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'pickups-' + new Date().toISOString().split('T')[0] + '.csv'; a.click(); URL.revokeObjectURL(url);
@@ -2096,6 +2157,7 @@ async function changePassword() {
   try { await api('/profile', { method: 'POST', body: JSON.stringify({ current_password: document.getElementById('currentPass').value, new_password: newP }) }); document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-ok">Password changed successfully.</div>'; ['currentPass','newPass','confirmPass'].forEach(f => document.getElementById(f).value = ''); } catch(e) { document.getElementById('settingsAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
 }
 
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.querySelectorAll('.overlay:not(.hidden)').forEach(el => el.classList.add('hidden')); document.getElementById('sidebar').classList.remove('open'); document.getElementById('mobOverlay').classList.remove('open'); document.body.classList.remove('menu-open'); } });
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
 // LIVE TRACKING
@@ -2741,16 +2803,9 @@ setInterval(() => { if (currentUser) api('/presence', { method: 'POST' }).catch(
 // TOAST
 function showToast(msg, duration = 2500) { const existing = document.querySelector('.toast'); if (existing) existing.remove(); const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg; document.body.appendChild(el); setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 200); }, duration); }
 
-// CSV EXPORT (my pickups page)
-function exportPickupsCSV() {
-  if (!allPickupsData.length) { showToast('No pickups to export'); return; }
-  const headers = ['ID','User','Address','Street','City','State','Zip','Status','Priority','Notes','Admin Notes','Driver','Requested','Updated'];
-  const rows = allPickupsData.map(p => [p.id, p.user_name||'', p.addr_label||'', p.street||'', p.city||'', p.state||'', p.zip||'', p.status, p.priority||'normal', (p.notes||'').replace(/"/g,'""'), (p.admin_notes||'').replace(/"/g,'""'), p.driver_name||'', p.requested_at||'', p.updated_at||'']);
-  const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `pickups-${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
-}
+function exportPickupsCSV() { exportCSV(); }
 
 init();
 </script>
 </body>
-      </html>
+  </html>
