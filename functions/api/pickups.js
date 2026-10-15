@@ -1,3 +1,4 @@
+import { esc } from '../../lib/auth.js';
 export async function onRequestGet(context) {
   const { env, data } = context;
   const user = data.user;
@@ -145,11 +146,11 @@ export async function onRequestPut(context) {
             subject: `Pickup ${statusLabels[status] || status} — ${pickup.addr_label || 'Address'}`,
             html: `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px">
               <h2 style="margin-bottom:8px">Pickup Update</h2>
-              <p>Hello ${pickup.user_name},</p>
-              <p>Your pickup request for <strong>${pickup.addr_label || 'your address'}</strong> has been updated.</p>
+              <p>Hello ${esc(pickup.user_name)},</p>
+              <p>Your pickup request for <strong>${esc(pickup.addr_label || 'your address')}</strong> has been updated.</p>
               <table style="margin:16px 0;font-size:15px">
                 <tr><td style="padding:4px 12px 4px 0;color:#666">Status:</td><td style="font-weight:600">${statusLabels[status] || status}</td></tr>
-                ${admin_notes ? `<tr><td style="padding:4px 12px 4px 0;color:#666">Notes:</td><td>${admin_notes}</td></tr>` : ''}
+                ${admin_notes ? `<tr><td style="padding:4px 12px 4px 0;color:#666">Notes:</td><td>${esc(admin_notes)}</td></tr>` : ''}
               </table>
               <p style="margin-top:24px"><a href="${env.SITE_URL || 'https://viscose.pages.dev'}/#mypickups" style="background:#111;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500">View Pickups</a></p>
               <p style="margin-top:32px;font-size:13px;color:#999">This email was sent by Viscose.</p>
