@@ -624,7 +624,14 @@
       input,select,textarea{font-size:16px!important}.page-head .btn{min-height:44px}
     }
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-  </style>
+  
+    /* Stability layer: loading bar and load-error banner */
+    body.is-loading::before{content:'';position:fixed;top:0;left:0;height:3px;width:40%;background:var(--accent,#111);z-index:20000;animation:vbar 1s ease-in-out infinite}
+    @keyframes vbar{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+    .load-error{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:19999;display:flex;gap:12px;align-items:center;max-width:92vw;padding:10px 14px;border-radius:12px;border:1px solid var(--orange,#f90);background:var(--bg2,#fff);color:var(--text,#111);box-shadow:0 6px 24px rgba(0,0,0,.18);font-size:.86rem}
+    .load-error button{border:0;border-radius:8px;padding:6px 12px;background:var(--accent,#111);color:var(--accent-fg,#fff);font-weight:600;cursor:pointer}
+    button:disabled{opacity:.6;cursor:progress}
+</style>
 </head>
 <body>
 
@@ -1253,13 +1260,54 @@ function setLang(lang) {
   });
 }
 
+class ApiError extends Error { constructor(m, status, code) { super(m); this.status = status; this.code = code; } }
+const staleError = () => { const e = new Error('Superseded request'); e.stale = true; return e; };
+const inflightGets = new Map(); const failedPaths = new Set(); let pendingReqs = 0; let sessionEnding = false;
+function setBusyBar(d) { pendingReqs = Math.max(0, pendingReqs + d); document.body.classList.toggle('is-loading', pendingReqs > 0); }
+function friendlyError(e) {
+  const m = (e && e.message) || '';
+  if (e instanceof TypeError || /failed to fetch|load failed|networkerror/i.test(m)) return 'Cannot reach the server. Check your connection and try again.';
+  return m || 'Something went wrong. Please try again.';
+}
+function showLoadError() {
+  let el = document.getElementById('loadError');
+  if (!el) { el = document.createElement('div'); el.id = 'loadError'; el.className = 'load-error hidden'; el.setAttribute('role', 'alert'); el.innerHTML = '<span>Some data could not be loaded.</span><button type="button" onclick="retryCurrentPage()">Retry</button>'; document.body.appendChild(el); }
+  el.classList.toggle('hidden', failedPaths.size === 0);
+}
+function handleSessionExpired() {
+  if (sessionEnding) return; sessionEnding = true;
+  try { sessionStorage.setItem('viscose_expired', '1'); } catch(e) {}
+  token = null; localStorage.removeItem('viscose_token'); location.reload();
+}
 async function api(path, opts = {}) {
+  const { poll, timeoutMs, ...fetchOpts } = opts;
+  const method = (fetchOpts.method || 'GET').toUpperCase();
+  if (poll && document.hidden) throw staleError();
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = 'Bearer ' + token;
-  const res = await fetch(API + path, { ...opts, headers });
-  let data; try { data = await res.json(); } catch(e) { throw new Error('The server could not respond. Please try again.'); }
-  if (!res.ok) throw new Error(data.error || 'Request failed');
-  return data;
+  const ctrl = new AbortController(); let timedOut = false; let entry = null;
+  const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, timeoutMs || (method === 'GET' ? 20000 : 45000));
+  if (method === 'GET' && !poll) { const prev = inflightGets.get(path); if (prev) { prev.superseded = true; prev.ctrl.abort(); } entry = { ctrl, superseded: false }; inflightGets.set(path, entry); }
+  setBusyBar(1);
+  try {
+    let res;
+    try { res = await fetch(API + path, { ...fetchOpts, headers, signal: ctrl.signal }); }
+    catch (e) {
+      if (entry && entry.superseded) throw staleError();
+      if (timedOut) throw new ApiError('The server took too long to respond. Please try again.', 0, 'timeout');
+      throw new ApiError('Cannot reach the server. Check your connection and try again.', 0, 'network');
+    }
+    if (entry && entry.superseded) throw staleError();
+    let data = null; try { data = await res.json(); } catch(e) {}
+    if (res.status === 401 && token && data && /^(Unauthorized|Invalid or expired session)$/.test(data.error || '')) { handleSessionExpired(); throw new ApiError('Your session expired. Please sign in again.', 401, 'auth'); }
+    if (!res.ok) throw new ApiError((data && data.error) || (res.status >= 500 ? 'The server had a problem. Please try again in a moment.' : 'Request failed (' + res.status + ').'), res.status, 'http');
+    if (data === null) throw new ApiError('The server sent an unreadable response. Please try again.', res.status, 'parse');
+    if (method === 'GET' && !poll) { failedPaths.delete(path); showLoadError(); }
+    return data;
+  } catch (e) {
+    if (method === 'GET' && !poll && !e.stale && e.code !== 'auth') { failedPaths.add(path); showLoadError(); }
+    throw e;
+  } finally { clearTimeout(timer); setBusyBar(-1); if (entry && inflightGets.get(path) === entry) inflightGets.delete(path); }
 }
 
 // OFFLINE QUEUE — pickup actions taken with no service are stored and synced when back online
@@ -1273,7 +1321,7 @@ async function apiQueued(path, opts) {
     return r;
   } catch(e) {
     // Only queue genuine network failures (offline), not auth/validation errors
-    if (!navigator.onLine || e.message === 'Failed to fetch' || /network/i.test(e.message)) {
+    if (!navigator.onLine || e.code === 'network') {
       queuePush(path, opts);
       return { queued: true };
     }
@@ -1340,8 +1388,15 @@ async function init() {
   if (hash && hash.startsWith('#reset=')) { showResetForm(hash.replace('#reset=', '')); return; }
   if (token) {
     try { const data = await api('/me'); currentUser = data.user; showApp(); }
-    catch { token = null; localStorage.removeItem('viscose_token'); checkSetup(); }
+    catch (e) {
+      if (e.stale || e.code === 'auth') return;
+      if (e.status === 403) { token = null; localStorage.removeItem('viscose_token'); checkSetup(); return; }
+      showScreen('loginScreen');
+      document.getElementById('loginAlert').innerHTML = '<div class="alert alert-error">Cannot reach Viscose right now. Your session is kept. Retrying...</div>';
+      clearTimeout(window._initRetry); window._initRetry = setTimeout(init, 5000);
+    }
   } else { checkSetup(); }
+  try { if (sessionStorage.getItem('viscose_expired')) { sessionStorage.removeItem('viscose_expired'); setTimeout(() => { const a = document.getElementById('loginAlert'); if (a) a.innerHTML = '<div class="alert alert-error">Your session expired. Please sign in again.</div>'; }, 50); } } catch(e) {}
 }
 
 async function checkSetup() {
@@ -1369,7 +1424,7 @@ async function doSetup() {
     if (!res.ok) throw new Error(data.error || 'Setup failed');
     document.getElementById('setupAlert').innerHTML = '<div class="alert alert-ok">Account created. Signing in...</div>';
     setTimeout(() => showScreen('loginScreen'), 1200);
-  } catch (e) { document.getElementById('setupAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
+  } catch (e) { document.getElementById('setupAlert').innerHTML = '<div class="alert alert-error">' + esc(friendlyError(e)) + '</div>'; }
 }
 
 async function doLogin() {
@@ -1381,7 +1436,7 @@ async function doLogin() {
     token = data.token; currentUser = data.user;
     localStorage.setItem('viscose_token', token);
     showApp();
-  } catch (e) { document.getElementById('loginAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
+  } catch (e) { document.getElementById('loginAlert').innerHTML = '<div class="alert alert-error">' + esc(friendlyError(e)) + '</div>'; }
 }
 
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
@@ -1409,7 +1464,7 @@ async function sendResetEmail() {
   if (!email) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">Enter your email.</div>'; return; }
   try { const res = await fetch(API + '/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) }); if (!res.ok) throw new Error('Could not request a reset. Please try again.');
     document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-ok">If that email exists, a reset link has been sent.</div>';
-  } catch(e) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">' + e.message + '</div>'; }
+  } catch(e) { document.getElementById('forgotAlert').innerHTML = '<div class="alert alert-error">' + esc(friendlyError(e)) + '</div>'; }
 }
 async function submitPasswordReset() {
   const np = document.getElementById('resetNewPass').value;
@@ -1764,7 +1819,7 @@ let selectedPickups = new Set();
 
 let adminPickupsSig = '', adminPollTimer = null;
 async function loadAllPickups() { try { const d = await api('/pickups'); allPickupsData = d.pickups; adminPickupsSig = JSON.stringify(d.pickups); selectedPickups.clear(); updateBulkUI(); renderPickups(); } catch(e) { console.error(e); } }
-function startAdminPolling() { if (adminPollTimer) return; adminPollTimer = setInterval(async () => { const pg = document.getElementById('page-pickups'); if (!pg || pg.classList.contains('hidden') || selectedPickups.size) return; try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups); if (sig !== adminPickupsSig) { allPickupsData = d.pickups; adminPickupsSig = sig; renderPickups(); } } catch(e) {} }, 15000); }
+function startAdminPolling() { if (adminPollTimer) return; adminPollTimer = setInterval(async () => { const pg = document.getElementById('page-pickups'); if (document.hidden || !pg || pg.classList.contains('hidden') || selectedPickups.size) return; try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups); if (sig !== adminPickupsSig) { allPickupsData = d.pickups; adminPickupsSig = sig; renderPickups(); } } catch(e) {} }, 15000); }
 function filterPickups(f) { pickupsShown = 50; pickupFilter = f; document.querySelectorAll('#pickupStatusFilters .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderPickups(); }
 function filterDate(f) { pickupsShown = 50; dateFilter = f; document.querySelectorAll('#dateFilters .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('date' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderPickups(); }
 function getFilteredPickups() {
@@ -1799,7 +1854,7 @@ let driverFilter = 'all';
 let driverPollTimer = null;
 async function loadDriverPickups() { try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups); if (sig !== driverPickupsSig) { const oldGeo = {}; driverPickupsData.forEach(p => { if (p._geo) oldGeo[p.id] = p._geo; }); driverPickupsData = d.pickups; driverPickupsData.forEach(p => { if (oldGeo[p.id]) p._geo = oldGeo[p.id]; }); driverPickupsSig = sig; renderDriverPickups(); if (typeof navRefreshTargets === 'function') navRefreshTargets(); } } catch(e) { console.error(e); } }
 let driverPickupsSig = '';
-function startDriverPolling() { if (driverPollTimer) return; driverPollTimer = setInterval(() => { if (document.getElementById('page-driverpickups') && !document.getElementById('page-driverpickups').classList.contains('hidden')) loadDriverPickups(); }, 12000); }
+function startDriverPolling() { if (driverPollTimer) return; driverPollTimer = setInterval(() => { if (!document.hidden && document.getElementById('page-driverpickups') && !document.getElementById('page-driverpickups').classList.contains('hidden')) loadDriverPickups(); }, 12000); }
 function filterDriverPickups(f) { driverFilter = f; document.querySelectorAll('#page-driverpickups .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('dFilter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderDriverPickups(); }
 function renderDriverPickups() {
   const filtered = driverFilter === 'all' ? driverPickupsData : driverPickupsData.filter(p => p.status === driverFilter);
@@ -2074,7 +2129,7 @@ function openDriverRoute() {
 let factoryData = [], factoryFilter = 'all';
 let factorySig = '', factoryPollTimer = null;
 async function loadFactoryPickups() { try { const d = await api('/pickups'); const sig = JSON.stringify(d.pickups); if (sig !== factorySig) { factoryData = d.pickups; factorySig = sig; renderFactoryPickups(); } } catch(e) { console.error(e); } }
-function startFactoryPolling() { if (factoryPollTimer) return; factoryPollTimer = setInterval(() => { if (document.getElementById('page-factory') && !document.getElementById('page-factory').classList.contains('hidden')) loadFactoryPickups(); }, 12000); }
+function startFactoryPolling() { if (factoryPollTimer) return; factoryPollTimer = setInterval(() => { if (!document.hidden && document.getElementById('page-factory') && !document.getElementById('page-factory').classList.contains('hidden')) loadFactoryPickups(); }, 12000); }
 function filterFactory(f) { factoryFilter = f; document.querySelectorAll('#page-factory .filter-tab').forEach(b => b.classList.remove('active')); document.getElementById('fFilter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active'); renderFactoryPickups(); }
 function renderFactoryPickups() {
   const show = factoryFilter === 'all' ? factoryData.filter(p => ['picked_up','in_process','ready'].includes(p.status)) : factoryData.filter(p => p.status === factoryFilter);
@@ -2171,7 +2226,7 @@ async function loadTracking() {
   }
   setTimeout(() => { if (trackingMap) trackingMap.invalidateSize(); }, 200);
   await refreshTracking();
-  trackingInterval = setInterval(refreshTracking, 4000);
+  trackingInterval = setInterval(() => { if (!document.hidden) refreshTracking(); }, 4000);
 }
 async function refreshTracking() {
   try {
@@ -2537,7 +2592,7 @@ async function openDmChat(userId, name, role) {
   checkDmPresence();
   loadPinnedMessage();
   if (dmPollInterval) clearInterval(dmPollInterval);
-  dmPollInterval = setInterval(() => { loadDmMessages(true); checkDmTyping(); }, 3000);
+  dmPollInterval = setInterval(() => { if (document.hidden) return; loadDmMessages(true); checkDmTyping(); }, 3000);
   if (dmPresenceInterval) clearInterval(dmPresenceInterval);
   dmPresenceInterval = setInterval(checkDmPresence, 15000);
 }
@@ -2802,14 +2857,56 @@ function toggleDmEmoji() { const panel = document.getElementById('dmEmojiPanel')
 function insertDmEmoji(emoji) { const input = document.getElementById('dmInput'); input.value += emoji; input.focus(); }
 
 // PRESENCE HEARTBEAT
-setInterval(() => { if (currentUser) api('/presence', { method: 'POST' }).catch(() => {}); }, 30000);
+setInterval(() => { if (currentUser && !document.hidden) api('/presence', { method: 'POST', poll: true }).catch(() => {}); }, 30000);
 
 // TOAST
 function showToast(msg, duration = 2500) { const existing = document.querySelector('.toast'); if (existing) existing.remove(); const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg; document.body.appendChild(el); setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 200); }, duration); }
 
 function exportPickupsCSV() { exportCSV(); }
 
+// ===== STABILITY LAYER =====
+(function () {
+  const MODALS = ['pickupModal','pickupUpdateModal','bulkModal','addressModal','adminModal','userModal','dmFwdModal','dmDelModal'];
+  const RELOAD = { dashboard: () => loadDashboard(), addresses: () => loadMyAddresses(), mypickups: () => loadMyPickups(), users: () => loadUsers(), pickups: () => { if (!selectedPickups.size) loadAllPickups(); }, driverpickups: () => loadDriverPickups(), factory: () => loadFactoryPickups(), settings: () => loadSettings() };
+  const currentPage = () => (location.hash || '').replace('#', '');
+  window.retryCurrentPage = function () { failedPaths.clear(); showLoadError(); const f = RELOAD[currentPage()]; if (f) f(); else showPage(currentPage()); };
+  // navigation: close stray modals, clear stale error banner
+  const origShowPage = window.showPage;
+  window.showPage = function (page) {
+    MODALS.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+    failedPaths.clear(); showLoadError();
+    return origShowPage.apply(this, arguments);
+  };
+  // double-click / double-tap protection: identical in-flight calls are ignored
+  const GUARDED = ['doLogin','doSetup','sendResetEmail','submitPasswordReset','saveAddress','deleteAddress','createUser','deleteUser','resetUserPassword','changeUserRole','createAdmin','removeAdmin','submitPickup','cancelPickup','updatePickup','executeBulkUpdate','saveProfile','changePassword','sendDm','sendComment','driverUpdateStatus','factoryUpdate','forwardDmTo','dmDoDelete'];
+  GUARDED.forEach(name => {
+    const fn = window[name]; if (typeof fn !== 'function') return;
+    const busy = new Set();
+    window[name] = async function () {
+      const key = JSON.stringify([].slice.call(arguments).map(a => (a && a.nodeType) ? 'node' : a));
+      if (busy.has(key)) return; busy.add(key);
+      const ae = document.activeElement; const btn = ae && ae.tagName === 'BUTTON' && !ae.disabled ? ae : null; if (btn) btn.disabled = true;
+      try { return await fn.apply(this, arguments); }
+      finally { busy.delete(key); if (btn) btn.disabled = false; }
+    };
+  });
+  // another tab signed in/out: reload so this tab never shows another account's state
+  window.addEventListener('storage', e => { if (e.key === 'viscose_token' && e.newValue !== token && !sessionEnding) { sessionEnding = true; location.reload(); } });
+  // returning to a tab after a while: refresh visible data
+  let hiddenAt = 0;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { hiddenAt = Date.now(); return; }
+    if (!currentUser || !hiddenAt || Date.now() - hiddenAt < 30000) return;
+    const f = RELOAD[currentPage()]; if (f) f(); try { pollDmUnread(); } catch(e) {}
+  });
+  window.addEventListener('online', () => { const f = failedPaths.size && RELOAD[currentPage()]; if (f) f(); });
+  // last-resort handlers so a stray error never leaves the page silently broken
+  let lastToast = 0; const soft = (msg) => { if (Date.now() - lastToast > 4000) { lastToast = Date.now(); try { showToast(msg); } catch(e) {} } };
+  window.addEventListener('unhandledrejection', e => { const r = e.reason; e.preventDefault(); if (r && (r.stale || r.name === 'AbortError')) return; console.error(r); if (r && r.code === 'auth') return; soft(friendlyError(r)); });
+  window.addEventListener('error', e => { if (e.target && e.target !== window) return; console.error(e.error || e.message); soft('Something went wrong. Please try again.'); });
+})();
+
 init();
 </script>
 </body>
-</html>
+  </html>
