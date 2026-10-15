@@ -37,7 +37,8 @@ export async function onRequestGet(context) {
       LEFT JOIN direct_messages r ON m.reply_to_id = r.id
       LEFT JOIN users r_u ON r.sender_id = r_u.id
       WHERE (m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?)
-      ORDER BY m.created_at ASC
+      ORDER BY m.created_at DESC, m.id DESC
+      LIMIT 300
     `).bind(user.user_id, otherId, otherId, user.user_id).all();
 
     await env.DB.prepare(
@@ -45,7 +46,7 @@ export async function onRequestGet(context) {
     ).bind(user.user_id, otherId).run();
 
     // Media (base64) is fetched on demand via ?media=ID so polling stays small
-    return Response.json({ messages: messages.results.map(m => (m.media ? { ...m, media: 'lazy' } : m)) });
+    return Response.json({ messages: messages.results.slice().reverse().map(m => (m.media ? { ...m, media: 'lazy' } : m)) });
   }
 
   const lastWhere = "((m.sender_id = ?1 AND m.receiver_id = u.id) OR (m.sender_id = u.id AND m.receiver_id = ?1))";
