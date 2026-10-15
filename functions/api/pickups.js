@@ -7,6 +7,18 @@ export async function onRequestGet(context) {
   const isDriver = user.role === 'driver';
   const isFactory = user.role === 'factory';
 
+  // On-demand photo fetch: lists never carry base64 photos
+  const photoId = url.searchParams.get('photo');
+  if (photoId) {
+    const field = url.searchParams.get('f');
+    if (!['photo', 'pickup_photo', 'delivery_photo'].includes(field)) return Response.json({ error: 'Invalid photo field' }, { status: 400 });
+    const row = await env.DB.prepare(`SELECT user_id, driver_id, ${field} AS data FROM pickups WHERE id = ?`).bind(photoId).first();
+    if (!row) return Response.json({ error: 'Not found' }, { status: 404 });
+    const allowed = isAdmin || isFactory || row.user_id === user.user_id || (isDriver && (row.driver_id === user.user_id || row.driver_id === null));
+    if (!allowed) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    return Response.json({ data: row.data || '' });
+  }
+
   let query, params;
   if ((isAdmin || isFactory) && !url.searchParams.get('mine')) {
     query = `SELECT p.*, u.name as user_name, u.email as user_email, u.phone as user_phone,
@@ -40,7 +52,12 @@ export async function onRequestGet(context) {
     ? await env.DB.prepare(query).bind(...params).all()
     : await env.DB.prepare(query).all();
 
-  return Response.json({ pickups: result.results });
+  const slim = result.results.map(r => {
+    const o = { ...r };
+    for (const k of ['photo', 'pickup_photo', 'delivery_photo']) if (o[k]) o[k] = 'lazy';
+    return o;
+  });
+  return Response.json({ pickups: slim });
 }
 
 export async function onRequestPost(context) {
