@@ -113,3 +113,34 @@ export async function onRequestDelete(context) {
   await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(userId).run();
   return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 }
+
+export async function onRequestPut(context) {
+  const { env, data } = context;
+  const me = data.user;
+  const j = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } });
+  if (me.role !== 'superadmin' && me.role !== 'admin') return j({ error: 'Forbidden' }, 403);
+
+  let body;
+  try { body = await context.request.json(); } catch (e) { return j({ error: 'Invalid request' }, 400); }
+  const { id, password, role } = body || {};
+  if (!id) return j({ error: 'Missing user id' }, 400);
+
+  const target = await env.DB.prepare("SELECT id, role FROM users WHERE id = ?").bind(id).first();
+  if (!target) return j({ error: 'User not found' }, 404);
+  if (target.role === 'superadmin') return j({ error: 'Cannot modify superadmin' }, 403);
+  if (target.role === 'admin' && me.role !== 'superadmin') return j({ error: 'Only the superadmin can modify admins' }, 403);
+  if (password === undefined && role === undefined) return j({ error: 'Nothing to update' }, 400);
+
+  if (role !== undefined) {
+    if (me.role !== 'superadmin') return j({ error: 'Only the superadmin can change roles' }, 403);
+    if (!['user', 'driver', 'factory', 'admin'].includes(role)) return j({ error: 'Invalid role' }, 400);
+    if (String(target.id) === String(me.user_id)) return j({ error: 'You cannot change your own role' }, 400);
+    await env.DB.prepare("UPDATE users SET role = ? WHERE id = ?").bind(role, target.id).run();
+  }
+  if (password !== undefined) {
+    if (typeof password !== 'string' || password.length < 6) return j({ error: 'Password must be at least 6 characters' }, 400);
+    await env.DB.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(await hashPassword(password), target.id).run();
+    await env.DB.prepare("DELETE FROM sessions WHERE user_id = ?").bind(target.id).run();
+  }
+  return j({ success: true });
+}
