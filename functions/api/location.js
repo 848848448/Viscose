@@ -3,7 +3,7 @@ export async function onRequestPost(context) {
   const user = data.user;
   if (user.role !== 'driver') return Response.json({ error: 'Drivers only' }, { status: 403 });
   const { lat, lng, pickup_id } = await context.request.json();
-  if (typeof lat !== 'number' || typeof lng !== 'number') return Response.json({ error: 'Missing coordinates' }, { status: 400 });
+  if (typeof lat !== 'number' || typeof lng !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return Response.json({ error: 'Missing coordinates' }, { status: 400 });
   await env.DB.prepare(
     `INSERT INTO driver_locations (user_id, lat, lng, pickup_id, updated_at)
      VALUES (?, ?, ?, ?, datetime('now'))
