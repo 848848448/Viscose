@@ -5,8 +5,8 @@ export async function onRequestGet(context) {
   if (!isAdmin) return Response.json({ error: 'Admins only' }, { status: 403 });
 
   const url = new URL(context.request.url);
-  const limit = parseInt(url.searchParams.get('limit')) || 50;
-  const offset = parseInt(url.searchParams.get('offset')) || 0;
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit')) || 50, 1), 200);
+  const offset = Math.max(parseInt(url.searchParams.get('offset')) || 0, 0);
 
   const fullQuery = `
     SELECT l.*, u.name as user_name, u.role as user_role, p.id as pickup_id,
