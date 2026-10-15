@@ -28,13 +28,19 @@ export async function onRequestGet(context) {
   const ids = messageIds.split(',').map(Number).filter(Boolean);
   if (!ids.length) return Response.json({ reactions: {} });
 
-  const placeholders = ids.map(() => '?').join(',');
-  const rows = await env.DB.prepare(
-    `SELECT message_id, emoji, user_id, u.name as user_name FROM message_reactions r JOIN users u ON r.user_id = u.id WHERE message_id IN (${placeholders})`
-  ).bind(...ids).all();
+  // D1 allows at most 100 bound parameters per query, so look up in chunks
+  const all = [];
+  for (let i = 0; i < ids.slice(0, 600).length; i += 90) {
+    const chunk = ids.slice(i, i + 90);
+    const placeholders = chunk.map(() => '?').join(',');
+    const rows = await env.DB.prepare(
+      `SELECT message_id, emoji, user_id, u.name as user_name FROM message_reactions r JOIN users u ON r.user_id = u.id WHERE message_id IN (${placeholders})`
+    ).bind(...chunk).all();
+    all.push(...rows.results);
+  }
 
   const reactions = {};
-  for (const r of rows.results) {
+  for (const r of all) {
     if (!reactions[r.message_id]) reactions[r.message_id] = [];
     reactions[r.message_id].push({ emoji: r.emoji, user_id: r.user_id, user_name: r.user_name });
   }
