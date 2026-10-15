@@ -1,0 +1,8 @@
+name = "viscose"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "viscose-db"
+database_id = "4c0e64d6-a0bb-4233-9b19-03cfe5b78d49"
