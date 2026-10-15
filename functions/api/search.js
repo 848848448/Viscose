@@ -2,7 +2,7 @@ export async function onRequestGet(context) {
   const { env, data } = context;
   const user = data.user;
   const url = new URL(context.request.url);
-  const q = (url.searchParams.get('q') || '').trim().slice(0, 100);
+  const q = (url.searchParams.get('q') || '').trim().slice(0, 40);
   if (!q || q.length < 2) return Response.json({ results: [] });
 
   const isAdmin = user.role === 'superadmin' || user.role === 'admin';
