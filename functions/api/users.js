@@ -1,10 +1,4 @@
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
+import { hashPassword, verifyPassword, esc } from '../../lib/auth.js';
 export async function onRequestGet(context) {
   const { env, data } = context;
   const user = data.user;
@@ -34,6 +28,13 @@ export async function onRequestPost(context) {
     return new Response(JSON.stringify({ error: 'Phone and billing address are required for users' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
   }
 
+  if (assignRole === 'admin' && currentUser.role !== 'superadmin') {
+    return new Response(JSON.stringify({ error: 'Only the superadmin can create admins' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+  }
+  if (typeof password !== 'string' || password.length < 6) {
+    return new Response(JSON.stringify({ error: 'Password must be at least 6 characters' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  }
+
   if (assignRole === 'superadmin') {
     return new Response(JSON.stringify({ error: 'Cannot create superadmin' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
@@ -61,14 +62,13 @@ export async function onRequestPost(context) {
           subject: 'Your Viscose account is ready',
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
             <h2 style="margin-bottom:8px">Welcome to Viscose</h2>
-            <p>Hello ${name},</p>
-            <p>An account has been created for you by ${currentUser.name}.</p>
+            <p>Hello ${esc(name)},</p>
+            <p>An account has been created for you by ${esc(currentUser.name)}.</p>
             <p><strong>Your login details:</strong></p>
             <table style="margin:16px 0;font-size:15px">
-              <tr><td style="padding:4px 12px 4px 0;color:#666">Email:</td><td style="font-weight:600">${userEmail}</td></tr>
-              <tr><td style="padding:4px 12px 4px 0;color:#666">Password:</td><td style="font-weight:600">${password}</td></tr>
-            </table>
-            <p>Please sign in and change your password in Settings.</p>
+              <tr><td style="padding:4px 12px 4px 0;color:#666">Email:</td><td style="font-weight:600">${esc(userEmail)}</td></tr>
+                          </table>
+            <p>Your password was set by the person who created your account. Ask them for it, then change it in Settings.</p>
             <p style="margin-top:24px"><a href="${env.SITE_URL || 'https://viscose.pages.dev'}" style="background:#111;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500">Sign In</a></p>
             <p style="margin-top:32px;font-size:13px;color:#999">This email was sent by Viscose.</p>
           </div>`
@@ -103,6 +103,13 @@ export async function onRequestDelete(context) {
   if (target.role === 'superadmin') {
     return new Response(JSON.stringify({ error: 'Cannot delete superadmin' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
+  if (target.role === 'admin' && currentUser.role !== 'superadmin') {
+    return new Response(JSON.stringify({ error: 'Only the superadmin can delete admins' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+  }
+  if (String(userId) === String(currentUser.user_id)) {
+    return new Response(JSON.stringify({ error: 'You cannot delete your own account' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  }
+  await env.DB.prepare("DELETE FROM sessions WHERE user_id = ?").bind(userId).run();
   await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(userId).run();
   return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 }

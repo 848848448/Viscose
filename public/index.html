@@ -879,7 +879,6 @@
           <h3>Language</h3>
           <div class="lang-switch" id="langSwitch">
             <button class="lang-btn active" onclick="setLang('en')">English</button>
-            <button class="lang-btn" onclick="setLang('yi')">יידיש</button>
             <button class="lang-btn" onclick="setLang('he')">עברית</button>
           </div>
         </div>
@@ -1194,15 +1193,15 @@ const API = '/api';
 // ===== I18N =====
 const LANGS = {
   en: { dashboard:'Dashboard', my_addresses:'My Addresses', my_pickups:'My Pickups', pickup_requests:'Pickup Requests', users:'Users', settings:'Account Settings', my_deliveries:'My Deliveries' },
-  yi: { dashboard:'דעשבארד', my_addresses:'מיינע אדרעסן', my_pickups:'מיינע פיקאפס', pickup_requests:'פיקאפ רעקוועסטס', users:'יוזערס', settings:'אקאונט סעטינגס', my_deliveries:'מיינע דעליווערעס' },
   he: { dashboard:'לוח בקרה', my_addresses:'הכתובות שלי', my_pickups:'האיסופים שלי', pickup_requests:'בקשות איסוף', users:'משתמשים', settings:'הגדרות חשבון', my_deliveries:'המשלוחים שלי' }
 };
 let currentLang = localStorage.getItem('viscose_lang') || 'en';
+if (currentLang === 'yi') currentLang = 'en';
 function setLang(lang) {
   currentLang = lang;
   localStorage.setItem('viscose_lang', lang);
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.includes(lang === 'en' ? 'En' : lang === 'yi' ? 'יידיש' : 'עברית')));
-  document.documentElement.dir = (lang === 'yi' || lang === 'he') ? 'rtl' : 'ltr';
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.includes(lang === 'en' ? 'En' : 'עברית')));
+  document.documentElement.dir = (lang === 'he') ? 'rtl' : 'ltr';
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
     if (LANGS[lang]?.[key]) el.textContent = LANGS[lang][key];
@@ -1330,7 +1329,7 @@ async function doLogin() {
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('setupPass').addEventListener('keydown', e => { if (e.key === 'Enter') doSetup(); });
 
-function logout() { token = null; currentUser = null; localStorage.removeItem('viscose_token'); location.hash = ''; showScreen('loginScreen'); }
+function logout() { if (token) { fetch(API + '/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + token } }).catch(() => {}); } token = null; currentUser = null; localStorage.removeItem('viscose_token'); location.hash = ''; showScreen('loginScreen'); }
 
 // FORGOT PASSWORD
 function showForgotPassword() {
@@ -1444,7 +1443,7 @@ window.addEventListener('hashchange', () => {
   if (currentUser) showPage(location.hash.replace('#', '') || 'dashboard');
 });
 
-function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 // Modern line icons (Material/Feather style). Usage: ic('camera') or ic('phone', 18)
 const ICON_PATHS = {
   camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
@@ -2747,4 +2746,4 @@ function exportPickupsCSV() {
 init();
 </script>
 </body>
-</html>
+      </html>
