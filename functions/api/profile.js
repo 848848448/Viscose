@@ -1,10 +1,4 @@
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
+import { hashPassword, verifyPassword, esc } from '../../lib/auth.js';
 export async function onRequestGet(context) {
   const { env, data } = context;
   let user;
@@ -49,16 +43,17 @@ export async function onRequestPost(context) {
     return Response.json({ error: 'New password must be at least 6 characters' }, { status: 400 });
   }
 
-  const currentHash = await hashPassword(current_password);
-  const user = await env.DB.prepare("SELECT id FROM users WHERE id = ? AND password_hash = ?")
-    .bind(data.user.user_id, currentHash).first();
+  const row = await env.DB.prepare("SELECT id, password_hash FROM users WHERE id = ?").bind(data.user.user_id).first();
+  const chk = row ? await verifyPassword(current_password, row.password_hash) : { ok: false };
 
-  if (!user) {
+  if (!chk.ok) {
     return Response.json({ error: 'Current password is incorrect' }, { status: 401 });
   }
 
   const newHash = await hashPassword(new_password);
   await env.DB.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(newHash, data.user.user_id).run();
+  const cur = context.request.headers.get('Authorization')?.replace('Bearer ', '');
+  await env.DB.prepare("DELETE FROM sessions WHERE user_id = ? AND token != ?").bind(data.user.user_id, cur || '').run();
 
   return Response.json({ success: true });
 }
