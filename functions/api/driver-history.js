@@ -7,7 +7,7 @@ export async function onRequestGet(context) {
   const url = new URL(context.request.url);
   const driverId = parseInt(url.searchParams.get('driver_id'));
   if (!driverId) return Response.json({ error: 'Missing driver_id' }, { status: 400 });
-  const days = parseInt(url.searchParams.get('days')) || 7;
+  const days = Math.min(Math.max(parseInt(url.searchParams.get('days')) || 7, 1), 90);
   const since = `-${days} days`;
 
   // Driver info
