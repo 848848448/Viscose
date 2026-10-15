@@ -3,11 +3,18 @@ export async function onRequestGet(context) {
   const user = data.user;
   const url = new URL(context.request.url);
   const withUser = url.searchParams.get('with');
+  const mediaId = url.searchParams.get('media');
   const isAdmin = user.role === 'superadmin' || user.role === 'admin';
   const isDriver = user.role === 'driver';
 
   if (!isAdmin && !isDriver) {
     return Response.json({ error: 'Not authorized' }, { status: 403 });
+  }
+
+  if (mediaId) {
+    const row = await env.DB.prepare("SELECT media, media_type FROM direct_messages WHERE id = ? AND (sender_id = ? OR receiver_id = ?)").bind(mediaId, user.user_id, user.user_id).first();
+    if (!row) return Response.json({ error: 'Not found' }, { status: 404 });
+    return Response.json({ media: row.media || '', media_type: row.media_type || '' });
   }
 
   if (withUser) {
@@ -37,43 +44,28 @@ export async function onRequestGet(context) {
       "UPDATE direct_messages SET read_at = datetime('now') WHERE receiver_id = ? AND sender_id = ? AND read_at IS NULL"
     ).bind(user.user_id, otherId).run();
 
-    return Response.json({ messages: messages.results });
+    // Media (base64) is fetched on demand via ?media=ID so polling stays small
+    return Response.json({ messages: messages.results.map(m => (m.media ? { ...m, media: 'lazy' } : m)) });
   }
 
-  let contacts;
-  if (isDriver) {
-    contacts = await env.DB.prepare(
-      "SELECT id, name, role FROM users WHERE role IN ('admin', 'superadmin') ORDER BY name"
-    ).all();
-  } else {
-    contacts = await env.DB.prepare(
-      "SELECT id, name, role FROM users WHERE role IN ('driver', 'admin', 'superadmin') AND id != ? ORDER BY CASE role WHEN 'driver' THEN 0 ELSE 1 END, name"
-    ).bind(user.user_id).all();
-  }
+  const lastWhere = "((m.sender_id = ?1 AND m.receiver_id = u.id) OR (m.sender_id = u.id AND m.receiver_id = ?1))";
+  const roleFilter = isDriver ? "u.role IN ('admin', 'superadmin')" : "u.role IN ('driver', 'admin', 'superadmin') AND u.id != ?1";
+  // One query for every conversation (was 2 queries per contact, which exceeds the free-plan subrequest limit with many users)
+  const rows = await env.DB.prepare(`
+    SELECT u.id, u.name, u.role,
+      (SELECT m.message FROM direct_messages m WHERE ${lastWhere} ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_message,
+      (SELECT m.created_at FROM direct_messages m WHERE ${lastWhere} ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_message_at,
+      (SELECT s.name FROM direct_messages m JOIN users s ON s.id = m.sender_id WHERE ${lastWhere} ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_sender,
+      (SELECT COUNT(*) FROM direct_messages m WHERE m.sender_id = u.id AND m.receiver_id = ?1 AND m.read_at IS NULL) AS unread
+    FROM users u WHERE ${roleFilter}
+    ORDER BY ${isDriver ? 'u.name' : "CASE u.role WHEN 'driver' THEN 0 ELSE 1 END, u.name"}
+  `).bind(user.user_id).all();
 
-  const conversations = [];
-  for (const c of contacts.results) {
-    const lastMsg = await env.DB.prepare(`
-      SELECT m.*, u.name as sender_name FROM direct_messages m
-      JOIN users u ON m.sender_id = u.id
-      WHERE (m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?)
-      ORDER BY m.created_at DESC LIMIT 1
-    `).bind(user.user_id, c.id, c.id, user.user_id).first();
-
-    const unread = await env.DB.prepare(
-      "SELECT COUNT(*) as count FROM direct_messages WHERE sender_id = ? AND receiver_id = ? AND read_at IS NULL"
-    ).bind(c.id, user.user_id).first();
-
-    conversations.push({
-      user_id: c.id,
-      name: c.name,
-      role: c.role,
-      last_message: lastMsg?.message || '',
-      last_message_at: lastMsg?.created_at || null,
-      last_sender: lastMsg?.sender_name || null,
-      unread: unread?.count || 0
-    });
-  }
+  const conversations = rows.results.map(r => ({
+    user_id: r.id, name: r.name, role: r.role,
+    last_message: r.last_message || '', last_message_at: r.last_message_at || null,
+    last_sender: r.last_sender || null, unread: r.unread || 0
+  }));
 
   conversations.sort((a, b) => {
     if (a.last_message_at && b.last_message_at) return b.last_message_at.localeCompare(a.last_message_at);
@@ -97,6 +89,8 @@ export async function onRequestPost(context) {
 
   const { receiver_id, message, reply_to_id, media, media_type } = await context.request.json();
   if (!receiver_id) return Response.json({ error: 'Receiver required' }, { status: 400 });
+  if (typeof media === 'string' && (media === 'lazy' || media.length > 1500000)) return Response.json({ error: 'That attachment is too large or invalid.' }, { status: 413 });
+  if (typeof message === 'string' && message.length > 5000) return Response.json({ error: 'Message is too long.' }, { status: 400 });
   if (!message && !media) return Response.json({ error: 'Message or media required' }, { status: 400 });
 
   const receiver = await env.DB.prepare("SELECT id, role FROM users WHERE id = ?").bind(receiver_id).first();
