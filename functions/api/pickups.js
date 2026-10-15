@@ -47,6 +47,8 @@ export async function onRequestPost(context) {
   const { env, data } = context;
   const user = data.user;
   const { address_id, notes, photo, priority, contact_phone } = await context.request.json();
+  if (typeof photo === 'string' && photo.length > 1500000) return Response.json({ error: 'That photo is too large. Try a smaller one.' }, { status: 413 });
+  if (typeof notes === 'string' && notes.length > 2000) return Response.json({ error: 'Notes are too long (2000 characters max).' }, { status: 400 });
 
   if (!address_id) {
     return Response.json({ error: 'Address is required' }, { status: 400 });
@@ -76,6 +78,8 @@ export async function onRequestPut(context) {
 
   const { id, status, admin_notes, driver_id, priority, delivery_photo, pickup_photo, cancel_reason, restore, scheduled_date } = await context.request.json();
   if (!id) return Response.json({ error: 'Missing pickup id' }, { status: 400 });
+  if (status !== undefined && status !== null && status !== '' && !['pending','picked_up','in_process','ready','delivered','cancelled'].includes(status)) return Response.json({ error: 'Invalid status' }, { status: 400 });
+  for (const ph of [delivery_photo, pickup_photo]) if (typeof ph === 'string' && ph.length > 1500000) return Response.json({ error: 'That photo is too large. Try a smaller one.' }, { status: 413 });
 
   if (!isAdmin && !isDriver && !isFactory) {
     return Response.json({ error: 'Not authorized' }, { status: 403 });
